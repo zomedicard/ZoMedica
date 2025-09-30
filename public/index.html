@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediJobs - Plataforma de Empleo</title>
+    <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="pipeline.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="brand">MediJobs</div>
+<div class="nav-links">
+    <a href="#" onclick="mostrarInicio()" class="nav-icon" title="Inicio">
+        <i class="fas fa-home"></i> </a>
+    <a href="#" onclick="mostrarVacantes()" class="nav-icon" title="Vacantes">
+        <i class="fas fa-briefcase"></i> </a>
+    <a href="#" onclick="mostrarRegistro()" id="btnRegistrarse" class="nav-icon" title="Registrarse">
+        <i class="fas fa-user-plus"></i> </a>
+    <a href="#" onclick="mostrarLogin()" id="btnLogin" class="nav-icon" title="Iniciar Sesión">
+        <i class="fas fa-sign-in-alt"></i> </a>
+    <a href="#" onclick="mostrarProfesionales()" id="btnProfesionales" class="nav-icon" title="Mis Postulaciones" style="display: none;">
+        <i class="fas fa-file-alt"></i> </a>
+    <a href="#" onclick="mostrarPerfilProfesional()" id="btnPerfilProfesional" class="nav-icon" title="Mi Perfil" style="display: none;">
+        <i class="fas fa-user-circle"></i> </a>
+    <a href="#" onclick="mostrarInstituciones()" id="btnPanelInstitucion" class="nav-icon" title="Panel de Institución" style="display: none;">
+        <i class="fas fa-building"></i> </a>
+    <a href="#" onclick="mostrarBusquedaTalentos()" id="btnBuscarTalentos" class="nav-icon" title="Buscar Talentos" style="display: none;">
+        <i class="fas fa-search"></i> </a>
+    <a href="#" onclick="mostrarNotificaciones()" id="btnNotificaciones" class="nav-icon" title="Notificaciones" style="display: none;">
+        <i class="fas fa-bell"></i> <span id="notification-count" class="notification-dot" style="display: none;"></span>
+    </a>
+    <a href="#" onclick="cerrarSesion()" id="btnLogout" class="nav-icon" title="Cerrar Sesión" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i> </a>
+</div>           
+        </nav>
+    </header>
+
+    <main>
+    <div id="loadingSpinner" class="spinner-container" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+    <div id="globalMessage" ...></div>
+    ...
+        <div id="globalMessage" class="message-inline" style="display: none;"></div>
+
+        <section id="inicio" class="container">
+    <h2 id="saludoUsuario" class="saludo-personal" style="text-align: center; margin-bottom: 20px;"></h2>
+
+    <div class="hero-section">
+        <h1 class="hero-title">Tu Carrera en el Sector Salud Comienza Aquí</h1>
+        <p class="hero-subtitle">
+            MediJobs es la plataforma exclusiva que conecta a los profesionales de la salud con las clínicas, hospitales y centros médicos más importantes del país.
+        </p>
+        <div class="cta-buttons">
+    <a href="#" id="btnEncontrarEmpleo" onclick="manejarClicEncontrarEmpleo()" class="button">Encontrar mi próximo empleo</a>
+    <a href="#" id="btnPublicarVacante" onclick="mostrarRegistro()" class="button-secondary">Publicar una vacante</a>
+</div>
+
+    <div class="benefits-section">
+        <div class="benefit-card">
+            <div class="benefit-icon"><i class="fas fa-user-md"></i></div>
+            <h4>Para Profesionales</h4>
+            <p>Accede a ofertas de empleo exclusivas, crea un perfil especializado y contacta directamente con las instituciones que buscan tu talento.</p>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon"><i class="fas fa-hospital"></i></div>
+            <h4>Para Instituciones</h4>
+            <p>Publica tus vacantes y encuentra talento calificado rápidamente. Gestiona tus candidatos con nuestro pipeline visual e intuitivo.</p>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon"><i class="fas fa-network-wired"></i></div>
+            <h4>Conexión Especializada</h4>
+            <p>Nos enfocamos 100% en el sector salud, asegurando que las oportunidades y los candidatos sean siempre relevantes.</p>
+        </div>
+    </div>
+
+    <h3 style="text-align: center; font-size: 1.8rem; margin-top: 50px;">Últimas Vacantes Publicadas</h3>
+    <div id="listaVacantesInicio" class="vacante-grid">
+        </div>
+</section>      
+
+        <section id="registro" class="container">
+            <h2>Registro de Usuario</h2>
+            <p id="errorRegistro" class="error"></p>
+            <form id="formRegistro">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" required>
+                <label for="correoRegistro">Correo Electrónico:</label>
+                <input type="email" id="correoRegistro" required>
+                <label for="passwordRegistro">Contraseña:</label>
+                <input type="password" id="passwordRegistro" required>
+                <label for="rol">Soy un(a):</label>
+                <select id="rol" required>
+                    <option value="profesional">Profesional</option>
+                    <option value="institucion">Institución</option>
+                </select>
+                <button type="submit">Registrarme</button>
+            </form>
+        </section>
+
+        <section id="login" class="container">
+            <h2>Inicio de Sesión</h2>
+            <p id="errorLogin" class="error"></p>
+            <form id="formLogin">
+                <label for="correoLogin">Correo Electrónico:</label>
+                <input type="email" id="correoLogin" required>
+                <label for="passwordLogin">Contraseña:</label>
+                <input type="password" id="passwordLogin" required>
+                <button type="submit">Iniciar Sesión</button>
+            </form>
+        </section>
+
+        <section id="vacantes" class="container" style="display: none;">
+    <h2>Encuentra tu Próximo Empleo en el Sector Salud</h2>
+    <p>Filtra por palabra clave, ubicación o tipo de contrato para encontrar la oportunidad perfecta para ti.</p>
+
+    <div class="modern-filter-bar">
+        <input type="text" id="searchInput" placeholder="Buscar por puesto o palabra clave...">
+        
+        <select id="ubicacionFilter">
+            <option value="">Todas las ubicaciones</option>
+            </select>
+
+        <select id="tipoContratoFilter">
+            <option value="">Cualquier contrato</option>
+            <option value="Jornada Completa">Jornada Completa</option>
+            <option value="Media Jornada">Media Jornada</option>
+            <option value="Freelance">Freelance</option>
+            <option value="Temporal">Temporal</option>
+        </select>
+        
+        <button onclick="aplicarFiltros()" class="button">Filtrar</button>
+    </div>
+
+    <div id="listaVacantes" class="vacante-grid">
+        </div>
+</section>
+
+        <section id="vacanteDetalles" class="container">
+            <button onclick="goBack()" class="button">← Volver Atrás</button>
+            <div id="vacanteInfo"></div>
+        </section>
+
+        <section id="perfilProfesional" class="container" style="display: none;">
+            <h2>Mi Perfil Profesional</h2>
+            <div id="infoProfesional">
+            </div>
+            <div class="perfil-acciones">
+                <button onclick="mostrarFormularioEditarPerfil()">Editar Perfil</button>
+            </div>
+        </section>
+
+<section id="editarPerfil" class="container" style="display: none;">
+    <h2>Editar Perfil Profesional</h2>
+    <p id="errorEditarPerfil" class="error"></p>
+    <form id="formEditarPerfil">
+        
+        <h3>Información Principal</h3>
+        <label for="nombreEditar">Nombre Completo:</label>
+        <input type="text" id="nombreEditar" required>
+
+        <label for="especialidadEditar">Título Profesional / Especialidad:</label>
+        <input type="text" id="especialidadEditar" placeholder="Ej: Médico General, Pediatra">
+        
+        <label for="bioEditar">Biografía Profesional:</label>
+        <textarea id="bioEditar" rows="5" placeholder="Escribe un breve resumen sobre tu experiencia y objetivos..."></textarea>
+
+        <h3>Información de Contacto y Personal</h3>
+        <label for="telefonoEditar">Teléfono:</label>
+        <input type="tel" id="telefonoEditar">
+
+        <label for="linkedinURLEditar">Perfil de LinkedIn:</label>
+        <input type="url" id="linkedinURLEditar" placeholder="https://www.linkedin.com/in/tu-perfil">
+
+        <label for="cedulaEditar">Cédula de Identidad:</label>
+        <input type="text" id="cedulaEditar">
+
+        <label for="fechaNacimientoEditar">Fecha de Nacimiento:</label>
+        <input type="date" id="fechaNacimientoEditar">
+        
+        <h3>Foto de Perfil</h3>
+        <label for="fotoEditar">Subir nueva foto (JPG o PNG):</label>
+        <input type="file" id="fotoEditar" name="foto" accept=".jpg, .jpeg, .png">
+        <button type="button" class="button" onclick="subirFotoDePerfil()">Subir y Guardar Foto</button>
+        
+        <h3>Hoja de Vida (CV)</h3>
+        <label for="cvEditar">Subir nuevo CV (PDF):</label>
+        <input type="file" id="cvEditar" name="cv" accept=".pdf">
+        <button type="button" class="button" onclick="subirCV()">Subir y Guardar CV</button>
+        <p id="cvActual" style="margin-top: 10px;"></p>
+
+        <h3>Experiencia Profesional</h3>
+        <div id="experienciaContainer"></div>
+        <button type="button" class="agregar-campo-btn" onclick="agregarCampo('experiencia')">Añadir Experiencia</button>
+
+        <h3>Educación</h3>
+        <div id="educacionContainer"></div>
+        <button type="button" class="agregar-campo-btn" onclick="agregarCampo('educacion')">Añadir Educación</button>
+
+      <h3>Certificaciones y Diplomados</h3>
+<div id="certificacionContainer"></div>  <button type="button" class="agregar-campo-btn" onclick="agregarCampo('certificacion')">Añadir Certificación</button>
+
+        <h3>Habilidades y Herramientas</h3>
+        <label for="habilidadesEditar">Habilidades (separadas por coma):</label>
+        <input type="text" id="habilidadesEditar" placeholder="Ej: Cirugía menor, Diagnóstico, Microsoft Office">
+
+        <button type="submit">Guardar Todos los Cambios</button>
+    </form>
+</section>        
+
+
+<section id="editarPerfilInstitucion" class="container" style="display: none;">
+    <h2>Editar Perfil de Institución</h2>
+    <p id="errorEditarPerfilInstitucion" class="error"></p>
+<form id="formEditarPerfilInstitucion">
+    <label for="nombreInstitucionEditar">Nombre de la Institución:</label>
+    <input type="text" id="nombreInstitucionEditar" required>
+
+    <label for="direccionEditar">Dirección:</label>
+    <input type="text" id="direccionEditar">
+
+    <label for="telefonoInstitucionEditar">Teléfono:</label>
+    <input type="text" id="telefonoInstitucionEditar">
+
+    <label for="sitioWebEditar">Sitio Web:</label>
+    <input type="url" id="sitioWebEditar" placeholder="https://www.tuinstitucion.com">
+
+    <label for="bioInstitucionEditar">Biografía / Sobre Nosotros:</label>
+    <textarea id="bioInstitucionEditar" rows="5" placeholder="Describe la misión y visión de tu institución..."></textarea>
+
+    <label for="logoEditar">Subir nuevo Logo (JPG o PNG):</label>
+    <input type="file" id="logoEditar" name="logo" accept=".jpg, .jpeg, .png">
+    <button type="button" class="button" onclick="subirLogoInstitucion()">Subir y Guardar Logo</button>
+
+    <button type="submit">Guardar Cambios de Texto</button>
+</form>    
+</section>
+
+        <section id="perfilPublicoInstitucion" class="container">
+            <button onclick="goBack()" class="button">← Volver Atrás</button>
+            <div id="perfilInfo"></div>
+        </section>
+
+        <section id="profesionales" class="container">
+            <h2>Mis Postulaciones</h2>
+            <div id="listaPostulaciones"></div>
+        </section>
+        
+        <section id="instituciones" class="container" style="display: none;">
+    <div class="dashboard-header">
+        <h2 id="nombreInstitucionPanel">Panel de Institución</h2>
+        <div id="dashboard-actions" class="dashboard-actions">
+            <button onclick="mostrarFormularioVacante()" class="button"><i class="fas fa-plus"></i> Nueva Vacante</button>
+            <button onclick="mostrarFormularioEditarInstitucion()" class="button-secondary"><i class="fas fa-edit"></i> Editar Perfil</button>
+            <button onclick="verPerfilPublicoInstitucion()" class="button-secondary"><i class="fas fa-eye"></i> Ver Perfil Público</button>
+        </div>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-card">
+            <h4>Vacantes Activas</h4>
+            <p id="statTotalVacantes">0</p>
+            <i class="fas fa-briefcase card-icon"></i>
+        </div>
+        <div class="stat-card">
+            <h4>Postulaciones Totales</h4>
+            <p id="statTotalPostulaciones">0</p>
+            <i class="fas fa-users card-icon"></i>
+        </div>
+    </div>
+
+    <div class="dashboard-main-content">
+        <div class="dashboard-column">
+            <h3>Mis Vacantes Publicadas</h3>
+            <div id="misVacantes">
+                </div>
+        </div>
+        <div class="dashboard-column">
+            <h3>Últimas Postulaciones Recibidas</h3>
+            <div id="postulacionesRecibidas">
+                </div>
+        </div>
+    </div>
+</section>
+
+
+<section id="pipelineVacante" class="container" style="display: none;">
+            <button onclick="mostrarInstituciones()" class="button">← Volver al Panel</button>
+            <h2 id="pipelineTituloVacante">Pipeline de Candidatos</h2>
+            
+            <div id="pipelineBoard" class="pipeline-board">
+                </div>
+        </section>
+      
+<section id="busquedaTalentos" class="container" style="display: none;">
+    <h2>Buscador de Talentos</h2>
+    <p>Encuentra profesionales buscando por especialidad, habilidades o palabras clave.</p>
+
+    <div class="filtros-container">
+        <h4>Filtros de Búsqueda</h4>
+        <div class="modern-filter-bar"> 
+            <input type="text" id="filtroEspecialidad" placeholder="Filtrar por especialidad...">
+            <input type="text" id="filtroHabilidades" placeholder="Filtrar por habilidades...">
+            <input type="text" id="filtroKeyword" placeholder="Buscar por palabra clave...">
+            <button onclick="ejecutarBusquedaTalentos()" class="button" style="margin-top: 0;">Buscar</button>
+        </div>
+    </div>
+
+    <h3>Resultados</h3>
+    <div id="resultadosBusquedaTalentos" class="vacante-grid">
+    </div>
+</section>
+
+<section id="perfilPostulante" class="container" style="display: none;">
+    <h2>Perfil del Candidato</h2>
+   <button onclick="goBack()" class="button">← Volver Atrás</button>
+    <div id="infoPostulante" style="margin-top: 20px;">
+        </div>
+</section>
+
+        <section id="formularioVacante" class="container">
+    <h2>Publicar Nueva Vacante</h2>
+    <form id="formVacante">
+        <label for="vacanteTitulo">Título de la Vacante:</label>
+        <input type="text" id="vacanteTitulo" required>
+
+        <label for="vacanteInstitucion">Nombre de la Institución:</label>
+        <input type="text" id="vacanteInstitucion" required>
+
+        <label for="vacanteUbicacion">Ubicación:</label>
+<select id="vacanteUbicacion" required>
+    <option value="" disabled selected>Selecciona una provincia</option>
+</select>
+
+        <label for="vacanteTipoContrato">Tipo de Contrato:</label>
+        <select id="vacanteTipoContrato">
+            <option value="">Seleccionar...</option>
+            <option value="Jornada Completa">Jornada Completa</option>
+            <option value="Media Jornada">Media Jornada</option>
+            <option value="Freelance">Freelance</option>
+            <option value="Temporal">Temporal</option>
+        </select>
+
+        <label for="vacanteSalario">Rango Salarial (Opcional):</label>
+        <input type="text" id="vacanteSalario" placeholder="Ej: RD$50,000 - RD$70,000">
+
+        <label for="vacanteDescripcion">Descripción:</label>
+        <textarea id="vacanteDescripcion" rows="5" required></textarea>
+        
+        <label for="vacanteKeywords">Palabras Clave (separadas por coma):</label>
+        <input type="text" id="vacanteKeywords">
+        
+        <button type="submit">Publicar Vacante</button>
+    </form>
+</section>
+
+<section id="notificaciones" class="container">
+    <h2>Mis Notificaciones</h2>
+    <div id="listaNotificaciones"></div>
+</section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

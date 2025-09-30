@@ -1,0 +1,54 @@
+[
+  {
+    "id": 1,
+    "titulo": "Médico General",
+    "institucion": "Clínica Santo Domingo",
+    "descripcion": "Se busca Médico General para horario nocturno. Ofrecemos salario competitivo y un entorno profesional de desarrollo.",
+    "keywords": [
+      "Médico",
+      "General",
+      "Clínica Santo Domingo",
+      "Salud",
+      "Horario nocturno"
+    ]
+  },
+  {
+    "id": 2,
+    "titulo": "Enfermera",
+    "institucion": "Clínica La Esperanza",
+    "descripcion": "Vacante para Enfermera con disponibilidad en turno diurno. Se ofrece salario competitivo y oportunidad de crecimiento profesional.",
+    "keywords": [
+      "Enfermera",
+      "Clínica La Esperanza",
+      "Turno diurno",
+      "Salud",
+      "Atención al paciente"
+    ]
+  },
+  {
+    "id": 3,
+    "titulo": "Bioanalista",
+    "institucion": "Laboratorio ABC",
+    "descripcion": "Se requiere Bioanalista para tiempo completo. Se ofrece salario competitivo y participación en un laboratorio moderno con equipo de última tecnología.",
+    "keywords": [
+      "Bioanalista",
+      "Laboratorio ABC",
+      "Tiempo completo",
+      "Análisis clínicos",
+      "Salud"
+    ]
+  },
+  {
+    "id": 4,
+    "titulo": "Médico General",
+    "institucion": "Centro Médico Espinal Melo",
+    "descripcion": "Buscamos Médico General con amplia experiencia en atención primaria. Se valorará experiencia en procedimientos médicos básicos y capacidad de trabajo en equipo. Ofrecemos salario competitivo y oportunidades de desarrollo.",
+    "keywords": [
+      "Médico",
+      "General",
+      "Centro Médico Espinal Melo",
+      "Atención primaria",
+      "Salud"
+    ]
+  }
+]
