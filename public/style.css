@@ -126,19 +126,7 @@ nav .nav-links a:hover {
     color: var(--white);
     font-size: 20px !important;
 }
-@media (max-width: 992px) {
-    nav { max-width: 95%; margin: 15px auto 20px auto; }
-}
-@media (max-width: 768px) {
-    nav {
-        flex-direction: column;
-        padding: 15px;
-        margin: 0;
-        max-width: 100%;
-        border-radius: 0;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-}
+
 .notification-dot {
     position: absolute;
     top: -2px;   
@@ -238,11 +226,6 @@ section { display: none; padding: 25px; }
     font-size: 1rem;
 }
 #searchInput, #filtroKeyword { flex-grow: 2; min-width: 250px; }
-@media (max-width: 768px) {
-    .modern-filter-bar input[type="text"], 
-    .modern-filter-bar select,
-    .modern-filter-bar button { width: 100%; min-width: unset; flex-grow: 1; }
-    .filtros-controles { flex-direction: column; align-items: stretch; }
 }
 
 /* Grid de Vacantes con Flexbox */
@@ -380,18 +363,7 @@ section { display: none; padding: 25px; }
     color: var(--medium-grey);
     border-color: #dee2e6;
 }
-/* --- RESPONSIVE DESIGN --- */
-@media (max-width: 992px) {
-    .container { margin: 20px; padding: 25px; }
-    .vacante, .postulacion-institucion { flex: 1 1 calc(50% - 25px); }
-}
-@media (max-width: 768px) {
-    /* ... media queries de navegación ... */
-    .container { margin: 15px; padding: 20px; }
-    h2 { font-size: 1.75rem; }
-    .vacante, .postulacion-institucion { flex: 1 1 100%; }
-    button, .button { padding: 10px 20px; font-size: 1rem; }
-}
+
 /* --- PERFIL PROFESIONAL Y DETALLES DE VACANTE (SIN CAMBIOS) --- */
 .perfil-seccion { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-light); }
 .detalles-grid { display: flex; flex-wrap: wrap; gap: 20px; background-color: var(--light-bg); padding: 20px; border-radius: 8px; margin: 20px 0; }
@@ -492,23 +464,6 @@ section { display: none; padding: 25px; }
     padding: 8px 15px;
     margin-top: 0;
     font-size: 0.9rem;
-}
-
-/* Ajuste Responsive */
-@media (max-width: 600px) {
-    .postulacion-card {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .postulacion-acciones {
-        margin-top: 15px;
-        margin-left: 0;
-        width: 100%;
-        justify-content: space-between;
-    }
-    .postulacion-estado {
-        margin: 10px 0 0 0;
-    }
 }
 
 /* --- NUEVOS ESTILOS PARA PERFIL PROFESIONAL MODERNO --- */
@@ -734,13 +689,6 @@ section { display: none; padding: 25px; }
     font-size: 0.95rem;
 }
 
-/* Ajuste responsive para el título principal en móviles */
-@media (max-width: 768px) {
-    .hero-title {
-        font-size: 2.2rem;
-    }
-}
-
 /* --- AÑADE ESTOS ESTILOS PARA EL NUEVO DASHBOARD INSTITUCIONAL --- */
 
 .dashboard-header {
@@ -812,11 +760,6 @@ section { display: none; padding: 25px; }
     gap: 30px;
 }
 
-@media (max-width: 992px) {
-    .dashboard-main-content {
-        grid-template-columns: 1fr;
-    }
-}
 /* --- AÑADE ESTA CLASE AL FINAL DE TU ARCHIVO style.css --- */
 
 /* Estilo para manejar texto largo que se desborda */
@@ -872,22 +815,32 @@ section { display: none; padding: 25px; }
     color: var(--primary-blue);
     opacity: 0.15;
 }
-/* --- ESTILOS PARA EL LOGO PERSONALIZADO Y MARCA --- */
 
-/* Ajusta el contenedor de la marca para alinear el logo y el texto */
-nav .brand {
-    display: flex;         /* Pone el logo y el texto uno al lado del otro */
-    align-items: center;   /* Los centra verticalmente */
-    gap: 10px;             /* Añade un espacio de 10px entre el logo y el texto */
-    font-weight: bold;     /* Hace el texto del nombre de marca más visible */
-    font-size: 1.2rem;     /* Ajusta el tamaño del texto de la marca */
+/* === ESTILOS AJUSTADOS PARA MARCA (SOLO TEXTO) === */
+
+/* El enlace que envuelve la marca */
+nav .brand-link {
+    text-decoration: none;
+    display: inline-block;
 }
 
-/* Estilo específico para la imagen del logo */
-nav .brand .brand-logo {
-    height: 30px;          /* Define la altura de tu logo (ajusta si es necesario) */
-    width: auto;           /* Mantiene la proporción de la imagen */
-    vertical-align: middle; /* Alinea verticalmente con el texto */
+/* Contenedor del texto */
+nav .brand {
+    display: flex; 
+    align-items: center;
+    transition: transform 0.3s ease;
+}
+
+/* Efecto de hover en el texto */
+nav .brand-link:hover .brand {
+    transform: scale(1.05); /* Aumentamos un poco el efecto */
+}
+
+/* Estilo para el texto "Zomedica" */
+nav .brand span {
+    font-size: 1.8rem; /* Hacemos el texto aún más grande para que sea el foco principal */
+    font-weight: 800;  /* Más grueso para mayor impacto */
+    color: var(--white);
 }
 
 /* --- ESTILOS PARA LA LISTA DE REQUISITOS EN LA VISTA DE VACANTE --- */
@@ -1127,4 +1080,77 @@ nav .brand .brand-logo {
 .notificacion.leida .notificacion-icon {
     color: var(--medium-grey);
     opacity: 0.7;
+}
+
+/* === ESTILOS MODERNOS PARA FORMULARIOS DE AUTENTICACIÓN === */
+
+/* Contenedor principal para los formularios */
+.auth-container {
+    max-width: 450px; /* Hacemos el contenedor más estrecho y centrado */
+    margin: 50px auto;
+    padding: 40px;
+    text-align: center;
+    border-top: 5px solid var(--primary-blue); /* Detalle de color superior */
+}
+
+.auth-container h2 {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+}
+
+.auth-subtitle {
+    color: var(--medium-grey);
+    margin-bottom: 30px;
+}
+
+/* Ocultamos las etiquetas <label> porque usamos placeholders */
+.auth-container form label {
+    display: none;
+}
+
+/* Grupo de formulario (para el icono y el input) */
+.form-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.form-group i {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--medium-grey);
+}
+
+.auth-container form input,
+.auth-container form select {
+    padding-left: 45px; /* Hacemos espacio para el icono */
+    width: 100%;
+    height: 50px;
+    background-color: var(--light-bg); /* Un fondo sutil para los campos */
+    border: 1px solid var(--border-light);
+}
+
+/* Botón de acción principal */
+.auth-container form button {
+    width: 100%; /* El botón ocupa todo el ancho */
+    padding: 15px;
+    font-size: 1.1rem;
+    margin-top: 10px;
+}
+
+/* Pie de formulario con enlaces */
+.form-footer {
+    margin-top: 25px;
+    font-size: 0.95rem;
+}
+
+.form-footer p {
+    margin: 8px 0;
+}
+
+.form-footer a {
+    font-weight: 600;
+    color: var(--primary-blue);
+    text-decoration: underline;
 }
