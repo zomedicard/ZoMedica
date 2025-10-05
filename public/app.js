@@ -160,7 +160,6 @@ function mostrarProfesionales(postulacionIdParaResaltar = null) { // ✨ Acepta 
 }
 
 // BORRA TU FUNCIÓN ANTERIOR Y PEGA ESTA EN SU LUGAR
-
 async function mostrarInstituciones() {
     // 1. Verificación de seguridad (esto se mantiene igual)
     if (!token || userTipo !== 'institucion') {
@@ -197,13 +196,23 @@ async function mostrarInstituciones() {
             vacantes.forEach(v => {
                 const vacanteDiv = document.createElement('div');
                 vacanteDiv.className = 'vacante';
+                // --- INICIO DE LA MODIFICACIÓN ---
                 vacanteDiv.innerHTML = `
-                    <a href="#" onclick="mostrarPipelinePorVacante(${v.id}, '${v.titulo}')" class="vacante-link">
-                        <h4>${v.titulo}</h4>
-                        <p>${v.descripcion.substring(0, 80)}...</p>
-                    </a>
-                    <button class="delete" onclick="eliminarVacante(${v.id})"><i class="fas fa-trash-alt"></i></button>
+                    <div class="vacante-header">
+                         <a href="#" onclick="mostrarPipelinePorVacante(${v.id}, '${v.titulo}')" class="vacante-link">
+                            <h4>${v.titulo}</h4>
+                         </a>
+                         <div class="vacante-acciones">
+                            <button class="icon-button" onclick="mostrarFormularioEditarVacante(${v.id})" title="Editar Vacante"><i class="fas fa-edit"></i></button>
+                            <button class="icon-button delete" onclick="eliminarVacante(${v.id})" title="Eliminar Vacante"><i class="fas fa-trash-alt"></i></button>
+                         </div>
+                    </div>
+                    <p>${v.descripcion.substring(0, 80)}...</p>
+                    <div class="vacante-stats">
+                        <span><i class="fas fa-eye"></i> Vistas: ${v.vistas}</span>
+                    </div>
                 `;
+                // --- FIN DE LA MODIFICACIÓN ---
                 misVacantesDiv.appendChild(vacanteDiv);
             });
         }
@@ -284,57 +293,53 @@ function mostrarNotificaciones() {
 
 async function cargarNotificaciones() {
     const listaNotificaciones = document.getElementById('listaNotificaciones');
-    if (!listaNotificaciones) return; // Si no encuentra el div, no hace nada.
+    const marcarTodasBtn = document.getElementById('marcarTodasLeidasBtn');
+    if (!listaNotificaciones || !marcarTodasBtn) return;
 
     listaNotificaciones.innerHTML = 'Cargando notificaciones...';
+    marcarTodasBtn.style.display = 'none'; // Ocultar el botón mientras carga
 
     try {
         const response = await fetch('http://localhost:3000/notificaciones', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-
-        if (!response.ok) {
-            throw new Error('La respuesta del servidor no fue exitosa.');
-        }
-
         const notificaciones = await response.json();
 
-        // --- INICIO: Lógica para el contador que hicimos antes ---
-        const notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
-        const notifCountSpan = document.getElementById('notification-count');
-        if (notifCountSpan) {
-            if (notificacionesNoLeidas > 0) {
-                notifCountSpan.textContent = notificacionesNoLeidas;
-                notifCountSpan.style.display = 'flex';
-            } else {
-                notifCountSpan.style.display = 'none';
-            }
-        }
-        // --- FIN: Lógica para el contador ---
-
-        listaNotificaciones.innerHTML = ''; // Limpiamos el mensaje "Cargando..."
+        // Actualizar contador global de la barra de navegación
+        actualizarContadorNotificaciones();
+        
+        listaNotificaciones.innerHTML = '';
 
         if (notificaciones.length === 0) {
             listaNotificaciones.innerHTML = '<p>No tienes notificaciones en este momento.</p>';
             return;
         }
 
+        const hayNoLeidas = notificaciones.some(n => !n.leida);
+        marcarTodasBtn.style.display = hayNoLeidas ? 'inline-block' : 'none';
+
         notificaciones.forEach(n => {
             const notificacionDiv = document.createElement('div');
-
-            // Asigna la clase correcta si está leída o no
             notificacionDiv.className = n.leida ? 'notificacion leida' : 'notificacion';
-
-            // Asigna la función de clic para marcar como leída
             notificacionDiv.setAttribute('onclick', `abrirNotificacion(${n.id}, this, '${n.url}')`);
 
-            // Crea el contenido HTML de la notificación
-            notificacionDiv.innerHTML = `
-                <p>${n.mensaje}</p>
-                <small>${new Date(n.fecha).toLocaleString()}</small>
-            `;
+            let iconClass = 'fa-bell'; // Icono por defecto
+            if (n.mensaje.includes('se postuló')) {
+                iconClass = 'fa-user-plus';
+            } else if (n.mensaje.includes('actualizó')) {
+                iconClass = 'fa-info-circle';
+            }
 
-            // Añade la notificación a la lista en la página
+            notificacionDiv.innerHTML = `
+                <div class="notificacion-icon">
+                    <i class="fas ${iconClass}"></i>
+                </div>
+                <div class="notificacion-contenido">
+                    <p>${n.mensaje}</p>
+                    <small>${new Date(n.fecha).toLocaleString()}</small>
+                </div>
+                ${!n.leida ? '<div class="unread-dot"></div>' : ''}
+            `;
             listaNotificaciones.appendChild(notificacionDiv);
         });
 
@@ -758,63 +763,71 @@ function calcularMatchScore(habilidadesProfesional, keywordsVacante) {
     return Math.round(score);
 }
 
+// REEMPLAZA ESTA FUNCIÓN COMPLETA EN app.js
+// REEMPLAZA ESTA FUNCIÓN COMPLETA EN app.js
 async function mostrarVacanteDetalles(vacanteId) {
     mostrarSeccion('vacanteDetalles');
     const vacanteInfoDiv = document.getElementById('vacanteInfo');
     vacanteInfoDiv.innerHTML = 'Cargando detalles de la vacante...';
 
     try {
-        const response = await fetch(`http://localhost:3000/vacantes/${vacanteId}`);
+        const fetchOptions = {};
+        if (token) {
+            fetchOptions.headers = { 'Authorization': `Bearer ${token}` };
+        }
+        const response = await fetch(`http://localhost:3000/vacantes/${vacanteId}`, fetchOptions);
         const vacante = await response.json();
+
         if (vacante.error) {
             vacanteInfoDiv.innerHTML = `<p>${vacante.error}</p>`;
             return;
         }
 
-        let matchScoreHTML = '';
-        if (token && userTipo === 'profesional') {
-            try {
-                const perfilRes = await fetch('http://localhost:3000/perfil', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const perfil = await perfilRes.json();
-                let habilidadesDelPerfil = [];
-                if (perfil.habilidades) {
-                    habilidadesDelPerfil = Array.isArray(perfil.habilidades) ? perfil.habilidades : perfil.habilidades.split(',').map(h => h.trim());
-                }
-                const score = calcularMatchScore(habilidadesDelPerfil, vacante.keywords || []);
-                matchScoreHTML = `
-                    <div class="match-score">
-                        <strong>Compatibilidad:</strong>
-                        <div class="score-percentage">${score}%</div>
-                    </div>
-                `;
-            } catch (error) {
-                console.error("Error al calcular el match score:", error);
-            }
+        // Creamos la sección de requisitos primero
+        let requisitosHTML = '<div class="perfil-seccion"><h3>Requisitos del Perfil</h3>';
+        if (vacante.requisitos_obligatorios && vacante.requisitos_obligatorios.length > 0) {
+            requisitosHTML += '<h4>✅ Requisitos Indispensables (Obligatorios)</h4><ul class="lista-requisitos">';
+            vacante.requisitos_obligatorios.forEach(req => {
+                requisitosHTML += `<li>${req}</li>`;
+            });
+            requisitosHTML += '</ul>';
         }
+        if (vacante.requisitos_deseables && vacante.requisitos_deseables.length > 0) {
+            requisitosHTML += '<h4 style="margin-top: 15px;">➕ Requisitos Deseables (Opcionales)</h4><ul class="lista-requisitos">';
+            vacante.requisitos_deseables.forEach(req => {
+                requisitosHTML += `<li>${req}</li>`;
+            });
+            requisitosHTML += '</ul>';
+        }
+        requisitosHTML += '</div>';
 
-        const keywordsHTML = (vacante.keywords || []).map(kw => `<span class="keyword-tag">${kw}</span>`).join('');
         const logoUrl = vacante.institucion.logoPath ? `http://localhost:3000/${vacante.institucion.logoPath}` : 'uploads/default-avatar.png';
         const institucionLink = vacante.institucion.id ? `onclick="mostrarPerfilPublicoInstitucion(${vacante.institucion.id})"` : 'style="cursor: default; text-decoration: none;"';
 
+        // Construimos el HTML final en el nuevo orden
         vacanteInfoDiv.innerHTML = `
             <div class="vacante-detalles-container">
-                ${matchScoreHTML}
                 <h2>${vacante.titulo}</h2>
                 <div class="institucion-info">
                     <img src="${logoUrl}" alt="Logo de ${vacante.institucion.nombre}" class="logo-institucion-vacante">
                     <p><strong>Institución:</strong> <a href="#" ${institucionLink}>${vacante.institucion.nombre}</a></p>
                 </div>
+
+                <button onclick="postularse(${vacante.id})" class="button postular-button" style="width:100%; margin: 20px 0;">Postularse a esta vacante</button>
+
                 <div class="detalles-grid">
-                    ${vacante.ubicacion ? `<div><strong><i class="icon-location"></i> Ubicación:</strong><p>${vacante.ubicacion}</p></div>` : ''}
-                    ${vacante.tipoContrato ? `<div><strong><i class="icon-file-text"></i> Contrato:</strong><p>${vacante.tipoContrato}</p></div>` : ''}
-                    ${vacante.salario ? `<div><strong><i class="icon-dollar-sign"></i> Salario:</strong><p>${vacante.salario}</p></div>` : ''}
+                    ${vacante.ubicacion ? `<div><strong><i class="fas fa-map-marker-alt"></i> Ubicación:</strong><p>${vacante.ubicacion}</p></div>` : ''}
+                    ${vacante.tipoContrato ? `<div><strong><i class="fas fa-file-contract"></i> Contrato:</strong><p>${vacante.tipoContrato}</p></div>` : ''}
+                    <div><strong><i class="fas fa-users"></i> Postulaciones:</strong><p>${vacante.totalPostulaciones}</p></div>
+                    <div><strong><i class="fas fa-eye"></i> Vistas:</strong><p>${vacante.vistas}</p></div>
                 </div>
-                <p><strong>Descripción:</strong></p>
-                <div class="descripcion-vacante">${vacante.descripcion}</div>
-                <p><strong>Palabras clave:</strong> ${keywordsHTML}</p>
-                <button onclick="postularse(${vacante.id})" class="postular-button">Postularse a esta vacante</button>
+
+                ${requisitosHTML}
+
+                <div class="perfil-seccion">
+                    <h3>Descripción del Puesto</h3>
+                    <div class="descripcion-vacante">${vacante.descripcion}</div>
+                </div>
             </div>
         `;
     } catch (error) {
@@ -951,10 +964,11 @@ async function handleRegister(e) {
     }
 }
 
-// Función para manejar los parámetros de la URL al cargar la página
+// REEMPLAZA TU FUNCIÓN handleUrlParams CON ESTA
 function handleUrlParams() {
     const params = new URLSearchParams(window.location.search);
     const verified = params.get('verified');
+    const resetToken = params.get('resetToken'); // <-- LÍNEA NUEVA
 
     if (verified === 'true') {
         mostrarMensajeGlobal('¡Tu correo ha sido verificado con éxito! Ya puedes iniciar sesión.', 'success');
@@ -965,16 +979,16 @@ function handleUrlParams() {
     } else if (verified === 'error') {
         mostrarMensajeGlobal('Ocurrió un error durante la verificación. Inténtalo de nuevo.', 'error');
         mostrarLogin();
+    } else if (resetToken) { // <-- LÓGICA NUEVA
+        mostrarFormularioReset(resetToken);
     }
 
-    // Limpia la URL para que el mensaje no reaparezca si el usuario refresca la página
-    if (verified) {
+    // Limpia la URL
+    if (verified || resetToken) {
         history.replaceState(null, '', window.location.pathname);
     }
 }
 
-// NOTA: Si no tienes la función `mostrarMensajeGlobal` en app.js, 
-// puedes añadirla como una utilidad simple:
 function mostrarMensajeGlobal(mensaje, tipo = 'info') {
     const globalMessage = document.getElementById('globalMessage');
     globalMessage.textContent = mensaje;
@@ -995,15 +1009,100 @@ function cerrarSesion() {
     mostrarInicio();
     actualizarNav();
 }
-
 // =================================================================
 // SECCIÓN: LÓGICA DE POSTULACIONES (PROFESIONAL)
 // =================================================================
+
 async function postularse(vacanteId) {
     if (userTipo !== 'profesional') {
         return mostrarMensajeGlobal('Debes iniciar sesión como profesional para postularte.', 'error');
     }
-    const postularButton = document.querySelector(`#vacanteInfo button[onclick="postularse(${vacanteId})"]`);
+
+    try {
+        // 1. Obtiene los requisitos obligatorios de la vacante
+        const vacanteRes = await fetch(`http://localhost:3000/vacantes/${vacanteId}`);
+        const vacante = await vacanteRes.json();
+        const requisitosObligatorios = (vacante.requisitos_obligatorios || []).map(r => r.trim().toLowerCase());
+
+        // 2. Obtiene el perfil COMPLETO del profesional
+        const perfilRes = await fetch('http://localhost:3000/perfil', { headers: { 'Authorization': `Bearer ${token}` } });
+        const perfil = await perfilRes.json();
+
+        // 3. Construimos el "super-texto" uniendo toda la información del perfil.
+        let textoCompletoDelPerfil = '';
+        textoCompletoDelPerfil += (perfil.especialidad || '') + ' ';
+        textoCompletoDelPerfil += (perfil.bio || '') + ' ';
+        textoCompletoDelPerfil += (perfil.habilidades || []).join(' ') + ' ';
+        (perfil.experiencias || []).forEach(exp => {
+            textoCompletoDelPerfil += (exp.puesto || '') + ' ' + (exp.descripcion || '') + ' ';
+        });
+        (perfil.educacion || []).forEach(edu => {
+            textoCompletoDelPerfil += (edu.titulo || '') + ' ';
+        });
+        (perfil.certificaciones || []).forEach(cert => {
+            textoCompletoDelPerfil += (cert.nombre || '') + ' ';
+        });
+        
+        textoCompletoDelPerfil = textoCompletoDelPerfil.toLowerCase();
+        
+        // 4. Comparamos cada requisito con el texto completo del perfil.
+        const requisitosFaltantes = [];
+        requisitosObligatorios.forEach(req => {
+            if (!textoCompletoDelPerfil.includes(req)) {
+                requisitosFaltantes.push(req);
+            }
+        });
+
+        // 5. La lógica de decisión
+        if (requisitosFaltantes.length > 0) {
+            mostrarModalCompatibilidad(requisitosFaltantes, vacanteId);
+        } else {
+            procederConPostulacion(vacanteId);
+        }
+
+    } catch (error) {
+        console.error("Error al verificar compatibilidad:", error);
+        mostrarMensajeGlobal('No se pudo verificar la compatibilidad. Inténtalo de nuevo.', 'error');
+    }
+}
+
+function mostrarModalCompatibilidad(skillsFaltantes, vacanteId) {
+    const modal = document.getElementById('compatibilityModal');
+    const skillsList = document.getElementById('missingSkillsList');
+    const btnContinue = document.getElementById('btnContinueApply');
+    const btnImprove = document.getElementById('btnImproveProfile');
+    
+    modal.querySelector('h2').textContent = "Requisitos Indispensables Faltantes";
+    modal.querySelector('p').textContent = "Hemos detectado que tu perfil no cumple con todos los requisitos obligatorios para esta vacante. Te recomendamos actualizar tu perfil antes de continuar.";
+    modal.querySelector('h4').textContent = "Requisitos Indispensables que Faltan en tu Perfil:";
+
+    skillsList.innerHTML = '';
+    skillsFaltantes.forEach(skill => {
+        const li = document.createElement('li');
+        li.textContent = skill.charAt(0).toUpperCase() + skill.slice(1);
+        skillsList.appendChild(li);
+    });
+
+    btnContinue.onclick = () => {
+        ocultarModalCompatibilidad();
+        procederConPostulacion(vacanteId);
+    };
+    btnImprove.onclick = () => {
+        ocultarModalCompatibilidad();
+        mostrarFormularioEditarPerfil();
+    };
+
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('visible'), 10);
+}
+
+function ocultarModalCompatibilidad() {
+    const modal = document.getElementById('compatibilityModal');
+    modal.classList.remove('visible');
+    setTimeout(() => modal.style.display = 'none', 300);
+}
+
+function procederConPostulacion(vacanteId) {
     const cvInput = document.createElement('input');
     cvInput.type = 'file';
     cvInput.accept = '.pdf';
@@ -1018,6 +1117,7 @@ async function postularse(vacanteId) {
         const formData = new FormData();
         formData.append('cv', file);
 
+        const postularButton = document.querySelector(`.postular-button`);
         try {
             postularButton.disabled = true;
             postularButton.textContent = 'Enviando...';
@@ -1048,11 +1148,6 @@ async function postularse(vacanteId) {
     cvInput.click();
 }
 
-// =================================================================
-// SECCIÓN: LÓGICA DE POSTULACIONES (PROFESIONAL)
-// =================================================================
-// ... (código anterior de postularse y eliminarPostulacion se mantiene igual)
-
 async function cargarPostulacionesProfesional(postulacionIdParaResaltar = null) {
     const listaPostulaciones = document.getElementById('listaPostulaciones');
     if (!listaPostulaciones) return;
@@ -1076,37 +1171,37 @@ async function cargarPostulacionesProfesional(postulacionIdParaResaltar = null) 
             postulaciones.forEach(postulacion => {
                 const pDiv = document.createElement('div');
                 pDiv.className = 'postulacion-card';
-                pDiv.id = `postulacion-${postulacion.id}`; // ✨ AÑADIMOS UN ID ÚNICO A CADA TARJETA
+                pDiv.id = `postulacion-${postulacion.id}`;
 
                 const estadoClase = postulacion.estado.toLowerCase().trim().replace(/\s+/g, '-');
 
-                pDiv.innerHTML = `
-                    <div class="postulacion-info">
-                        <h4><i class="fas fa-briefcase"></i> ${postulacion.vacante_titulo}</h4>
-                        <p><i class="fas fa-building"></i> <strong>Institución:</strong> ${postulacion.vacante_institucion}</p>
-                        <p><i class="fas fa-calendar-alt"></i> <strong>Fecha de postulación:</strong> ${new Date(postulacion.fecha).toLocaleDateString()}</p>
-                    </div>
-                    
-                    <div class="postulacion-acciones">
-                        <span class="postulacion-estado estado-${estadoClase}">${postulacion.estado}</span>
-                        <button class="delete" onclick="eliminarPostulacion(${postulacion.id})">
-                            <i class="fas fa-trash-alt"></i> Eliminar
-                        </button>
-                    </div>
-                `;
+                // DENTRO DE la función cargarPostulacionesProfesional, REEMPLAZA ESTE BLOQUE
+
+pDiv.innerHTML = `
+    <a href="#" onclick="mostrarVacanteDetalles(${postulacion.vacante_id})" class="postulacion-link">
+        <div class="postulacion-info">
+            <h4><i class="fas fa-briefcase"></i> ${postulacion.vacante_titulo}</h4>
+            <p><i class="fas fa-building"></i> <strong>Institución:</strong> ${postulacion.vacante_institucion}</p>
+            <p><i class="fas fa-calendar-alt"></i> <strong>Fecha de postulación:</strong> ${new Date(postulacion.fecha).toLocaleDateString()}</p>
+        </div>
+    </a>
+    <div class="postulacion-acciones">
+        <span class="postulacion-estado estado-${estadoClase}">${postulacion.estado}</span>
+        <button class="delete" onclick="eliminarPostulacion(${postulacion.id})">
+            <i class="fas fa-trash-alt"></i> Eliminar
+        </button>
+    </div>
+`;
                 listaPostulaciones.appendChild(pDiv);
             });
 
-            // --- ✨ LÓGICA PARA RESALTAR Y ENFOCAR LA TARJETA ---
             if (postulacionIdParaResaltar) {
                 const targetCard = document.getElementById(`postulacion-${postulacionIdParaResaltar}`);
                 if (targetCard) {
-                    // Usamos un pequeño retraso para asegurar que el navegador haya dibujado todo
                     setTimeout(() => {
                         targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         targetCard.style.transition = 'background-color 0.5s ease';
-                        targetCard.style.backgroundColor = '#e3f2fd'; // Un color de resaltado azul claro
-                        // Quitar el resaltado después de unos segundos
+                        targetCard.style.backgroundColor = '#e3f2fd';
                         setTimeout(() => {
                             targetCard.style.backgroundColor = '';
                         }, 2500);
@@ -1140,16 +1235,21 @@ async function eliminarPostulacion(id) {
     }
 }
 
+
 // =================================================================
 // SECCIÓN: LÓGICA DEL PANEL DE INSTITUCIÓN
 // =================================================================
+// REEMPLAZA ESTA SECCIÓN COMPLETA EN app.js
 if (document.getElementById('formVacante')) {
     document.getElementById('formVacante').addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        // Leemos los datos del formulario, incluyendo los nuevos campos de requisitos
         const titulo = document.getElementById('vacanteTitulo').value;
         const institucion = document.getElementById('vacanteInstitucion').value;
         const descripcion = document.getElementById('vacanteDescripcion').value;
-        const keywords = document.getElementById('vacanteKeywords').value.split(',').map(k => k.trim());
+        const requisitos_obligatorios = document.getElementById('vacanteRequisitosObligatorios').value; // <-- CAMBIO
+        const requisitos_deseables = document.getElementById('vacanteRequisitosDeseables').value;   // <-- CAMBIO
         const ubicacion = document.getElementById('vacanteUbicacion').value;
         const tipoContrato = document.getElementById('vacanteTipoContrato').value;
         const salario = document.getElementById('vacanteSalario').value;
@@ -1158,7 +1258,17 @@ if (document.getElementById('formVacante')) {
             const response = await fetch('http://localhost:3000/vacantes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ titulo, institucion, descripcion, keywords, ubicacion, tipoContrato, salario })
+                // Nos aseguramos de enviar los nuevos campos al backend
+                body: JSON.stringify({ 
+                    titulo, 
+                    institucion, 
+                    descripcion, 
+                    requisitos_obligatorios, // <-- CAMBIO
+                    requisitos_deseables,    // <-- CAMBIO
+                    ubicacion, 
+                    tipoContrato, 
+                    salario 
+                })
             });
             const data = await response.json();
             if (data.error) {
@@ -1308,6 +1418,79 @@ async function verPerfilPostulante(postulacionId) {
         }
 
         const perfil = await res.json();
+// AÑADE ESTAS DOS NUEVAS FUNCIONES AL FINAL DE LA SECCIÓN "LÓGICA DEL PANEL DE INSTITUCIÓN"
+
+async function mostrarFormularioEditarVacante(vacanteId) {
+    mostrarSeccion('formularioEditarVacante');
+    popularDropdownProvincias('vacanteUbicacionEditar'); // Rellenamos el selector de ubicación
+
+    try {
+        // 1. Pedimos los datos actuales de la vacante al servidor
+        const response = await fetch(`http://localhost:3000/vacantes/${vacanteId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const vacante = await response.json();
+
+        if (vacante.error) {
+            alert(vacante.error);
+            return mostrarInstituciones();
+        }
+
+        // 2. Rellenamos el formulario con los datos obtenidos
+        document.getElementById('editarVacanteId').value = vacante.id;
+        document.getElementById('vacanteTituloEditar').value = vacante.titulo;
+        document.getElementById('vacanteInstitucionEditar').value = vacante.institucion;
+        document.getElementById('vacanteUbicacionEditar').value = vacante.ubicacion;
+        document.getElementById('vacanteTipoContratoEditar').value = vacante.tipoContrato;
+        document.getElementById('vacanteSalarioEditar').value = vacante.salario;
+        document.getElementById('vacanteDescripcionEditar').value = vacante.descripcion;
+        document.getElementById('vacanteRequisitosObligatoriosEditar').value = vacante.requisitos_obligatorios.join(', ');
+        document.getElementById('vacanteRequisitosDeseablesEditar').value = vacante.requisitos_deseables.join(', ');
+
+    } catch (error) {
+        console.error('Error al cargar datos para editar:', error);
+        alert('No se pudieron cargar los datos de la vacante.');
+    }
+}
+
+// Event listener para el formulario de edición
+document.getElementById('formEditarVacante').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const vacanteId = document.getElementById('editarVacanteId').value;
+    
+    // Recolectamos los datos del formulario
+    const datosActualizados = {
+        titulo: document.getElementById('vacanteTituloEditar').value,
+        institucion: document.getElementById('vacanteInstitucionEditar').value,
+        ubicacion: document.getElementById('vacanteUbicacionEditar').value,
+        tipoContrato: document.getElementById('vacanteTipoContratoEditar').value,
+        salario: document.getElementById('vacanteSalarioEditar').value,
+        descripcion: document.getElementById('vacanteDescripcionEditar').value,
+        requisitos_obligatorios: document.getElementById('vacanteRequisitosObligatoriosEditar').value,
+        requisitos_deseables: document.getElementById('vacanteRequisitosDeseablesEditar').value,
+    };
+
+    try {
+        const response = await fetch(`http://localhost:3000/vacantes/${vacanteId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(datosActualizados)
+        });
+
+        const data = await response.json();
+        
+        if (data.error) {
+            alert(`Error: ${data.error}`);
+        } else {
+            alert(data.message);
+            mostrarInstituciones(); // Volvemos al panel principal
+        }
+    } catch (error) {
+        console.error('Error al actualizar la vacante:', error);
+        alert('Ocurrió un error al guardar los cambios.');
+    }
+});
 
         // ==========================================================
         // PUNTO DE CONTROL 1: VERIFICAR LOS DATOS RECIBIDOS
@@ -1441,7 +1624,7 @@ async function cargarDatosPerfilProfesional() {
     }
 }
 
-      // Dentro de app.js
+// REEMPLAZA TU FUNCIÓN cargarPerfilProfesional EN app.js CON ESTA VERSIÓN
 
 async function cargarPerfilProfesional() {
     try {
@@ -1449,19 +1632,25 @@ async function cargarPerfilProfesional() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        
+
         const perfil = await res.json();
         const perfilContainer = document.getElementById('infoProfesional');
         const imagenSrc = perfil.fotoPath ? `http://localhost:3000/${perfil.fotoPath}` : 'uploads/default-avatar.png';
 
-        // --- INICIO DE LA NUEVA ESTRUCTURA HTML ---
         let perfilHTML = `
             <div class="perfil-header">
                 <img src="${imagenSrc}" alt="Foto de Perfil" id="imagenPerfil" class="perfil-foto">
                 <h3>${perfil.nombre}</h3>
                 <p class="perfil-titulo-puesto">${perfil.especialidad || 'Especialidad no especificada'}</p>
             </div>
-            
+
+            <div class="perfil-seccion stats-bar" style="margin-top: 20px; border-top: none;">
+                <div class="stat-card">
+                    <h4>Postulaciones Realizadas</h4>
+                    <p>${perfil.totalPostulaciones}</p>
+                    <i class="fas fa-file-alt card-icon"></i>
+                </div>
+            </div>
             <div class="perfil-seccion">
                 <h4>Información Personal y Contacto</h4>
                 <div class="info-personal-grid">
@@ -1473,41 +1662,36 @@ async function cargarPerfilProfesional() {
                 </div>
                 ${perfil.cvPath ? `<div class="cv-download-container" style="margin-top: 20px;"><a href="http://localhost:3000/${perfil.cvPath}" target="_blank" class="button">Descargar CV</a></div>` : ''}
             </div>
-            
+
             <div class="perfil-seccion">
                 <h4>Acerca de mí</h4>
                 <p>${perfil.bio || 'Aún no has agregado una biografía.'}</p>
             </div>`;
-        // --- FIN DE LA INFORMACIÓN PERSONAL ---
 
-        // Experiencia Profesional
         if (perfil.experiencias && perfil.experiencias.length > 0) {
             perfilHTML += `<div class="perfil-seccion"><h4>Experiencia Profesional</h4><ul class="lista-experiencia">`;
             perfil.experiencias.forEach(exp => {
-                perfilHTML += `<li><strong>${exp.puesto}</strong><br>${exp.institucion}<br>${exp.periodo}<p>${exp.descripcion}</p></li>`;
+                perfilHTML += `<li><strong>${exp.puesto}</strong> en ${exp.institucion} (${exp.periodo})<p>${exp.descripcion}</p></li>`;
             });
             perfilHTML += `</ul></div>`;
         }
 
-        // Educación
         if (perfil.educacion && perfil.educacion.length > 0) {
             perfilHTML += `<div class="perfil-seccion"><h4>Educación</h4><ul class="lista-educacion">`;
             perfil.educacion.forEach(edu => {
-                perfilHTML += `<li><strong>${edu.titulo}</strong><br>${edu.institucion}<br>${edu.periodo}</li>`;
+                perfilHTML += `<li><strong>${edu.titulo}</strong> en ${edu.institucion} (${edu.periodo})</li>`;
             });
             perfilHTML += `</ul></div>`;
         }
 
-        // Certificaciones
         if (perfil.certificaciones && perfil.certificaciones.length > 0) {
-            perfilHTML += `<div class="perfil-seccion"><h4>Certificaciones y Diplomados</h4><ul class="lista-educacion">`; // Reutilizamos lista-educacion para estilo
+            perfilHTML += `<div class="perfil-seccion"><h4>Certificaciones y Diplomados</h4><ul class="lista-educacion">`;
             perfil.certificaciones.forEach(cert => {
                 perfilHTML += `<li><strong>${cert.nombre}</strong><br>${cert.institucion}<br>${cert.periodo}</li>`;
             });
             perfilHTML += `</ul></div>`;
         }
 
-        // Habilidades
         if (perfil.habilidades) {
             const habilidadesArray = Array.isArray(perfil.habilidades) ? perfil.habilidades : perfil.habilidades.split(',').map(h => h.trim());
             perfilHTML += `<div class="perfil-seccion"><h4>Habilidades y Herramientas</h4><div class="tags-container">`;
@@ -1516,10 +1700,9 @@ async function cargarPerfilProfesional() {
             });
             perfilHTML += `</div></div>`;
         }
-        
+
         perfilContainer.innerHTML = perfilHTML;
-        // La función termina como estaba
-        
+
     } catch (err) {
         console.error('Error al cargar perfil:', err);
         document.getElementById('infoProfesional').innerHTML = '<p>Error al cargar el perfil.</p>';
@@ -2019,3 +2202,108 @@ function activarDragAndDrop() {
         });
     });
 }
+
+// Función para manejar el clic en "Marcar todas como leídas"
+async function marcarTodasComoLeidas() {
+    try {
+        const response = await fetch('http://localhost:3000/notificaciones/marcar-todas-leidas', {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            throw new Error('El servidor no pudo completar la acción.');
+        }
+
+        // Si el servidor confirma, actualizamos la interfaz de usuario
+        document.querySelectorAll('#listaNotificaciones .notificacion').forEach(elem => {
+            elem.classList.add('leida');
+        });
+        document.querySelectorAll('.unread-dot').forEach(dot => dot.style.display = 'none');
+        document.getElementById('marcarTodasLeidasBtn').style.display = 'none';
+        
+        // Actualizamos el contador de la barra de navegación
+        const notifCountSpan = document.getElementById('notification-count');
+        if (notifCountSpan) {
+            notifCountSpan.style.display = 'none';
+            notifCountSpan.textContent = '0';
+        }
+
+    } catch (error) {
+        console.error('Error en marcarTodasComoLeidas:', error);
+        alert('No se pudieron marcar las notificaciones. Inténtalo de nuevo.');
+    }
+}
+
+// Asignamos el evento al botón
+document.getElementById('marcarTodasLeidasBtn').addEventListener('click', marcarTodasComoLeidas);
+
+// NAVEGACIÓN
+function mostrarFormularioRecuperar() {
+    mostrarSeccion('recuperarPassword');
+}
+
+function mostrarFormularioReset(token) {
+    mostrarSeccion('resetPassword');
+    document.getElementById('resetTokenInput').value = token;
+}
+
+// LÓGICA DE FORMULARIOS
+
+// Formulario para solicitar el enlace
+document.getElementById('formRecuperarPassword').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const correo = document.getElementById('correoRecuperar').value;
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    try {
+        const response = await fetch('http://localhost:3000/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ correo })
+        });
+        const data = await response.json();
+        // Siempre mostramos un mensaje de éxito para no revelar información
+        mostrarMensajeGlobal(data.message, 'success');
+        mostrarLogin();
+    } catch (error) {
+        mostrarMensajeGlobal('Ocurrió un error. Inténtalo de nuevo.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Enviar Enlace';
+    }
+});
+
+// Formulario para establecer la nueva contraseña
+document.getElementById('formResetPassword').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = document.getElementById('resetTokenInput').value;
+    const password = document.getElementById('passwordReset').value;
+    const passwordConfirm = document.getElementById('passwordResetConfirm').value;
+
+    if (password !== passwordConfirm) {
+        return mostrarMensajeGlobal('Las contraseñas no coinciden.', 'error');
+    }
+    if (password.length < 6) {
+         return mostrarMensajeGlobal('La contraseña debe tener al menos 6 caracteres.', 'error');
+    }
+
+    try {
+        const response = await fetch('http://localhost:3000/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, password })
+        });
+        const data = await response.json();
+        if (data.error) {
+            mostrarMensajeGlobal(data.error, 'error');
+        } else {
+            mostrarMensajeGlobal(data.message, 'success');
+            mostrarLogin();
+        }
+    } catch (error) {
+        mostrarMensajeGlobal('Ocurrió un error. Inténtalo de nuevo.', 'error');
+    }
+});

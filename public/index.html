@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediJobs - Plataforma de Empleo</title>
+    <title>ZoMedica - Plataforma de Empleo</title>
     <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="pipeline.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -11,7 +11,9 @@
 <body>
     <header>
         <nav>
-            <div class="brand">MediJobs</div>
+            <div class="brand">
+    <img src="/assets/zomedica-logo.png" alt="Zomedica Logo" class="brand-logo"> Zomedica
+</div>
 <div class="nav-links">
     <a href="#" onclick="mostrarInicio()" class="nav-icon" title="Inicio">
         <i class="fas fa-home"></i> </a>
@@ -52,7 +54,7 @@
     <div class="hero-section">
         <h1 class="hero-title">Tu Carrera en el Sector Salud Comienza Aquí</h1>
         <p class="hero-subtitle">
-            MediJobs es la plataforma exclusiva que conecta a los profesionales de la salud con las clínicas, hospitales y centros médicos más importantes del país.
+            ZoMedica es la plataforma exclusiva que conecta a los profesionales de la salud con las clínicas, hospitales y centros médicos más importantes del país.
         </p>
         <div class="cta-buttons">
     <a href="#" id="btnEncontrarEmpleo" onclick="manejarClicEncontrarEmpleo()" class="button">Encontrar mi próximo empleo</a>
@@ -110,8 +112,32 @@
                 <label for="passwordLogin">Contraseña:</label>
                 <input type="password" id="passwordLogin" required>
                 <button type="submit">Iniciar Sesión</button>
+                <p style="text-align: center; margin-top: 15px;"><a href="#" onclick="mostrarFormularioRecuperar()">¿Olvidaste tu contraseña?</a></p>
             </form>
         </section>
+
+<section id="recuperarPassword" class="container" style="display: none;">
+    <h2>Recuperar Contraseña</h2>
+    <p>Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.</p>
+    <form id="formRecuperarPassword">
+        <label for="correoRecuperar">Correo Electrónico:</label>
+        <input type="email" id="correoRecuperar" required>
+        <button type="submit">Enviar Enlace</button>
+        <button type="button" class="button-secondary" onclick="mostrarLogin()">Volver a Inicio de Sesión</button>
+    </form>
+</section>
+
+<section id="resetPassword" class="container" style="display: none;">
+    <h2>Crear Nueva Contraseña</h2>
+    <form id="formResetPassword">
+        <input type="hidden" id="resetTokenInput">
+        <label for="passwordReset">Nueva Contraseña:</label>
+        <input type="password" id="passwordReset" required>
+        <label for="passwordResetConfirm">Confirmar Nueva Contraseña:</label>
+        <input type="password" id="passwordResetConfirm" required>
+        <button type="submit">Guardar Contraseña</button>
+    </form>
+</section>
 
         <section id="vacantes" class="container" style="display: none;">
     <h2>Encuentra tu Próximo Empleo en el Sector Salud</h2>
@@ -350,17 +376,90 @@
         <label for="vacanteDescripcion">Descripción:</label>
         <textarea id="vacanteDescripcion" rows="5" required></textarea>
         
-        <label for="vacanteKeywords">Palabras Clave (separadas por coma):</label>
-        <input type="text" id="vacanteKeywords">
+     <label for="vacanteRequisitosObligatorios">Requisitos Indispensables (Obligatorios):</label>
+<p style="font-size: 0.8rem; color: #6c757d; margin-top: -10px;">Separe cada requisito con una coma (ej: Título en Medicina, Inglés Avanzado).</p>
+<textarea id="vacanteRequisitosObligatorios" rows="3" required></textarea>
+
+<label for="vacanteRequisitosDeseables">Requisitos Deseables (Opcionales):</label>
+<p style="font-size: 0.8rem; color: #6c757d; margin-top: -10px;">Separe cada requisito con una coma (ej: Manejo de Office, Liderazgo).</p>
+<textarea id="vacanteRequisitosDeseables" rows="3"></textarea>
         
         <button type="submit">Publicar Vacante</button>
     </form>
 </section>
 
+<section id="formularioEditarVacante" class="container" style="display: none;">
+    <h2>Editar Vacante Publicada</h2>
+    <form id="formEditarVacante">
+        <input type="hidden" id="editarVacanteId"> <label for="vacanteTituloEditar">Título de la Vacante:</label>
+        <input type="text" id="vacanteTituloEditar" required>
+
+        <label for="vacanteInstitucionEditar">Nombre de la Institución:</label>
+        <input type="text" id="vacanteInstitucionEditar" required>
+
+        <label for="vacanteUbicacionEditar">Ubicación:</label>
+        <select id="vacanteUbicacionEditar" required>
+            <option value="" disabled selected>Selecciona una provincia</option>
+        </select>
+
+        <label for="vacanteTipoContratoEditar">Tipo de Contrato:</label>
+        <select id="vacanteTipoContratoEditar">
+            <option value="">Seleccionar...</option>
+            <option value="Jornada Completa">Jornada Completa</option>
+            <option value="Media Jornada">Media Jornada</option>
+            <option value="Freelance">Freelance</option>
+            <option value="Temporal">Temporal</option>
+        </select>
+
+        <label for="vacanteSalarioEditar">Rango Salarial (Opcional):</label>
+        <input type="text" id="vacanteSalarioEditar" placeholder="Ej: RD$50,000 - RD$70,000">
+
+        <label for="vacanteDescripcionEditar">Descripción:</label>
+        <textarea id="vacanteDescripcionEditar" rows="5" required></textarea>
+        
+        <label for="vacanteRequisitosObligatoriosEditar">Requisitos Indispensables (Obligatorios):</label>
+        <p style="font-size: 0.8rem; color: #6c757d; margin-top: -10px;">Separe cada requisito con una coma.</p>
+        <textarea id="vacanteRequisitosObligatoriosEditar" rows="3" required></textarea>
+
+        <label for="vacanteRequisitosDeseablesEditar">Requisitos Deseables (Opcionales):</label>
+        <p style="font-size: 0.8rem; color: #6c757d; margin-top: -10px;">Separe cada requisito con una coma.</p>
+        <textarea id="vacanteRequisitosDeseablesEditar" rows="3"></textarea>
+        
+        <button type="submit">Guardar Cambios</button>
+        <button type="button" class="button-secondary" onclick="mostrarInstituciones()">Cancelar</button>
+    </form>
+</section>
+
 <section id="notificaciones" class="container">
-    <h2>Mis Notificaciones</h2>
+
+    <div class="notificaciones-header">
+        <h2>Mis Notificaciones</h2>
+        <button id="marcarTodasLeidasBtn" class="button-secondary" style="margin-top: 0; display: none;">
+            <i class="fas fa-check-double"></i> Marcar todas como leídas
+        </button>
+    </div>
+    
     <div id="listaNotificaciones"></div>
 </section>
+
+<div id="compatibilityModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <span class="modal-close" onclick="ocultarModalCompatibilidad()">&times;</span>
+        <h2>¡Un Momento! Revisa tu Compatibilidad</h2>
+        <p>Hemos notado que tu perfil podría no cumplir con todos los requisitos clave de esta vacante. Esto podría afectar tus posibilidades de ser seleccionado.</p>
+
+        <div class="missing-skills-container">
+            <h4>Requisitos Indispensables que Faltan en tu Perfil:</h4>
+            <ul id="missingSkillsList">
+                </ul>
+        </div>
+
+        <div class="modal-actions">
+            <button id="btnImproveProfile" class="button-secondary">Mejorar mi Perfil</button>
+            <button id="btnContinueApply" class="button">Postularme de Todas Formas</button>
+        </div>
+    </div>
+</div>
     </main>
 
     <script src="app.js"></script>
