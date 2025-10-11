@@ -1,4 +1,11 @@
 // =================================================================
+// # --- CONFIGURACIÓN GLOBAL ---
+// =================================================================
+
+const API_BASE_URL = 'https://zomedica.onrender.com';
+const WS_BASE_URL = 'wss://zomedica.onrender.com';
+
+// =================================================================
 // # --- ESTADO GLOBAL E INICIALIZACIÓN ---
 // =================================================================
 
@@ -363,7 +370,7 @@ if (document.getElementById('formLogin')) {
         errorLogin.textContent = '';
 
         try {
-            const response = await fetch('https://zomedica.onrender.com/login', {
+            const response = await fetch(`${API_BASE_URL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ correo, password })
@@ -2512,7 +2519,7 @@ function iniciarConexionWebSocket() {
     if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
         socket.close();
     }
-    socket = new WebSocket(`ws://localhost:3000?token=${token}`);
+    socket = new WebSocket(`wss://zomedica.onrender.com?token=${token}`);
 
     socket.onopen = () => {
         console.log('Conexión WebSocket establecida.');
