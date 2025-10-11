@@ -1,0 +1,8 @@
+# Dependencias que se instalan en el servidor
+node_modules/
+
+# Archivo de la base de datos (se borrará en el servidor, lo solucionaremos luego)
+database.sqlite
+
+# Archivo con tus claves secretas
+.env
