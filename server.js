@@ -439,6 +439,52 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// AÑADE ESTA NUEVA RUTA EN TU SECCIÓN DE AUTENTICACIÓN
+app.post('/resend-verification', async (req, res) => {
+    const { correo } = req.body;
+    if (!correo) {
+        return res.status(400).json({ error: 'Correo no proporcionado.' });
+    }
+
+    try {
+        const user = await db.get('SELECT * FROM usuarios WHERE correo = ?', [correo]);
+
+        // Si el usuario existe y no está verificado
+        if (user && user.verificado === 0) {
+            // Reutiliza el token existente o crea uno nuevo si no existe
+            const tokenVerificacion = user.token_verificacion || crypto.randomBytes(32).toString('hex');
+
+            // Si el token era nulo, lo actualizamos en la BD
+            if (!user.token_verificacion) {
+                await db.run('UPDATE usuarios SET token_verificacion = ? WHERE id = ?', [tokenVerificacion, user.id]);
+            }
+
+            const linkVerificacion = `http://localhost:3000/verify-email/${tokenVerificacion}`;
+            const mailOptions = {
+                from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
+                to: correo,
+                subject: 'Verifica tu cuenta en ZoMedica (Reenvío)',
+                html: `
+                    <p>Haz clic en el siguiente botón para verificar tu correo electrónico.</p>
+                    <a href="${linkVerificacion}" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px;">
+                        Verificar mi Cuenta
+                    </a>
+                `
+            };
+
+            await transporter.sendMail(mailOptions);
+            console.log(`Correo de verificación REENVIADO a ${correo}`);
+        }
+
+        // Siempre enviamos una respuesta genérica por seguridad
+        res.json({ message: 'Si tu correo está registrado y no verificado, se ha enviado un nuevo enlace de verificación.' });
+
+    } catch (err) {
+        console.error('Error al reenviar correo de verificación:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
 // RUTA 1: PARA SOLICITAR EL CORREO DE RECUPERACIÓN
 app.post('/forgot-password', async (req, res) => {
     const { correo } = req.body;
