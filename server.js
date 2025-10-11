@@ -339,7 +339,7 @@ app.post('/register', async (req, res) => {
         );
 
         // --- INICIO: LÓGICA DE ENVÍO DE CORREO REAL ---
-        const linkVerificacion = `http://localhost:3000/verify-email/${tokenVerificacion}`; 
+        const linkVerificacion = `${process.env.FRONTEND_URL}/verify-email/${tokenVerificacion}`; 
         
         const mailOptions = {
             from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
@@ -381,7 +381,7 @@ app.post('/register', async (req, res) => {
 
 app.get('/verify-email/:token', async (req, res) => {
     // La URL de tu frontend. Asegúrate de que el puerto (5500) sea correcto.
-    const frontendUrl = 'http://127.0.0.1:5501/index.html';
+    const frontendUrl = `${process.env.FRONTEND_URL}/index.html`;
 
     try {
         const token = req.params.token;
@@ -459,7 +459,7 @@ app.post('/resend-verification', async (req, res) => {
                 await db.run('UPDATE usuarios SET token_verificacion = ? WHERE id = ?', [tokenVerificacion, user.id]);
             }
 
-            const linkVerificacion = `http://localhost:3000/verify-email/${tokenVerificacion}`;
+            const linkVerificacion = `${process.env.FRONTEND_URL}/verify-email/${tokenVerificacion}`;
             const mailOptions = {
                 from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
                 to: correo,
@@ -497,7 +497,7 @@ app.post('/forgot-password', async (req, res) => {
                 'UPDATE usuarios SET reset_token = ?, reset_token_expires = ? WHERE id = ?',
                 [token, expires, user.id]
             );
-            const resetLink = `http://127.0.0.1:5501/index.html?resetToken=${token}`;
+            const resetLink = `${process.env.FRONTEND_URL}/index.html?resetToken=${token}`;
             const mailOptions = {
                 from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
                 to: user.correo,
