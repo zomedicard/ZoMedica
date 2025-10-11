@@ -241,10 +241,10 @@ try {
             try {
                 const data = await fs.readFile(path.join(__dirname, 'vacantes.json'), 'utf8');
                 const vacantesDesdeJson = JSON.parse(data);
-                const stmt = await db.prepare('INSERT INTO vacantes (id, titulo, institucion, descripcion, keywords) VALUES (?, ?, ?, ?, ?)');
-                for (const vacante of vacantesDesdeJson) {
-                    await stmt.run(vacante.id, vacante.titulo, vacante.institucion, vacante.descripcion, JSON.stringify(vacante.keywords));
-                }
+                const stmt = await db.prepare('INSERT INTO vacantes (id, titulo, institucion, descripcion) VALUES (?, ?, ?, ?)');
+for (const vacante of vacantesDesdeJson) {
+    await stmt.run(vacante.id, vacante.titulo, vacante.institucion, vacante.descripcion);
+}
                 await stmt.finalize();
                 console.log('Vacantes migradas a la base de datos.');
             } catch (e) {
