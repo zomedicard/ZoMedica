@@ -14,6 +14,8 @@ import multer from 'multer';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import crypto from 'crypto';
+import { WebSocketServer } from 'ws';
+import http from 'http';
 
 // =================================================================
 // SECCIÓN: CONFIGURACIÓN DE NODEMAILER (SERVICIO DE CORREO)
@@ -170,6 +172,47 @@ let db;
         periodo TEXT,
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
     );
+    
+    CREATE TABLE IF NOT EXISTS favoritos (
+       usuario_id INTEGER,
+       vacante_id INTEGER,
+       PRIMARY KEY (usuario_id, vacante_id),
+       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+       FOREIGN KEY (vacante_id) REFERENCES vacantes(id) ON DELETE CASCADE
+   );
+    
+    CREATE TABLE IF NOT EXISTS alertas (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       usuario_id INTEGER NOT NULL,
+       palabras_clave TEXT,
+       ubicacion TEXT,
+       tipo_contrato TEXT,
+       fecha_creacion TEXT NOT NULL,
+       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+    );
+    
+    CREATE TABLE IF NOT EXISTS conversaciones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    postulacion_id INTEGER UNIQUE NOT NULL,
+    profesional_id INTEGER NOT NULL,
+    institucion_id INTEGER NOT NULL,
+    activa INTEGER DEFAULT 0,
+    fecha_creacion TEXT NOT NULL,
+    FOREIGN KEY (postulacion_id) REFERENCES postulaciones(id) ON DELETE CASCADE,
+    FOREIGN KEY (profesional_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (institucion_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS mensajes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversacion_id INTEGER NOT NULL,
+    remitente_id INTEGER NOT NULL,
+    mensaje TEXT NOT NULL,
+    fecha_envio TEXT NOT NULL,
+    leido INTEGER DEFAULT 0,
+    FOREIGN KEY (conversacion_id) REFERENCES conversaciones(id) ON DELETE CASCADE,
+    FOREIGN KEY (remitente_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
 
     CREATE TABLE IF NOT EXISTS vistas_vacantes (
             usuario_id INTEGER,
@@ -387,7 +430,7 @@ app.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Credenciales inválidas.' });
         }
         
-        const token = jwt.sign({ id: user.id, rol: user.rol, correo: user.correo, nombre: user.nombre }, JWT_SECRET, { expiresIn: '1h' });
+       const token = jwt.sign({ id: user.id, rol: user.rol, correo: user.correo, nombre: user.nombre }, JWT_SECRET, { expiresIn: '15m' });
         res.json({ token, user: { id: user.id, nombre: user.nombre, rol: user.rol, correo: user.correo } });
 
     } catch (err) {
@@ -744,6 +787,7 @@ app.post('/vacantes', verificarToken, async (req, res) => {
             [titulo, institucion, descripcion, requisitos_obligatorios, requisitos_deseables, req.user.id, ubicacion, tipoContrato, salario]
         );
         res.status(201).json({ message: 'Vacante creada con éxito.', id: result.lastID });
+        procesarAlertasParaNuevaVacante({ ...req.body, id: result.lastID });
     } catch (err) {
         console.error('Error al crear vacante:', err);
         res.status(500).json({ error: 'Error interno del servidor.' });
@@ -878,6 +922,7 @@ app.put('/vacantes/:id', verificarToken, async (req, res) => {
         );
 
         res.json({ message: 'Vacante actualizada con éxito.' });
+        procesarAlertasParaNuevaVacante({ ...req.body, id: vacanteId });
 
     } catch (err) {
         console.error('Error al actualizar vacante:', err);
@@ -1083,48 +1128,63 @@ app.get('/institucion/postulaciones/:id/profesional', verificarToken, async (req
     }
 });
 
+// REEMPLAZA ESTA FUNCIÓN COMPLETA
 app.put('/postulaciones/:id/estado', verificarToken, async (req, res) => {
     const postulacionId = req.params.id;
     const { estado } = req.body;
     if (req.user.rol !== 'institucion') {
-        return res.status(403).json({ error: 'Acceso denegado. Solo las instituciones pueden cambiar el estado.' });
+        return res.status(403).json({ error: 'Acceso denegado.' });
     }
     const estadosValidos = ['Enviada', 'En Revisión', 'Entrevistado', 'Rechazado', 'Aceptado'];
     if (!estadosValidos.includes(estado)) {
-        return res.status(400).json({ error: 'Estado de postulación no válido.' });
+        return res.status(400).json({ error: 'Estado no válido.' });
     }
-const postulacion = await db.get(
-            `SELECT
-                p.usuario_id AS profesional_id,
-                p.vacante_id, 
-                v.titulo AS vacante_titulo,
-                v.usuario_id AS institucion_id
-            FROM postulaciones p
-            JOIN vacantes v ON p.vacante_id = v.id
-            WHERE p.id = ?`,
+
+    try {
+        const postulacion = await db.get(
+            `SELECT p.usuario_id AS profesional_id, v.usuario_id AS institucion_id, v.titulo AS vacante_titulo
+            FROM postulaciones p JOIN vacantes v ON p.vacante_id = v.id WHERE p.id = ?`,
             postulacionId
         );
-        if (!postulacion) {
-            return res.status(404).json({ error: 'Postulación no encontrada.' });
-        }
-        if (postulacion.institucion_id !== req.user.id) {
+
+        if (!postulacion || postulacion.institucion_id !== req.user.id) {
             return res.status(403).json({ error: 'No tienes permiso para modificar esta postulación.' });
         }
 
-        // Obtenemos el nombre de la institución para el mensaje
-        const institucion = await db.get('SELECT nombre FROM usuarios WHERE id = ?', req.user.id);
-
         await db.run('UPDATE postulaciones SET estado = ? WHERE id = ?', [estado, postulacionId]);
-        
-       const mensaje = `La institución "${institucion.nombre}" actualizó tu postulación a "${postulacion.vacante_titulo}" al estado: "${estado}".`;
-const url = `postulacion/${postulacionId}`;
+
+        // --- LÓGICA DE ACTIVACIÓN DEL CHAT ---
+        if (estado === 'Entrevistado') {
+            // Intenta crear una conversación si no existe
+            await db.run(
+                `INSERT OR IGNORE INTO conversaciones (postulacion_id, profesional_id, institucion_id, fecha_creacion) 
+                VALUES (?, ?, ?, ?)`,
+                [postulacionId, postulacion.profesional_id, postulacion.institucion_id, new Date().toISOString()]
+            );
+            // La activa
+            await db.run(
+                'UPDATE conversaciones SET activa = 1 WHERE postulacion_id = ?',
+                [postulacionId]
+            );
+        }
+        // --- FIN DE LA LÓGICA DEL CHAT ---
+
+        const institucion = await db.get('SELECT nombre FROM usuarios WHERE id = ?', req.user.id);
+        const mensaje = `La institución "${institucion.nombre}" actualizó tu postulación a "${postulacion.vacante_titulo}" al estado: "${estado}".`;
+        const url = `postulacion/${postulacionId}`;
 
         await db.run(
             'INSERT INTO notificaciones (usuario_id, mensaje, fecha, url) VALUES (?, ?, ?, ?)',
             [postulacion.profesional_id, mensaje, new Date().toISOString(), url]
         );
-        res.json({ message: `Estado de postulación actualizado a "${estado}".` });
-    });
+
+        res.json({ message: `Estado actualizado a "${estado}".` });
+    } catch (err) {
+        console.error('Error al actualizar estado:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
 // --- Rutas de Notificaciones ---
 app.get('/notificaciones', verificarToken, async (req, res) => {
     try {
@@ -1238,17 +1298,371 @@ app.get('/profesionales/:id', verificarToken, async (req, res) => {
     }
 });
 
-// --- FIN: Rutas para el Buscador de Talentos ---
+// --- Rutas y Lógica para Alertas de Empleo ---
+
+// RUTA 1: Para que un usuario cree una nueva alerta
+app.post('/alertas', verificarToken, async (req, res) => {
+    if (req.user.rol !== 'profesional') {
+        return res.status(403).json({ error: 'Solo los profesionales pueden crear alertas.' });
+    }
+    const { palabras_clave, ubicacion, tipo_contrato } = req.body;
+    if (!palabras_clave && !ubicacion && !tipo_contrato) {
+        return res.status(400).json({ error: 'Debes proporcionar al menos un criterio para la alerta.' });
+    }
+    try {
+        await db.run(
+            'INSERT INTO alertas (usuario_id, palabras_clave, ubicacion, tipo_contrato, fecha_creacion) VALUES (?, ?, ?, ?, ?)',
+            [req.user.id, palabras_clave, ubicacion, tipo_contrato, new Date().toISOString()]
+        );
+        res.status(201).json({ message: 'Alerta creada con éxito.' });
+    } catch (err) {
+        console.error('Error al crear alerta:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
+// RUTA 2: Para que un usuario vea sus alertas guardadas
+app.get('/alertas', verificarToken, async (req, res) => {
+    if (req.user.rol !== 'profesional') {
+        return res.status(403).json({ error: 'Acceso denegado.' });
+    }
+    try {
+        const alertas = await db.all('SELECT * FROM alertas WHERE usuario_id = ?', req.user.id);
+        res.json(alertas);
+    } catch (err) {
+        console.error('Error al obtener alertas:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
+// RUTA 3: Para que un usuario elimine una alerta
+app.delete('/alertas/:id', verificarToken, async (req, res) => {
+    try {
+        const result = await db.run(
+            'DELETE FROM alertas WHERE id = ? AND usuario_id = ?',
+            [req.params.id, req.user.id]
+        );
+        if (result.changes === 0) {
+            return res.status(404).json({ error: 'Alerta no encontrada o no tienes permiso para eliminarla.' });
+        }
+        res.json({ message: 'Alerta eliminada con éxito.' });
+    } catch (err) {
+        console.error('Error al eliminar alerta:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
+
+// FUNCIÓN CENTRAL: Compara una vacante nueva con todas las alertas guardadas
+async function procesarAlertasParaNuevaVacante(vacante) {
+    console.log(`🔎 Procesando alertas para la nueva vacante: "${vacante.titulo}"`);
+    const alertas = await db.all(`
+        SELECT a.*, u.correo, u.nombre FROM alertas a
+        JOIN usuarios u ON a.usuario_id = u.id
+    `);
+
+    for (const alerta of alertas) {
+        let coincide = true;
+
+        // Comprueba si la ubicación de la alerta coincide (si existe)
+        if (alerta.ubicacion && !vacante.ubicacion.toLowerCase().includes(alerta.ubicacion.toLowerCase())) {
+            coincide = false;
+        }
+
+        // Comprueba si el tipo de contrato coincide (si existe)
+        if (alerta.tipo_contrato && vacante.tipoContrato !== alerta.tipo_contrato) {
+            coincide = false;
+        }
+
+        // Comprueba si las palabras clave coinciden (si existen)
+        if (alerta.palabras_clave) {
+            const textoVacante = `${vacante.titulo} ${vacante.descripcion}`.toLowerCase();
+            if (!textoVacante.includes(alerta.palabras_clave.toLowerCase())) {
+                coincide = false;
+            }
+        }
+
+        if (coincide) {
+            console.log(`✅ Coincidencia encontrada para ${alerta.correo}. Enviando email...`);
+            // Si todo coincide, envía el correo
+            const mailOptions = {
+                from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
+                to: alerta.correo,
+                subject: `📢 Nueva Oportunidad en ZoMedica: ${vacante.titulo}`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; color: #333;">
+                        <h2>¡Hola, ${alerta.nombre}!</h2>
+                        <p>Hemos encontrado una nueva vacante que coincide con una de tus alertas guardadas:</p>
+                        <div style="border-left: 4px solid #0A66C2; padding-left: 15px; margin: 20px 0;">
+                            <h3 style="margin: 0;">${vacante.titulo}</h3>
+                            <p style="margin: 5px 0;"><strong>Institución:</strong> ${vacante.institucion}</p>
+                            ${vacante.ubicacion ? `<p style="margin: 5px 0;"><strong>Ubicación:</strong> ${vacante.ubicacion}</p>` : ''}
+                        </div>
+                        <p>¡No pierdas la oportunidad! Haz clic en el siguiente botón para ver los detalles y postularte.</p>
+                        <a href="http://127.0.0.1:5501/index.html" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                            Ver Vacante Ahora
+                        </a>
+                        <p style="font-size: 0.8em; color: #777; margin-top: 30px;">Recibes este correo porque creaste una alerta de empleo en ZoMedica.</p>
+                    </div>
+                `
+            };
+
+            try {
+                await transporter.sendMail(mailOptions);
+            } catch (emailError) {
+                console.error(`❌ Error enviando email de alerta a ${alerta.correo}:`, emailError);
+            }
+        }
+    }
+}
+
+// --- Rutas para el Sistema de Mensajería ---
+
+// --- NUEVA RUTA ---
+// Cuenta los mensajes no leídos para el usuario logueado
+app.get('/mensajes/no-leidos', verificarToken, async (req, res) => {
+    try {
+        const count = await db.get(`
+            SELECT COUNT(m.id) as total
+            FROM mensajes m
+            JOIN conversaciones c ON m.conversacion_id = c.id
+            WHERE m.remitente_id != ? AND m.leido = 0 AND (c.profesional_id = ? OR c.institucion_id = ?)
+        `, [req.user.id, req.user.id, req.user.id]);
+
+        res.json({ total: count.total || 0 });
+    } catch (err) {
+        console.error('Error al contar mensajes no leídos:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
+
+// Obtiene todas las conversaciones activas para el usuario logueado
+app.get('/conversaciones', verificarToken, async (req, res) => {
+    try {
+        let conversaciones;
+        if (req.user.rol === 'profesional') {
+            conversaciones = await db.all(`
+                SELECT c.id, c.postulacion_id, u.nombre AS nombre_interlocutor, v.titulo AS titulo_vacante
+                FROM conversaciones c
+                JOIN usuarios u ON c.institucion_id = u.id
+                JOIN postulaciones p ON c.postulacion_id = p.id
+                JOIN vacantes v ON p.vacante_id = v.id
+                WHERE c.profesional_id = ? AND c.activa = 1
+            `, req.user.id);
+        } else { // Rol es 'institucion'
+            conversaciones = await db.all(`
+                SELECT c.id, c.postulacion_id, u.nombre AS nombre_interlocutor, v.titulo AS titulo_vacante
+                FROM conversaciones c
+                JOIN usuarios u ON c.profesional_id = u.id
+                JOIN postulaciones p ON c.postulacion_id = p.id
+                JOIN vacantes v ON p.vacante_id = v.id
+                WHERE c.institucion_id = ? AND c.activa = 1
+            `, req.user.id);
+        }
+        res.json(conversaciones);
+    } catch (err) {
+        console.error('Error al obtener conversaciones:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
+
+// Obtiene todos los mensajes de una conversación específica
+app.get('/conversaciones/:id/mensajes', verificarToken, async (req, res) => {
+    try {
+        const conversacion = await db.get('SELECT * FROM conversaciones WHERE id = ?', req.params.id);
+        // Verificación de seguridad: el usuario debe ser parte de la conversación
+        if (req.user.id !== conversacion.profesional_id && req.user.id !== conversacion.institucion_id) {
+            return res.status(403).json({ error: 'Acceso denegado.' });
+        }
+        const mensajes = await db.all('SELECT * FROM mensajes WHERE conversacion_id = ? ORDER BY fecha_envio ASC', req.params.id);
+        res.json(mensajes);
+    } catch (err) {
+        console.error('Error al obtener mensajes:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
+// --- NUEVA RUTA ---
+// Marca los mensajes de una conversación como leídos
+app.put('/conversaciones/:id/leido', verificarToken, async (req, res) => {
+    try {
+        // Verificación de seguridad (similar a la que ya tenemos)
+        const conversacion = await db.get('SELECT * FROM conversaciones WHERE id = ?', req.params.id);
+        if (req.user.id !== conversacion.profesional_id && req.user.id !== conversacion.institucion_id) {
+            return res.status(403).json({ error: 'Acceso denegado.' });
+        }
+        // Actualiza solo los mensajes recibidos por el usuario actual
+        await db.run(
+            'UPDATE mensajes SET leido = 1 WHERE conversacion_id = ? AND remitente_id != ?',
+            [req.params.id, req.user.id]
+        );
+        res.json({ message: 'Mensajes marcados como leídos.' });
+    } catch (err) {
+        console.error('Error al marcar mensajes como leídos:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
+// Envía un nuevo mensaje
+app.post('/mensajes', verificarToken, async (req, res) => {
+    const { conversacion_id, mensaje } = req.body;
+    try {
+        const conversacion = await db.get('SELECT * FROM conversaciones WHERE id = ?', conversacion_id);
+        if (req.user.id !== conversacion.profesional_id && req.user.id !== conversacion.institucion_id) {
+            return res.status(403).json({ error: 'Acceso denegado.' });
+        }
+        const result = await db.run(
+            'INSERT INTO mensajes (conversacion_id, remitente_id, mensaje, fecha_envio) VALUES (?, ?, ?, ?)',
+            [conversacion_id, req.user.id, mensaje, new Date().toISOString()]
+        );
+
+        // --- INICIO DE LA LÓGICA DE WEBSOCKETS ---
+        const destinatarioId = req.user.id === conversacion.profesional_id ? conversacion.institucion_id : conversacion.profesional_id;
+        const destinatarioSocket = clients.get(destinatarioId);
+
+        if (destinatarioSocket && destinatarioSocket.readyState === destinatarioSocket.OPEN) {
+            destinatarioSocket.send(JSON.stringify({ type: 'nuevo_mensaje' }));
+            console.log(`📢 Notificación de nuevo mensaje enviada en tiempo real al usuario ${destinatarioId}`);
+        }
+        // --- FIN DE LA LÓGICA DE WEBSOCKETS ---
+
+        res.status(201).json({ message: 'Mensaje enviado.', id: result.lastID });
+    } catch (err) {
+        console.error('Error al enviar mensaje:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
 
 // =================================================================
 // SECCIÓN: SERVIDOR DE ARCHIVOS ESTÁTICOS Y ARRANQUE DEL SERVIDOR
 // =================================================================
-// Le dice a Express que sirva archivos directamente desde las carpetas 'public' y 'uploads'.
-// Finalmente, inicia el servidor para que empiece a escuchar peticiones.
+// --- Rutas para Vacantes Favoritas ---
+
+// RUTA 1: Para marcar/desmarcar una vacante como favorita
+app.post('/favoritos/:vacanteId', verificarToken, async (req, res) => {
+    if (req.user.rol !== 'profesional') {
+        return res.status(403).json({ error: 'Solo los profesionales pueden guardar favoritos.' });
+    }
+    const usuarioId = req.user.id;
+    const vacanteId = req.params.vacanteId;
+
+    try {
+        const esFavorito = await db.get('SELECT * FROM favoritos WHERE usuario_id = ? AND vacante_id = ?', [usuarioId, vacanteId]);
+
+        if (esFavorito) {
+            // Si ya es favorito, lo quitamos
+            await db.run('DELETE FROM favoritos WHERE usuario_id = ? AND vacante_id = ?', [usuarioId, vacanteId]);
+            res.json({ message: 'Vacante eliminada de favoritos.', esFavorito: false });
+        } else {
+            // Si no es favorito, lo añadimos
+            await db.run('INSERT INTO favoritos (usuario_id, vacante_id) VALUES (?, ?)', [usuarioId, vacanteId]);
+            res.json({ message: 'Vacante guardada en favoritos.', esFavorito: true });
+        }
+    } catch (err) {
+        console.error('Error al gestionar favorito:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
+// RUTA 2: Para obtener todas las vacantes favoritas de un usuario
+app.get('/favoritos', verificarToken, async (req, res) => {
+    if (req.user.rol !== 'profesional') {
+        return res.status(403).json({ error: 'Acceso denegado.' });
+    }
+    try {
+        const favoritos = await db.all(`
+            SELECT v.* FROM vacantes v
+            JOIN favoritos f ON v.id = f.vacante_id
+            WHERE f.usuario_id = ?
+        `, req.user.id);
+        res.json(favoritos);
+    } catch (err) {
+        console.error('Error al obtener favoritos:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
+// --- Ruta de Analíticas para Vacantes ---
+
+app.get('/institucion/vacantes/:id/analiticas', verificarToken, async (req, res) => {
+    if (req.user.rol !== 'institucion') {
+        return res.status(403).json({ error: 'Acceso denegado.' });
+    }
+
+    const vacanteId = req.params.id;
+
+    try {
+        // 1. Verificamos que la vacante pertenece a la institución que la solicita
+        const vacante = await db.get('SELECT * FROM vacantes WHERE id = ? AND usuario_id = ?', [vacanteId, req.user.id]);
+        if (!vacante) {
+            return res.status(404).json({ error: 'Vacante no encontrada o no te pertenece.' });
+        }
+
+        // 2. Contamos las postulaciones totales para esa vacante
+        const postulaciones = await db.get('SELECT COUNT(*) AS total FROM postulaciones WHERE vacante_id = ?', vacanteId);
+
+        // 3. Calculamos la tasa de conversión
+        const vistasUnicas = vacante.vistas; // Ya tenemos este dato en la tabla de vacantes
+        const totalPostulaciones = postulaciones.total;
+        let tasaConversion = 0;
+        if (vistasUnicas > 0) {
+            tasaConversion = ((totalPostulaciones / vistasUnicas) * 100).toFixed(1);
+        }
+
+        // 4. Enviamos todos los datos juntos
+        res.json({
+            vistas: vistasUnicas,
+            postulaciones: totalPostulaciones,
+            tasa_conversion: tasaConversion
+        });
+
+    } catch (err) {
+        console.error('Error al obtener analíticas de la vacante:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
+// --- PEGA ESTE NUEVO BLOQUE DE CÓDIGO EN LUGAR DEL ANTERIOR ---
+
+// Mantenemos estas líneas para que el servidor siga sirviendo archivos
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// 1. Creamos un servidor HTTP base y le pasamos nuestra aplicación Express.
+const server = http.createServer(app);
+
+// 2. Creamos el servidor de WebSockets y lo "enganchamos" al servidor HTTP principal.
+const wss = new WebSocketServer({ server });
+
+// 3. Este mapa nos ayudará a saber qué conexión WebSocket pertenece a qué usuario.
+const clients = new Map();
+
+// 4. Lógica que se ejecuta cada vez que un nuevo usuario se conecta por WebSocket.
+wss.on('connection', (ws, req) => {
+    // Extraemos el token de la URL para identificar al usuario.
+    const token = req.url.split('?token=')[1];
+    if (token) {
+        jwt.verify(token, JWT_SECRET, (err, user) => {
+            if (!err) {
+                // Si el token es válido, guardamos la conexión del usuario.
+                clients.set(user.id, ws);
+                console.log(`✅ WebSocket conectado para el usuario: ${user.id}`);
+                
+                // Si el usuario cierra la pestaña, eliminamos su conexión.
+                ws.on('close', () => {
+                    clients.delete(user.id);
+                    console.log(`🔌 WebSocket desconectado para el usuario: ${user.id}`);
+                });
+            }
+        });
+    }
+});
+
+// 5. Finalmente, le decimos a nuestro nuevo servidor "combinado" que empiece a escuchar.
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Servidor escuchando en el puerto ${PORT}`);
+server.listen(PORT, () => {
+    console.log(`🚀 Servidor (HTTP y WebSocket) escuchando en el puerto ${PORT}`);
 });
