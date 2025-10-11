@@ -39,10 +39,16 @@ app.use(cors());
 app.use(express.json());
 
 // Variables de entorno y de ruta
-const JWT_SECRET = process.env.env_SECRET || "tu_secreto_secreto";
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// Comprobación de seguridad: detiene el servidor si la clave secreta no está configurada.
+if (!JWT_SECRET) {
+  console.error("¡ERROR FATAL! La variable de entorno JWT_SECRET no está definida.");
+  process.exit(1); // Detiene la ejecución para evitar correr en un estado inseguro.
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 
 // =================================================================
 // SECCIÓN: CONFIGURACIÓN DE MULTER (SUBIDA DE ARCHIVOS)
