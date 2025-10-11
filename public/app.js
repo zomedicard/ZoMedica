@@ -112,7 +112,7 @@ async function mostrarInicio() {
     }
 
     try {
-        const response = await fetch(`https://zomedica.onrender.com/vacantes`);
+        const response = await fetch(`https://zo-medica.onrender.com/vacantes`);
         const vacantes = await response.json();
         const vacantesRecientes = vacantes.sort((a, b) => b.id - a.id).slice(0, 3);
         
@@ -165,8 +165,8 @@ async function mostrarInstituciones() {
     document.getElementById('nombreInstitucionPanel').textContent = `Panel de ${userName}`;
     try {
         const [vacantesRes, postulacionesRes] = await Promise.all([
-            fetchProtegido('https://zomedica.onrender.com/institucion/vacantes'),
-            fetchProtegido('https://zomedica.onrender.com/institucion/postulaciones')
+            fetchProtegido('https://zo-medica.onrender.com/institucion/vacantes'),
+            fetchProtegido('https://zo-medica.onrender.com/institucion/postulaciones')
         ]);
         const vacantes = await vacantesRes.json();
         const postulaciones = await postulacionesRes.json();
@@ -226,7 +226,7 @@ async function cargarFiltroDeVacantes() {
     }
 
     try {
-        const response = await fetch('https://zomedica.onrender.com/institucion/vacantes', {
+        const response = await fetch('https://zo-medica.onrender.com/institucion/vacantes', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const vacantes = await response.json();
@@ -260,7 +260,7 @@ async function cargarNotificaciones() {
     marcarTodasBtn.style.display = 'none'; // Ocultar el botón mientras carga
 
     try {
-        const response = await fetch('https://zomedica.onrender.com/notificaciones', {
+        const response = await fetch('https://zo-medica.onrender.com/notificaciones', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const notificaciones = await response.json();
@@ -352,7 +352,7 @@ async function marcarNotificacionComoLeida(notificacionId, elemento) {
 
     // 3. Llama a la API para guardar el cambio en la base de datos.
     try {
-        await fetch(`https://zomedica.onrender.com/notificaciones/${notificacionId}/leida`, {
+        await fetch(`https://zo-medica.onrender.com/notificaciones/${notificacionId}/leida`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -510,7 +510,7 @@ async function actualizarContadorNotificaciones() {
     if (!token) return;
     const notifCountSpan = document.getElementById('notification-count');
     try {
-        const response = await fetchProtegido('https://zomedica.onrender.com/notificaciones');
+        const response = await fetchProtegido('https://zo-medica.onrender.com/notificaciones');
         if (!response.ok) return;
         const notificaciones = await response.json();
         const notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
@@ -689,7 +689,7 @@ async function cargarVacantes(query = '', ubicacion = '', tipoContrato = '') {
         if (ubicacion) params.append('ubicacion', ubicacion);
         if (tipoContrato) params.append('tipoContrato', tipoContrato);
         
-        const response = await fetch(`https://zomedica.onrender.com/vacantes?${params.toString()}`);
+        const response = await fetch(`https://zo-medica.onrender.com/vacantes?${params.toString()}`);
 
         if (!response.ok) {
             throw new Error(`Error del servidor: ${response.status}`);
@@ -783,7 +783,7 @@ async function mostrarVacanteDetalles(vacanteId) {
         if (token) {
             fetchOptions.headers = { 'Authorization': `Bearer ${token}` };
         }
-        const response = await fetch(`https://zomedica.onrender.com/vacantes/${vacanteId}`, fetchOptions);
+        const response = await fetch(`https://zo-medica.onrender.com/vacantes/${vacanteId}`, fetchOptions);
         const vacante = await response.json();
 
         if (vacante.error) {
@@ -809,7 +809,7 @@ async function mostrarVacanteDetalles(vacanteId) {
         }
         requisitosHTML += '</div>';
 
-        const logoUrl = vacante.institucion.logoPath ? `https://zomedica.onrender.com/${vacante.institucion.logoPath}` : 'uploads/default-avatar.png';
+        const logoUrl = vacante.institucion.logoPath ? `https://zo-medica.onrender.com/${vacante.institucion.logoPath}` : 'uploads/default-avatar.png';
         const institucionLink = vacante.institucion.id ? `onclick="mostrarPerfilPublicoInstitucion(${vacante.institucion.id})"` : 'style="cursor: default; text-decoration: none;"';
 
         // Construimos el HTML final en el nuevo orden
@@ -857,7 +857,7 @@ if (document.getElementById('formRegistro')) {
         const errorRegistro = document.getElementById('errorRegistro');
         errorRegistro.textContent = '';
         try {
-            const response = await fetch('https://zomedica.onrender.com/register', {
+            const response = await fetch('https://zo-medica.onrender.com/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ nombre, correo, password, rol })
@@ -884,7 +884,7 @@ if (document.getElementById('formLogin')) {
         errorLogin.innerHTML = ''; // Usamos innerHTML para poder poner un enlace
 
         try {
-            const response = await fetch('https://zomedica.onrender.com/login', {
+            const response = await fetch('https://zo-medica.onrender.com/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ correo, password })
@@ -990,10 +990,10 @@ async function postularse(vacanteId) {
         // --- INICIO DE LA CORRECCIÓN ---
         // Usamos nuestro "guardián" para las peticiones.
         // Si la sesión expira aquí, se cerrará automáticamente.
-        const vacanteRes = await fetchProtegido(`https://zomedica.onrender.com/vacantes/${vacanteId}`);
+        const vacanteRes = await fetchProtegido(`https://zo-medica.onrender.com/vacantes/${vacanteId}`);
         const vacante = await vacanteRes.json();
 
-        const perfilRes = await fetchProtegido('https://zomedica.onrender.com/perfil');
+        const perfilRes = await fetchProtegido('https://zo-medica.onrender.com/perfil');
         const perfil = await perfilRes.json();
         // --- FIN DE LA CORRECCIÓN ---
 
@@ -1075,7 +1075,7 @@ function procederConPostulacion(vacanteId) {
         try {
             postularButton.disabled = true;
             postularButton.textContent = 'Enviando...';
-            const response = await fetch(`https://zomedica.onrender.com/postular/${vacanteId}`, {
+            const response = await fetch(`https://zo-medica.onrender.com/postular/${vacanteId}`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
@@ -1107,7 +1107,7 @@ async function cargarPostulacionesProfesional(postulacionIdParaResaltar = null) 
     if (!listaPostulaciones) return;
     listaPostulaciones.innerHTML = 'Cargando postulaciones...';
     try {
-        const response = await fetch('https://zomedica.onrender.com/postulaciones', {
+        const response = await fetch('https://zo-medica.onrender.com/postulaciones', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const postulaciones = await response.json();
@@ -1172,7 +1172,7 @@ pDiv.innerHTML = `
 async function eliminarPostulacion(id) {
     if (!confirm('¿Estás seguro de que quieres eliminar esta postulación?')) return;
     try {
-        const response = await fetch(`https://zomedica.onrender.com/postulaciones/${id}`, {
+        const response = await fetch(`https://zo-medica.onrender.com/postulaciones/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -1209,7 +1209,7 @@ if (document.getElementById('formVacante')) {
         const salario = document.getElementById('vacanteSalario').value;
 
         try {
-            const response = await fetch('https://zomedica.onrender.com/vacantes', {
+            const response = await fetch('https://zo-medica.onrender.com/vacantes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 // Nos aseguramos de enviar los nuevos campos al backend
@@ -1244,7 +1244,7 @@ async function cargarVacantesInstitucion() {
     if(!misVacantesDiv) return;
     misVacantesDiv.innerHTML = 'Cargando vacantes...';
     try {
-        const response = await fetch('https://zomedica.onrender.com/institucion/vacantes', {
+        const response = await fetch('https://zo-medica.onrender.com/institucion/vacantes', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const vacantes = await response.json();
@@ -1274,7 +1274,7 @@ async function cargarVacantesInstitucion() {
 async function eliminarVacante(id) {
     if (!confirm('¿Estás seguro de que quieres eliminar esta vacante?')) return;
     try {
-        const response = await fetch(`https://zomedica.onrender.com/vacantes/${id}`, {
+        const response = await fetch(`https://zo-medica.onrender.com/vacantes/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -1301,7 +1301,7 @@ async function cargarPostulacionesInstitucion(vacanteId = null, esVistaPipeline 
     }
 
     try {
-        const response = await fetch(`https://zomedica.onrender.com/institucion/postulaciones?${params.toString()}`, {
+        const response = await fetch(`https://zo-medica.onrender.com/institucion/postulaciones?${params.toString()}`, {
             headers: { 'Authorization': `Bearer ${token}` },
             cache: 'no-store'
         });
@@ -1362,7 +1362,7 @@ async function verPerfilPostulante(postulacionId) {
 
     try {
         // 2. Llama a la nueva ruta segura del backend
-        const res = await fetch(`https://zomedica.onrender.com/institucion/postulaciones/${postulacionId}/profesional`, {
+        const res = await fetch(`https://zo-medica.onrender.com/institucion/postulaciones/${postulacionId}/profesional`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -1392,7 +1392,7 @@ document.getElementById('formEditarVacante').addEventListener('submit', async (e
     };
 
     try {
-        const response = await fetch(`https://zomedica.onrender.com/vacantes/${vacanteId}`, {
+        const response = await fetch(`https://zo-medica.onrender.com/vacantes/${vacanteId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(datosActualizados)
@@ -1417,7 +1417,7 @@ document.getElementById('formEditarVacante').addEventListener('submit', async (e
         console.log("Datos del perfil recibidos del servidor:", perfil);
         // ==========================================================
 
-        const imagenSrc = perfil.fotoPath ? `https://zomedica.onrender.com/${perfil.fotoPath}` : 'uploads/default-avatar.png';
+        const imagenSrc = perfil.fotoPath ? `https://zo-medica.onrender.com/${perfil.fotoPath}` : 'uploads/default-avatar.png';
 
         let perfilHTML = `
             <div class="perfil-header">
@@ -1430,7 +1430,7 @@ document.getElementById('formEditarVacante').addEventListener('submit', async (e
                 <p><strong>Correo:</strong> ${perfil.correo}</p>
                 <p><strong>Teléfono:</strong> ${perfil.telefono || 'No especificado'}</p>
                 ${perfil.linkedinURL ? `<p><strong>LinkedIn:</strong> <a href="${perfil.linkedinURL}" target="_blank">Ver Perfil</a></p>` : ''}
-                ${perfil.cvPath ? `<p><a href="https://zomedica.onrender.com/${perfil.cvPath}" target="_blank" class="button">Descargar CV</a></p>` : ''}
+                ${perfil.cvPath ? `<p><a href="https://zo-medica.onrender.com/${perfil.cvPath}" target="_blank" class="button">Descargar CV</a></p>` : ''}
             </div>
             <div class="perfil-seccion">
                 <h4>Acerca del Profesional</h4>
@@ -1475,7 +1475,7 @@ document.getElementById('formEditarVacante').addEventListener('submit', async (e
 
 async function cambiarEstadoPostulacion(id, estado) {
     try {
-        const response = await fetch(`https://zomedica.onrender.com/postulaciones/${id}/estado`, {
+        const response = await fetch(`https://zo-medica.onrender.com/postulaciones/${id}/estado`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ estado })
@@ -1507,7 +1507,7 @@ async function cambiarEstadoPostulacion(id, estado) {
 // =================================================================
 async function cargarDatosPerfilProfesional() {
     try {
-        const res = await fetch('https://zomedica.onrender.com/perfil', {
+        const res = await fetch('https://zo-medica.onrender.com/perfil', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const perfil = await res.json();
@@ -1522,7 +1522,7 @@ async function cargarDatosPerfilProfesional() {
         const cvActualP = document.getElementById('cvActual');
         if (cvActualP) {
             if (perfil.cvPath) {
-                cvActualP.innerHTML = `CV actual: <a href="https://zomedica.onrender.com/${perfil.cvPath}" target="_blank">Ver CV</a>`;
+                cvActualP.innerHTML = `CV actual: <a href="https://zo-medica.onrender.com/${perfil.cvPath}" target="_blank">Ver CV</a>`;
             } else {
                 cvActualP.innerHTML = 'No hay CV subido.';
             }
@@ -1548,14 +1548,14 @@ async function cargarDatosPerfilProfesional() {
 
 async function cargarPerfilProfesional() {
     try {
-        const res = await fetch('https://zomedica.onrender.com/perfil', {
+        const res = await fetch('https://zo-medica.onrender.com/perfil', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
         const perfil = await res.json();
         const perfilContainer = document.getElementById('infoProfesional');
-        const imagenSrc = perfil.fotoPath ? `https://zomedica.onrender.com/${perfil.fotoPath}` : 'uploads/default-avatar.png';
+        const imagenSrc = perfil.fotoPath ? `https://zo-medica.onrender.com/${perfil.fotoPath}` : 'uploads/default-avatar.png';
 
         let perfilHTML = `
             <div class="perfil-header">
@@ -1580,7 +1580,7 @@ async function cargarPerfilProfesional() {
                     <div><strong>Fecha de Nacimiento:</strong> <p>${perfil.fechaNacimiento || 'No especificado'}</p></div>
                     ${perfil.linkedinURL ? `<div><strong>LinkedIn:</strong> <p><a href="${perfil.linkedinURL}" target="_blank">Ver Perfil</a></p></div>` : ''}
                 </div>
-                ${perfil.cvPath ? `<div class="cv-download-container" style="margin-top: 20px;"><a href="https://zomedica.onrender.com/${perfil.cvPath}" target="_blank" class="button">Descargar CV</a></div>` : ''}
+                ${perfil.cvPath ? `<div class="cv-download-container" style="margin-top: 20px;"><a href="https://zo-medica.onrender.com/${perfil.cvPath}" target="_blank" class="button">Descargar CV</a></div>` : ''}
             </div>
 
             <div class="perfil-seccion">
@@ -1637,7 +1637,7 @@ async function subirFotoDePerfil() {
     const formData = new FormData();
     formData.append('foto', file);
     try {
-        const response = await fetch(`https://zomedica.onrender.com/perfil/foto`, {
+        const response = await fetch(`https://zo-medica.onrender.com/perfil/foto`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData
@@ -1699,7 +1699,7 @@ if (document.getElementById('formEditarPerfil')) {
         errorEditarPerfil.textContent = '';
 
         try {
-            const res = await fetch('https://zomedica.onrender.com/perfil', {
+            const res = await fetch('https://zo-medica.onrender.com/perfil', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify(dataToSend)
@@ -1735,7 +1735,7 @@ async function subirCV() {
     cvActualP.textContent = 'Subiendo CV...';
 
     try {
-        const response = await fetch('https://zomedica.onrender.com/perfil/cv', {
+        const response = await fetch('https://zo-medica.onrender.com/perfil/cv', {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData
@@ -1746,7 +1746,7 @@ async function subirCV() {
             cvActualP.textContent = 'Error al subir.';
         } else {
             alert(data.message);
-            cvActualP.innerHTML = `CV actual: <a href="https://zomedica.onrender.com/${data.cvPath}" target="_blank">Ver CV</a>`;
+            cvActualP.innerHTML = `CV actual: <a href="https://zo-medica.onrender.com/${data.cvPath}" target="_blank">Ver CV</a>`;
         }
     } catch (error) {
         console.error('Error al subir el CV:', error);
@@ -1774,7 +1774,7 @@ if (document.getElementById('formEditarPerfilInstitucion')) {
         errorEditarPerfilInstitucion.textContent = '';
 
         try {
-            const res = await fetch('https://zomedica.onrender.com/perfil', {
+            const res = await fetch('https://zo-medica.onrender.com/perfil', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 // Envía los campos nuevos al servidor
@@ -1801,7 +1801,7 @@ if (document.getElementById('formEditarPerfilInstitucion')) {
 
 async function cargarDatosPerfilInstitucion() {
     try {
-        const res = await fetch('https://zomedica.onrender.com/perfil', {
+        const res = await fetch('https://zo-medica.onrender.com/perfil', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -1824,7 +1824,7 @@ async function subirLogoInstitucion() {
     formData.append('logo', file);
 
     try {
-        const response = await fetch(`https://zomedica.onrender.com/perfil/logo`, {
+        const response = await fetch(`https://zo-medica.onrender.com/perfil/logo`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData
@@ -1852,7 +1852,7 @@ async function cargarPerfilPublicoInstitucion(institucionId) {
     perfilInfoDiv.innerHTML = 'Cargando perfil...';
 
     try {
-        const res = await fetch(`https://zomedica.onrender.com/instituciones/${institucionId}`);
+        const res = await fetch(`https://zo-medica.onrender.com/instituciones/${institucionId}`);
         const perfil = await res.json();
 
         if (perfil.error) {
@@ -1860,7 +1860,7 @@ async function cargarPerfilPublicoInstitucion(institucionId) {
             return;
         }
 
-        const logoUrl = perfil.logoPath ? `https://zomedica.onrender.com/${perfil.logoPath}` : 'uploads/default-avatar.png';
+        const logoUrl = perfil.logoPath ? `https://zo-medica.onrender.com/${perfil.logoPath}` : 'uploads/default-avatar.png';
 
         let sitioWebHTML = '';
         if (perfil.sitioWeb) {
@@ -1951,7 +1951,7 @@ async function ejecutarBusquedaTalentos() {
     if (keyword) params.append('keyword', keyword);
 
     try {
-        const response = await fetch(`https://zomedica.onrender.com/institucion/buscar-profesionales?${params.toString()}`, {
+        const response = await fetch(`https://zo-medica.onrender.com/institucion/buscar-profesionales?${params.toString()}`, {
             headers: { 'Authorization': `Bearer ${token}` },
             cache: 'no-store'
         });
@@ -1966,7 +1966,7 @@ async function ejecutarBusquedaTalentos() {
                 const perfilDiv = document.createElement('div');
                 perfilDiv.className = 'vacante'; // Reutilizamos el estilo de las tarjetas de vacante
 
-                const imagenSrc = perfil.fotoPath ? `https://zomedica.onrender.com/${perfil.fotoPath}` : 'uploads/default-avatar.png';
+                const imagenSrc = perfil.fotoPath ? `https://zo-medica.onrender.com/${perfil.fotoPath}` : 'uploads/default-avatar.png';
                 const habilidadesHTML = (perfil.habilidades || []).map(h => `<span class="keyword-tag">${h}</span>`).join(' ');
 
                 perfilDiv.innerHTML = `
@@ -1997,7 +1997,7 @@ async function verPerfilCompletoProfesional(profesionalId) {
     perfilContainer.innerHTML = '<p>Cargando perfil del candidato...</p>';
 
     try {
-        const res = await fetch(`https://zomedica.onrender.com/profesionales/${profesionalId}`, {
+        const res = await fetch(`https://zo-medica.onrender.com/profesionales/${profesionalId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -2007,7 +2007,7 @@ async function verPerfilCompletoProfesional(profesionalId) {
         }
 
         const perfil = await res.json();
-        const imagenSrc = perfil.fotoPath ? `https://zomedica.onrender.com/${perfil.fotoPath}` : 'uploads/default-avatar.png';
+        const imagenSrc = perfil.fotoPath ? `https://zo-medica.onrender.com/${perfil.fotoPath}` : 'uploads/default-avatar.png';
 
         // CONSTRUIMOS EL HTML COMPLETO DEL PERFIL
         let perfilHTML = `
@@ -2021,7 +2021,7 @@ async function verPerfilCompletoProfesional(profesionalId) {
                 <p><strong>Correo:</strong> ${perfil.correo}</p>
                 <p><strong>Teléfono:</strong> ${perfil.telefono || 'No especificado'}</p>
                 ${perfil.linkedinURL ? `<p><strong>LinkedIn:</strong> <a href="${perfil.linkedinURL}" target="_blank">Ver Perfil</a></p>` : ''}
-                ${perfil.cvPath ? `<p><a href="https://zomedica.onrender.com/${perfil.cvPath}" target="_blank" class="button">Descargar CV</a></p>` : ''}
+                ${perfil.cvPath ? `<p><a href="https://zo-medica.onrender.com/${perfil.cvPath}" target="_blank" class="button">Descargar CV</a></p>` : ''}
             </div>
             <div class="perfil-seccion">
                 <h4>Acerca del Profesional</h4>
@@ -2126,7 +2126,7 @@ function activarDragAndDrop() {
 // Función para manejar el clic en "Marcar todas como leídas"
 async function marcarTodasComoLeidas() {
     try {
-        const response = await fetch('https://zomedica.onrender.com/notificaciones/marcar-todas-leidas', {
+        const response = await fetch('https://zo-medica.onrender.com/notificaciones/marcar-todas-leidas', {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -2179,7 +2179,7 @@ document.getElementById('formRecuperarPassword').addEventListener('submit', asyn
     btn.textContent = 'Enviando...';
 
     try {
-        const response = await fetch('https://zomedica.onrender.com/forgot-password', {
+        const response = await fetch('https://zo-medica.onrender.com/forgot-password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ correo })
@@ -2211,7 +2211,7 @@ document.getElementById('formResetPassword').addEventListener('submit', async (e
     }
 
     try {
-        const response = await fetch('https://zomedica.onrender.com/reset-password', {
+        const response = await fetch('https://zo-medica.onrender.com/reset-password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token, password })
@@ -2235,7 +2235,7 @@ async function cargarFavoritos() {
     listaFavoritos.innerHTML = 'Cargando tus vacantes guardadas...';
 
     try {
-        const response = await fetch('https://zomedica.onrender.com/favoritos', {
+        const response = await fetch('https://zo-medica.onrender.com/favoritos', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const vacantes = await response.json();
@@ -2275,7 +2275,7 @@ async function toggleFavorito(vacanteId, boton) {
     }
 
     try {
-        const response = await fetch(`https://zomedica.onrender.com/favoritos/${vacanteId}`, {
+        const response = await fetch(`https://zo-medica.onrender.com/favoritos/${vacanteId}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -2311,7 +2311,7 @@ async function cargarAlertas() {
     listaAlertas.innerHTML = 'Cargando tus alertas...';
 
     try {
-        const response = await fetch('https://zomedica.onrender.com/alertas', {
+        const response = await fetch('https://zo-medica.onrender.com/alertas', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const alertas = await response.json();
@@ -2359,7 +2359,7 @@ async function crearAlertaDesdeFiltros() {
     }
 
     try {
-        const response = await fetch('https://zomedica.onrender.com/alertas', {
+        const response = await fetch('https://zo-medica.onrender.com/alertas', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -2382,7 +2382,7 @@ async function eliminarAlerta(id) {
     if (!confirm('¿Estás seguro de que quieres eliminar esta alerta?')) return;
 
     try {
-        const response = await fetch(`https://zomedica.onrender.com/alertas/${id}`, {
+        const response = await fetch(`https://zo-medica.onrender.com/alertas/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -2406,7 +2406,7 @@ async function mostrarFormularioEditarVacante(vacanteId) {
 
     try {
         // 1. Pedimos los datos actuales de la vacante al servidor
-        const response = await fetch(`https://zomedica.onrender.com/vacantes/${vacanteId}`, {
+        const response = await fetch(`https://zo-medica.onrender.com/vacantes/${vacanteId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const vacante = await response.json();
@@ -2452,7 +2452,7 @@ async function mostrarModalAnaliticas(vacanteId, vacanteTitulo) {
     setTimeout(() => modal.classList.add('visible'), 10);
 
     try {
-        const response = await fetch(`https://zomedica.onrender.com/institucion/vacantes/${vacanteId}/analiticas`, {
+        const response = await fetch(`https://zo-medica.onrender.com/institucion/vacantes/${vacanteId}/analiticas`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -2502,7 +2502,7 @@ async function cargarConversaciones() {
     const listaConversaciones = document.getElementById('listaConversaciones');
     listaConversaciones.innerHTML = '<p style="padding: 15px;">Cargando...</p>';
     try {
-        const response = await fetch('https://zomedica.onrender.com/conversaciones', { headers: { 'Authorization': `Bearer ${token}` } });
+        const response = await fetch('https://zo-medica.onrender.com/conversaciones', { headers: { 'Authorization': `Bearer ${token}` } });
         const conversaciones = await response.json();
         listaConversaciones.innerHTML = '';
         if (conversaciones.length === 0) {
@@ -2541,14 +2541,14 @@ async function abrirChat(conversacionId) {
     try {
         // --- INICIO DE LA MODIFICACIÓN ---
         // 1. Marca los mensajes como leídos en el servidor
-        await fetchProtegido(`https://zomedica.onrender.com/conversaciones/${conversacionId}/leido`, { method: 'PUT' });
+        await fetchProtegido(`https://zo-medica.onrender.com/conversaciones/${conversacionId}/leido`, { method: 'PUT' });
 
         // 2. Actualiza el contador de la burbuja roja inmediatamente
         actualizarContadorMensajes();
         // --- FIN DE LA MODIFICACIÓN ---
 
         // El resto de la función sigue igual
-        const response = await fetchProtegido(`https://zomedica.onrender.com/conversaciones/${conversacionId}/mensajes`);
+        const response = await fetchProtegido(`https://zo-medica.onrender.com/conversaciones/${conversacionId}/mensajes`);
         const mensajes = await response.json();
         chatWindow.innerHTML = '';
         mensajes.forEach(msg => {
@@ -2573,7 +2573,7 @@ async function enviarMensaje() {
     if (!mensaje || !conversacionActivaId) return;
 
     try {
-        const response = await fetch('https://zomedica.onrender.com/mensajes', {
+        const response = await fetch('https://zo-medica.onrender.com/mensajes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ conversacion_id: conversacionActivaId, mensaje })
@@ -2611,7 +2611,7 @@ async function actualizarContadorMensajes() {
     if (!mensajesCountSpan) return;
 
     try {
-        const response = await fetchProtegido('https://zomedica.onrender.com/mensajes/no-leidos');
+        const response = await fetchProtegido('https://zo-medica.onrender.com/mensajes/no-leidos');
         const data = await response.json();
 
         if (data.total > 0) {
@@ -2674,7 +2674,7 @@ if (token) {
 
 async function reenviarVerificacion(correo) {
     try {
-        const response = await fetch('https://zomedica.onrender.com/resend-verification', {
+        const response = await fetch('https://zo-medica.onrender.com/resend-verification', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ correo })

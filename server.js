@@ -44,7 +44,7 @@ app.use(cors(corsOptions));;
 app.use(express.json());
 
 // Variables de entorno y de ruta
-const JWT_SECRET = process.env.env_SECRET || "tu_secreto_secreto";
+const JWT_SECRET = process.env.JWT_SECRET || "YHLQMDLGN_8095040_DJLUJIAN_LAPIZ";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -349,7 +349,7 @@ const result = await db.run(
 );
 
         // --- INICIO: LÓGICA DE ENVÍO DE CORREO REAL ---
-        const linkVerificacion = `http://localhost:3000/verify-email/${tokenVerificacion}`; 
+        const linkVerificacion = `https://zo-medica.vercel.app/verify-email/${tokenVerificacion}`; 
         
         const mailOptions = {
             from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
@@ -463,7 +463,7 @@ app.post('/resend-verification', async (req, res) => {
                 [tokenVerificacion, tokenExpires, correo]
             );
 
-            const linkVerificacion = `http://localhost:3000/verify-email/${tokenVerificacion}`;
+            const linkVerificacion = `https://zo-medica.vercel.app/verify-email/${tokenVerificacion}`;
             const mailOptions = {
                 from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
                 to: correo,
@@ -1439,7 +1439,7 @@ async function procesarAlertasParaNuevaVacante(vacante) {
                             ${vacante.ubicacion ? `<p style="margin: 5px 0;"><strong>Ubicación:</strong> ${vacante.ubicacion}</p>` : ''}
                         </div>
                         <p>¡No pierdas la oportunidad! Haz clic en el siguiente botón para ver los detalles y postularte.</p>
-                        <a href="http://127.0.0.1:5501/index.html" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                        <a href="https://zo-medica.vercel.app" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block;">
                             Ver Vacante Ahora
                         </a>
                         <p style="font-size: 0.8em; color: #777; margin-top: 30px;">Recibes este correo porque creaste una alerta de empleo en ZoMedica.</p>
