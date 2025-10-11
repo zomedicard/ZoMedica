@@ -37,7 +37,7 @@ const transporter = nodemailer.createTransport({
 const app = express();
 // Configuración de CORS para permitir solo peticiones desde tu frontend en Vercel
 const corsOptions = {
-  origin: 'https://zo-medica.vercel.app', // <-- ¡PON TU URL DE VERCEL AQUÍ!
+  origin: 'https://zo-medica.vercel.app' 
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));;
@@ -1705,4 +1705,15 @@ wss.on('connection', (ws, req) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`🚀 Servidor (HTTP y WebSocket) escuchando en el puerto ${PORT}`);
+});
+
+// Ruta pública para obtener las vacantes
+app.get("/vacantes", async (req, res) => {
+  try {
+    const vacantes = await Vacante.find().sort({ fechaPublicacion: -1 });
+    res.json(vacantes);
+  } catch (error) {
+    console.error("Error al obtener las vacantes:", error);
+    res.status(500).json({ error: "Error al obtener las vacantes" });
+  }
 });
