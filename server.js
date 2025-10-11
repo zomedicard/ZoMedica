@@ -35,20 +35,19 @@ const transporter = nodemailer.createTransport({
 // =================================================================
 // Inicialización de Express y configuración de middlewares que se aplican a todas las peticiones.
 const app = express();
-app.use(cors());
+// Configuración de CORS para permitir solo peticiones desde tu frontend en Vercel
+const corsOptions = {
+  origin: 'https://zo-medica.vercel.app', // <-- ¡PON TU URL DE VERCEL AQUÍ!
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));;
 app.use(express.json());
 
 // Variables de entorno y de ruta
-const JWT_SECRET = process.env.JWT_SECRET;
-
-// Comprobación de seguridad: detiene el servidor si la clave secreta no está configurada.
-if (!JWT_SECRET) {
-  console.error("¡ERROR FATAL! La variable de entorno JWT_SECRET no está definida.");
-  process.exit(1); // Detiene la ejecución para evitar correr en un estado inseguro.
-}
-
+const JWT_SECRET = process.env.env_SECRET || "tu_secreto_secreto";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 
 // =================================================================
 // SECCIÓN: CONFIGURACIÓN DE MULTER (SUBIDA DE ARCHIVOS)
@@ -90,7 +89,7 @@ let db;
         });
        
      await db.exec(`
-       CREATE TABLE IF NOT EXISTS usuarios (
+      CREATE TABLE IF NOT EXISTS usuarios (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
     correo TEXT UNIQUE NOT NULL, 
@@ -98,7 +97,8 @@ let db;
     rol TEXT NOT NULL,
     perfil_completo INTEGER DEFAULT 0,
     verificado INTEGER DEFAULT 0, 
-    token_verificacion TEXT, 
+    token_verificacion TEXT,
+    token_verificacion_expires INTEGER,
     especialidad TEXT,
     bio TEXT,
     direccion TEXT,
@@ -110,7 +110,7 @@ let db;
     linkedinURL TEXT,
     cedula TEXT,
     fechaNacimiento TEXT,
-    habilidades TEXT -- Almacenado como JSON string,
+    habilidades TEXT,
     reset_token TEXT,
     reset_token_expires INTEGER
 );
@@ -120,6 +120,7 @@ let db;
     titulo TEXT,
     institucion TEXT,
     descripcion TEXT,
+    keywords TEXT,
     requisitos_obligatorios TEXT,
     requisitos_deseables TEXT,
     usuario_id INTEGER,
@@ -247,10 +248,10 @@ try {
             try {
                 const data = await fs.readFile(path.join(__dirname, 'vacantes.json'), 'utf8');
                 const vacantesDesdeJson = JSON.parse(data);
-                const stmt = await db.prepare('INSERT INTO vacantes (id, titulo, institucion, descripcion) VALUES (?, ?, ?, ?)');
-for (const vacante of vacantesDesdeJson) {
-    await stmt.run(vacante.id, vacante.titulo, vacante.institucion, vacante.descripcion);
-}
+                const stmt = await db.prepare('INSERT INTO vacantes (id, titulo, institucion, descripcion, keywords) VALUES (?, ?, ?, ?, ?)');
+                for (const vacante of vacantesDesdeJson) {
+                    await stmt.run(vacante.id, vacante.titulo, vacante.institucion, vacante.descripcion, JSON.stringify(vacante.keywords));
+                }
                 await stmt.finalize();
                 console.log('Vacantes migradas a la base de datos.');
             } catch (e) {
@@ -274,6 +275,8 @@ for (const vacante of vacantesDesdeJson) {
     }
 })();
 
+// Hacer que la carpeta "public" sea accesible para el navegador
+app.use(express.static(path.join(__dirname, 'public')));
 
 // =================================================================
 // SECCIÓN: MIDDLEWARE DE AUTENTICACIÓN
@@ -337,15 +340,16 @@ app.post('/register', async (req, res) => {
         }
         
         const hashedPassword = await bcrypt.hash(password, 10);
-        const tokenVerificacion = crypto.randomBytes(32).toString('hex');
-        
-        const result = await db.run(
-            'INSERT INTO usuarios (nombre, correo, password, rol, verificado, token_verificacion) VALUES (?, ?, ?, ?, ?, ?)',
-            [nombre, correo, hashedPassword, rol, 0, tokenVerificacion]
-        );
+const tokenVerificacion = crypto.randomBytes(32).toString('hex');
+const tokenExpires = Date.now() + 3600000; // El token expira en 1 hora
+
+const result = await db.run(
+    'INSERT INTO usuarios (nombre, correo, password, rol, verificado, token_verificacion, token_verificacion_expires) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [nombre, correo, hashedPassword, rol, 0, tokenVerificacion, tokenExpires]
+);
 
         // --- INICIO: LÓGICA DE ENVÍO DE CORREO REAL ---
-        const linkVerificacion = `${process.env.FRONTEND_URL}/verify-email/${tokenVerificacion}`; 
+        const linkVerificacion = `http://localhost:3000/verify-email/${tokenVerificacion}`; 
         
         const mailOptions = {
             from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
@@ -386,25 +390,24 @@ app.post('/register', async (req, res) => {
 // server.js (Añadir esta ruta en una sección de "Autenticación Avanzada")
 
 app.get('/verify-email/:token', async (req, res) => {
-    // La URL de tu frontend. Asegúrate de que el puerto (5500) sea correcto.
-    const frontendUrl = `${process.env.FRONTEND_URL}/index.html`;
-
+    const frontendUrl = 'https://zo-medica.vercel.app/index.html';
     try {
         const token = req.params.token;
+        // Ahora también comprobamos que el token no haya expirado
         const result = await db.run(
-            'UPDATE usuarios SET verificado = 1, token_verificacion = NULL WHERE token_verificacion = ? AND verificado = 0',
-            [token]
+            'UPDATE usuarios SET verificado = 1, token_verificacion = NULL, token_verificacion_expires = NULL WHERE token_verificacion = ? AND token_verificacion_expires > ?',
+            [token, Date.now()] // Compara con la fecha y hora actual
         );
 
         if (result.changes > 0) {
-            // Éxito: Redirige al login con un parámetro de éxito
-            console.log(`✅ ÉXITO: Usuario con token ${token} ha sido verificado.`);
-            res.redirect(`${frontendUrl}#login?verified=true`);
-        } else {
-            // Fracaso: Redirige al login con un parámetro de error
-            console.log(`⚠️ ALERTA: No se pudo verificar el token ${token}.`);
-            res.redirect(`${frontendUrl}#login?verified=false`);
-        }
+    // Éxito: Redirige al login con el parámetro ANTES del ancla
+    console.log(`✅ ÉXITO: Usuario con token ${token} ha sido verificado.`);
+    res.redirect(`${frontendUrl}?verified=true#login`); // <-- LÍNEA CORREGIDA
+} else {
+    // Fracaso: Redirige al login con el parámetro ANTES del ancla
+    console.log(`⚠️ ALERTA: No se pudo verificar el token ${token}.`);
+    res.redirect(`${frontendUrl}?verified=false#login`); // <-- LÍNEA CORREGIDA
+}
     } catch (error) {
         console.error('Error al verificar correo:', error);
         res.redirect(`${frontendUrl}#login?verified=error`);
@@ -420,16 +423,18 @@ app.post('/login', async (req, res) => {
         console.log('🔎 Intentando iniciar sesión para:', user); 
         // ------------------------------------
 
-        if (!user) {
+       if (!user) {
             return res.status(401).json({ error: 'Credenciales inválidas.' });
         }
 
+        // ▼▼▼ ESTE ES EL BLOQUE QUE VAMOS A "APAGAR" ▼▼▼
         if (user.verificado === 0) {
             return res.status(403).json({ 
                 error: 'Debes verificar tu correo electrónico antes de iniciar sesión.',
                 requiereVerificacion: true 
             });
-        }
+          
+          }
 
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
@@ -445,48 +450,31 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// AÑADE ESTA NUEVA RUTA EN TU SECCIÓN DE AUTENTICACIÓN
 app.post('/resend-verification', async (req, res) => {
     const { correo } = req.body;
-    if (!correo) {
-        return res.status(400).json({ error: 'Correo no proporcionado.' });
-    }
-
     try {
-        const user = await db.get('SELECT * FROM usuarios WHERE correo = ?', [correo]);
+        const user = await db.get('SELECT * FROM usuarios WHERE correo = ? AND verificado = 0', [correo]);
+        if (user) {
+            const tokenVerificacion = crypto.randomBytes(32).toString('hex');
+            const tokenExpires = Date.now() + 3600000; // Nuevo token, nueva expiración de 1 hora
 
-        // Si el usuario existe y no está verificado
-        if (user && user.verificado === 0) {
-            // Reutiliza el token existente o crea uno nuevo si no existe
-            const tokenVerificacion = user.token_verificacion || crypto.randomBytes(32).toString('hex');
+            await db.run(
+                'UPDATE usuarios SET token_verificacion = ?, token_verificacion_expires = ? WHERE correo = ?',
+                [tokenVerificacion, tokenExpires, correo]
+            );
 
-            // Si el token era nulo, lo actualizamos en la BD
-            if (!user.token_verificacion) {
-                await db.run('UPDATE usuarios SET token_verificacion = ? WHERE id = ?', [tokenVerificacion, user.id]);
-            }
-
-            const linkVerificacion = `${process.env.FRONTEND_URL}/verify-email/${tokenVerificacion}`;
+            const linkVerificacion = `http://localhost:3000/verify-email/${tokenVerificacion}`;
             const mailOptions = {
                 from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
                 to: correo,
-                subject: 'Verifica tu cuenta en ZoMedica (Reenvío)',
-                html: `
-                    <p>Haz clic en el siguiente botón para verificar tu correo electrónico.</p>
-                    <a href="${linkVerificacion}" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px;">
-                        Verificar mi Cuenta
-                    </a>
-                `
+                subject: 'Verifica tu cuenta en ZoMedica (Nuevo Enlace)',
+                html: `<p>Recibiste una solicitud para un nuevo enlace de verificación. Haz clic abajo para activar tu cuenta. Este enlace expirará en 1 hora.</p><a href="${linkVerificacion}" style="padding: 10px; background-color: #0A66C2; color: white; text-decoration: none; border-radius: 5px;">Verificar mi Cuenta</a>`
             };
-
             await transporter.sendMail(mailOptions);
-            console.log(`Correo de verificación REENVIADO a ${correo}`);
         }
-
-        // Siempre enviamos una respuesta genérica por seguridad
-        res.json({ message: 'Si tu correo está registrado y no verificado, se ha enviado un nuevo enlace de verificación.' });
-
+        res.json({ message: 'Si tu cuenta existe y no está verificada, se ha enviado un nuevo enlace a tu correo.' });
     } catch (err) {
-        console.error('Error al reenviar correo de verificación:', err);
+        console.error('Error reenviando verificación:', err);
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
@@ -503,7 +491,7 @@ app.post('/forgot-password', async (req, res) => {
                 'UPDATE usuarios SET reset_token = ?, reset_token_expires = ? WHERE id = ?',
                 [token, expires, user.id]
             );
-            const resetLink = `${process.env.FRONTEND_URL}/index.html?resetToken=${token}`;
+            const resetLink = `https://zo-medica.vercel.app/index.html?resetToken=${token}`;
             const mailOptions = {
                 from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
                 to: user.correo,
@@ -1451,7 +1439,7 @@ async function procesarAlertasParaNuevaVacante(vacante) {
                             ${vacante.ubicacion ? `<p style="margin: 5px 0;"><strong>Ubicación:</strong> ${vacante.ubicacion}</p>` : ''}
                         </div>
                         <p>¡No pierdas la oportunidad! Haz clic en el siguiente botón para ver los detalles y postularte.</p>
-                        <a href="${process.env.FRONTEND_URL}" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                        <a href="http://127.0.0.1:5501/index.html" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block;">
                             Ver Vacante Ahora
                         </a>
                         <p style="font-size: 0.8em; color: #777; margin-top: 30px;">Recibes este correo porque creaste una alerta de empleo en ZoMedica.</p>

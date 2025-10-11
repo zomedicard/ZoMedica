@@ -89,7 +89,6 @@ a:hover {
 }
 
 /* --- ESTILOS DE NAVEGACIÓN (SIN CAMBIOS RESPECTO A TU VERSIÓN) --- */
-/* --- ESTILOS DE NAVEGACIÓN (MEJORADOS) --- */
 nav {
     max-width: 90%; 
     margin: 20px auto 30px auto;
@@ -1226,18 +1225,16 @@ nav .brand span {
 /* --- ESTILOS PARA EL SISTEMA DE MENSAJERÍA --- */
 .chat-container {
     display: flex;
-    height: 70vh; /* Aumentamos la altura para más espacio */
-    border: none; /* Quitamos el borde para un look más limpio */
-    border-radius: 15px; /* Bordes más redondeados */
+    height: 60vh;
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Sombra elegante */
 }
 .chat-sidebar {
-    width: 30%; /* La hacemos un poco más estrecha */
+    width: 35%;
     border-right: 1px solid var(--border-light);
     overflow-y: auto;
-    background-color: #ffffff; /* Fondo blanco puro */
-    padding: 5px 0;
+    background-color: #fcfcfc;
 }
 .chat-main {
     width: 65%;
@@ -1246,106 +1243,65 @@ nav .brand span {
 }
 .chat-window {
     flex-grow: 1;
-    padding: 25px; /* Más padding para que respire */
+    padding: 20px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    background-color: var(--light-bg); /* Fondo ligeramente azulado */
 }
-/* Área de Input: Hacemos que el input y el botón de envío se vean como un solo componente */
 .chat-input-area {
     display: flex;
-    padding: 10px 15px;
-    background-color: var(--white);
+    padding: 15px;
     border-top: 1px solid var(--border-light);
 }
 #mensajeInput {
     flex-grow: 1;
-    border-radius: 25px; /* Más redondeado */
-    padding: 12px 20px;
-    border: 1px solid var(--border-light);
+    border-radius: 20px 0 0 20px;
     border-right: none;
-    transition: border-color 0.3s;
-}
-#mensajeInput:focus {
-    border-color: var(--primary-blue);
-    outline: none;
-    box-shadow: 0 0 0 1px var(--primary-blue);
-}
-#enviarMensajeBtn {
-    border-radius: 25px;
-    margin-top: 0;
-    margin-left: 10px;
-    padding: 10px 20px;
-    font-size: 1rem;
-    box-shadow: none;
 }
 #enviarMensajeBtn {
     border-radius: 0 20px 20px 0;
     margin-top: 0;
     box-shadow: none;
 }
-/* Elementos de la conversación */
 .conversation-item {
-    padding: 12px 18px; /* Menos padding */
+    padding: 15px;
     cursor: pointer;
     border-bottom: 1px solid var(--border-light);
     transition: background-color 0.2s;
-    position: relative;
 }
-
 .conversation-item:hover {
     background-color: var(--light-bg);
 }
-
-/* Chat Activo: Color de fondo más notable */
 .conversation-item.active {
     background-color: var(--primary-blue);
     color: white;
 }
-
-.conversation-item.active h6, .conversation-item.active p {
-    color: white;
-    opacity: 1;
-}
-
-.conversation-item h6 {
-    font-size: 1rem;
-    font-weight: 600;
+.conversation-item h6, .conversation-item p {
+    margin: 0;
+    pointer-events: none; /* Evita que el texto interfiera con el clic */
 }
 .conversation-item p {
-    font-size: 0.8rem;
-    color: var(--medium-grey);
-    opacity: 0.9;
+    font-size: 0.85rem;
+    opacity: 0.8;
 }
-/* Estilo Base de la Burbuja */
 .message-bubble {
-    max-width: 80%; /* Aumentamos el ancho máximo para mensajes largos */
-    padding: 10px 14px; /* Un poco menos de padding */
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 18px;
     margin-bottom: 10px;
     line-height: 1.4;
-    font-size: 0.95rem; /* Letra un poco más pequeña */
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Sombra muy sutil */
-    transition: opacity 0.3s ease;
 }
-
-/* Burbujas ENVIADAS (Usuario Logueado) */
 .message-bubble.sent {
-    background-color: var(--primary-blue); /* Color principal de ZoMedica */
+    background-color: var(--primary-blue);
     color: white;
-    align-self: flex-end; /* A la derecha */
-    /* Bordes dinámicos: más redondeados arriba, más "afilada" la esquina de la ventana */
-    border-radius: 18px 18px 4px 18px; 
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
 }
-
-/* Burbujas RECIBIDAS (Interlocutor) */
 .message-bubble.received {
-    background-color: var(--white); /* Fondo blanco (o un color muy suave) */
+    background-color: #e9e9eb;
     color: var(--dark-text);
-    align-self: flex-start; /* A la izquierda */
-    /* Bordes dinámicos: más redondeados arriba, más "afilada" la esquina de la ventana */
-    border-radius: 18px 18px 18px 4px;
-    border: 1px solid var(--border-light); /* Borde suave */
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
 }
 .chat-placeholder {
     margin: auto;
@@ -1483,369 +1439,4 @@ nav .nav-links a {
     padding: 8px 12px;
     /* ... (otros estilos) ... */
     /* Asegúrate de que aquí NO exista una propiedad `text-indent` */
-}
-
-/* ================================================================= */
-/* # --- ESTILOS MODERNOS PARA EL PANEL DE INSTITUCIÓN --- */
-/* ================================================================= */
-
-/* --- Nuevos Colores para Botones de Acción --- */
-:root {
-    --success-color: #28a745; /* Verde para "Crear" */
-    --success-hover: #218838;
-    --warning-color: #ffc107; /* Amarillo para "Editar" */
-    --warning-hover: #e0a800;
-    --warning-text: #212529;   /* Texto oscuro para botones amarillos */
-    --info-color: #17a2b8;    /* Cian para "Ver" */
-    --info-hover: #117a8b;
-}
-
-.button-success {
-    background-color: var(--success-color);
-    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-}
-.button-success:hover {
-    background-color: var(--success-hover);
-    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-}
-
-.button-warning {
-    background-color: var(--warning-color);
-    color: var(--warning-text); /* Texto oscuro para mejor legibilidad */
-    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.35);
-}
-.button-warning:hover {
-    background-color: var(--warning-hover);
-    color: var(--warning-text);
-    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.45);
-}
-
-/* Encabezado del Panel */
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 25px;
-    padding-bottom: 20px;
-    /* Eliminamos el borde inferior para un look más limpio */
-}
-
-.dashboard-welcome h2 {
-    font-size: 2rem;
-    color: var(--dark-text);
-    margin: 0;
-    border: none; /* Quitamos borde heredado */
-    padding: 0;
-}
-
-.dashboard-welcome p {
-    font-size: 1.1rem;
-    color: var(--medium-grey);
-    margin-top: 5px;
-}
-
-/* Tarjetas de Estadísticas Mejoradas */
-.stats-bar {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); /* Un poco más de espacio */
-    gap: 25px;
-    margin-bottom: 40px;
-}
-
-.stat-card {
-    background-color: var(--white); /* Fondo blanco puro */
-    border-radius: 12px;
-    padding: 25px;
-    position: relative;
-    overflow: hidden;
-    border: none; /* Sin borde */
-    border-left: 5px solid; /* Borde de color a la izquierda */
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-}
-
-/* Asignamos colores a cada tarjeta */
-.stat-card:nth-child(1) { border-color: var(--primary-blue); }
-.stat-card:nth-child(2) { border-color: var(--success-color); }
-.stat-card:nth-child(3) { border-color: var(--info-color); } /* Para la tercera tarjeta (opcional) */
-
-.stat-card h4 {
-    color: var(--medium-grey);
-    font-size: 1rem;
-    font-weight: 500;
-}
-
-.stat-card p {
-    font-size: 2.8rem;
-    font-weight: 700;
-}
-
-.stat-card .card-icon {
-    font-size: 3.5rem; /* Icono más grande */
-    position: absolute;
-    top: 50%;
-    right: 20px;
-    transform: translateY(-50%);
-    opacity: 0.1; /* Más sutil */
-}
-
-/* Colores de iconos por tarjeta */
-.stat-card:nth-child(1) .card-icon { color: var(--primary-blue); }
-.stat-card:nth-child(2) .card-icon { color: var(--success-color); }
-.stat-card:nth-child(3) .card-icon { color: var(--info-color); }
-
-/* Títulos de las columnas del dashboard */
-.dashboard-column h3 {
-    font-size: 1.5rem;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--border-light);
-    margin-bottom: 20px;
-}
-
-/* ================================================================= */
-/* # --- ESTILOS MODERNOS PARA TARJETAS DE VACANTES --- */
-/* ================================================================= */
-
-/* Rediseño de la tarjeta base de la vacante */
-.vacante {
-    background-color: var(--white);
-    border: 1px solid var(--border-light); /* Borde sutil para definir la tarjeta */
-    border-radius: 12px;
-    padding: 25px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06); /* Sombra suave por defecto */
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    overflow: hidden; /* Oculta el borde superior hasta el hover */
-}
-
-/* Borde de color superior que aparece al pasar el ratón */
-.vacante::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 5px; /* Un poco más grueso */
-    background-color: var(--primary-blue);
-    transform: translateY(-100%); /* Oculto por defecto */
-    transition: transform 0.3s ease;
-}
-
-.vacante:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-.vacante:hover::before {
-    transform: translateY(0); /* Muestra el borde */
-}
-
-/* Contenido de la tarjeta */
-.vacante-contenido a {
-    text-decoration: none;
-}
-
-.vacante-contenido .vacante-titulo {
-    font-size: 1.3rem; /* Título más grande y llamativo */
-    font-weight: 700;
-    color: var(--dark-text);
-    margin: 0 0 8px 0;
-    line-height: 1.3;
-}
-
-.vacante-contenido .vacante-institucion {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--medium-grey);
-    margin-bottom: 15px;
-}
-
-/* Detalles con iconos (Ubicación, Contrato) */
-.vacante-detalles-iconos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 15px;
-    padding-top: 15px;
-    border-top: 1px solid var(--border-light);
-}
-
-.detalle-icono {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-    color: var(--medium-grey);
-}
-
-.detalle-icono i {
-    color: var(--primary-blue);
-    font-size: 1.1rem;
-}
-
-/* Pie de la tarjeta */
-.vacante-footer {
-    margin-top: auto; /* Empuja el footer al final de la tarjeta */
-    padding-top: 15px;
-}
-
-.keywords-container .keyword-tag {
-    background-color: #e9ecef;
-    color: #495057;
-    font-weight: 500;
-    font-size: 0.8rem;
-    padding: 5px 10px;
-}
-
-/* ===================================================================== */
-/* # --- ESTILOS MEJORADOS PARA VACANTES PUBLICADAS (PANEL INSTITUCIÓN) --- */
-/* ===================================================================== */
-
-/* Estilo para la tarjeta específica dentro del panel de la institución */
-#misVacantes .vacante {
-    border-left: 4px solid var(--primary-blue); /* Borde de color distintivo */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: border-color 0.3s ease;
-}
-
-#misVacantes .vacante:hover {
-    border-color: var(--accent-green); /* Cambia el color del borde al pasar el ratón */
-}
-
-#misVacantes .vacante-header h4 {
-    color: var(--dark-text);
-    font-weight: 700;
-}
-
-/* Mejora de los botones de acción con colores */
-#misVacantes .icon-button {
-    font-size: 1.2rem; /* Iconos un poco más grandes */
-    padding: 8px;
-}
-
-/* Color para Editar (Amarillo) */
-#misVacantes .icon-button[title="Editar"]:hover {
-    color: #ffc107; 
-    transform: scale(1.15);
-}
-
-/* Color para Analíticas (Verde) */
-#misVacantes .icon-button[title="Analíticas"]:hover {
-    color: #28a745; 
-    transform: scale(1.15);
-}
-
-/* El color para Eliminar (Rojo) ya está definido, pero reforzamos el efecto */
-#misVacantes .icon-button[title="Eliminar"]:hover {
-    color: var(--error-red);
-    transform: scale(1.15);
-}
-
-/* Estilo mejorado para la barra de estadísticas */
-#misVacantes .vacante-stats {
-    background-color: var(--light-bg);
-    padding: 8px 12px;
-    border-radius: 20px; /* Bordes redondeados tipo "píldora" */
-    margin-top: 15px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--medium-grey);
-    align-self: flex-start; /* Lo alineamos a la izquierda */
-    display: inline-flex; /* Usamos flex para alinear el ícono */
-    align-items: center;
-    gap: 6px;
-}
-
-#misVacantes .vacante-stats i {
-    color: var(--primary-blue);
-}
-
-/* ===================================================================== */
-/* # --- ESTILOS MEJORADOS PARA VACANTES PUBLICADAS (PANEL INSTITUCIÓN) --- */
-/* ===================================================================== */
-
-/* Estilo para la tarjeta específica dentro del panel de la institución */
-#misVacantes .vacante {
-    border-left: 4px solid var(--primary-blue); /* Borde de color distintivo */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: border-color 0.3s ease;
-}
-
-#misVacantes .vacante:hover {
-    border-color: var(--accent-green); /* Cambia el color del borde al pasar el ratón */
-}
-
-#misVacantes .vacante-header h4 {
-    color: var(--dark-text);
-    font-weight: 700;
-}
-
-/* Mejora de los botones de acción con colores */
-#misVacantes .icon-button {
-    font-size: 1.2rem; /* Iconos un poco más grandes */
-    padding: 8px;
-}
-
-/* Color para Editar (Amarillo) */
-#misVacantes .icon-button[title="Editar"]:hover {
-    color: #ffc107; 
-    transform: scale(1.15);
-}
-
-/* Color para Analíticas (Verde) */
-#misVacantes .icon-button[title="Analíticas"]:hover {
-    color: #28a745; 
-    transform: scale(1.15);
-}
-
-/* El color para Eliminar (Rojo) ya está definido, pero reforzamos el efecto */
-#misVacantes .icon-button[title="Eliminar"]:hover {
-    color: var(--error-red);
-    transform: scale(1.15);
-}
-
-/* Estilo mejorado para la barra de estadísticas */
-#misVacantes .vacante-stats {
-    background-color: var(--light-bg);
-    padding: 8px 12px;
-    border-radius: 20px; /* Bordes redondeados tipo "píldora" */
-    margin-top: 15px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--medium-grey);
-    align-self: flex-start; /* Lo alineamos a la izquierda */
-    display: inline-flex; /* Usamos flex para alinear el ícono */
-    align-items: center;
-    gap: 6px;
-}
-
-#misVacantes .vacante-stats i {
-    color: var(--primary-blue);
-}
-
-/* ===================================================================== */
-/* # --- CORRECCIÓN DEFINITIVA: VISIBILIDAD DE TEXTO EN MENÚ DESPLEGABLE --- */
-/* ===================================================================== */
-
-/*
-  Esta regla fuerza a que el texto dentro de los enlaces del menú
-  desplegable sea siempre visible, anulando el estilo que hereda
-  de los botones de la barra de navegación.
-*/
-.dropdown-content a {
-    text-indent: 0 !important;
-    font-size: 1rem !important; /* Asegura que el texto tenga tamaño */
 }

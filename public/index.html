@@ -355,18 +355,13 @@
         </div>
 </section>
         
-        
-<section id="instituciones" class="container" style="display: none;">
+        <section id="instituciones" class="container" style="display: none;">
     <div class="dashboard-header">
-        <div class="dashboard-welcome">
-            <h2>Panel de Institución</h2>
-            <p>¡Hola de nuevo, <span id="nombreInstitucionPanel" style="font-weight: 600;"></span>!</p>
-        </div>
-        
+        <h2 id="nombreInstitucionPanel">Panel de Institución</h2>
         <div id="dashboard-actions" class="dashboard-actions">
-            <button onclick="mostrarFormularioVacante()" class="button button-success"><i class="fas fa-plus"></i> Nueva Vacante</button>
-            <button onclick="mostrarFormularioEditarInstitucion()" class="button button-warning"><i class="fas fa-edit"></i> Editar Perfil</button>
-            <button onclick="mostrarPerfilPublicoInstitucion(${userId})" class="button-secondary"><i class="fas fa-eye"></i> Ver Perfil Público</button>
+            <button onclick="mostrarFormularioVacante()" class="button"><i class="fas fa-plus"></i> Nueva Vacante</button>
+            <button onclick="mostrarFormularioEditarInstitucion()" class="button-secondary"><i class="fas fa-edit"></i> Editar Perfil</button>
+            <button onclick="verPerfilPublicoInstitucion()" class="button-secondary"><i class="fas fa-eye"></i> Ver Perfil Público</button>
         </div>
     </div>
 
@@ -381,7 +376,7 @@
             <p id="statTotalPostulaciones">0</p>
             <i class="fas fa-users card-icon"></i>
         </div>
-        </div>
+    </div>
 
     <div class="dashboard-main-content">
         <div class="dashboard-column">
@@ -392,10 +387,11 @@
         <div class="dashboard-column">
             <h3>Últimas Postulaciones Recibidas</h3>
             <div id="postulacionesRecibidas">
-                 </div>
+                </div>
         </div>
     </div>
 </section>
+
 
 <section id="pipelineVacante" class="container" style="display: none;">
             <button onclick="mostrarInstituciones()" class="button">← Volver al Panel</button>
