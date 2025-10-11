@@ -1451,7 +1451,7 @@ async function procesarAlertasParaNuevaVacante(vacante) {
                             ${vacante.ubicacion ? `<p style="margin: 5px 0;"><strong>Ubicación:</strong> ${vacante.ubicacion}</p>` : ''}
                         </div>
                         <p>¡No pierdas la oportunidad! Haz clic en el siguiente botón para ver los detalles y postularte.</p>
-                        <a href="http://127.0.0.1:5501/index.html" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                        <a href="${process.env.FRONTEND_URL}" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block;">
                             Ver Vacante Ahora
                         </a>
                         <p style="font-size: 0.8em; color: #777; margin-top: 30px;">Recibes este correo porque creaste una alerta de empleo en ZoMedica.</p>
