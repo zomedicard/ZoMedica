@@ -35,18 +35,20 @@ const transporter = nodemailer.createTransport({
 // =================================================================
 // Inicialización de Express y configuración de middlewares que se aplican a todas las peticiones.
 const app = express();
-// Configuración de CORS para permitir solo peticiones desde tu frontend en Vercel
+// =================================================================
+// SECCIÓN: CONFIGURACIÓN DE CORS (ANTES DE LAS RUTAS)
+// =================================================================
+import cors from 'cors';
+
 const corsOptions = {
-  origin: 'https://zo-medica.vercel.app', 
+  origin: 'https://zo-medica.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // métodos permitidos
+  allowedHeaders: ['Content-Type', 'Authorization'],     // cabeceras permitidas
+  credentials: true,                                    // si usas cookies o tokens
   optionsSuccessStatus: 200
 };
+
 app.use(cors(corsOptions));
-    origin: '*',  // Cambia a '*' temporalmente para probar
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Añade métodos explícitos
-    allowedHeaders: ['Content-Type', 'Authorization'],  // Permite headers que usas
-    optionsSuccessStatus: 200
-}));
-app.use(express.json());
 
 // Variables de entorno y de ruta
 const JWT_SECRET = process.env.JWT_SECRET || "YHLQMDLGN_8095040_DJLUJIAN_LAPIZ";
