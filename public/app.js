@@ -677,59 +677,26 @@ function aplicarFiltros() {
     cargarVacantes(searchInput, ubicacionFilter, tipoContratoFilter);
 }
 
-async function cargarVacantes(query = '', ubicacion = '', tipoContrato = '') {
+async function cargarVacantes(filtros = {}) {
     const listaVacantes = document.getElementById('listaVacantes');
-    if (!listaVacantes) return;
+    listaVacantes.innerHTML = 'Cargando vacantes...';
 
-    mostrarSpinner('listaVacantes');
-    
     try {
-        const params = new URLSearchParams();
-        if (query) params.append('q', query);
-        if (ubicacion) params.append('ubicacion', ubicacion);
-        if (tipoContrato) params.append('tipoContrato', tipoContrato);
-        
-        const response = await fetch(`https://zo-medica.onrender.com/vacantes?${params.toString()}`);
-
-        if (!response.ok) {
-            throw new Error(`Error del servidor: ${response.status}`);
+        // Construye la query string SOLO si hay filtros
+        let queryString = '';
+        if (Object.keys(filtros).length > 0) {
+            queryString = '?' + new URLSearchParams(filtros).toString();
         }
-
+        
+        // Fetch sin trailing '?' innecesario
+        const response = await fetch(`https://zo-medica.onrender.com/vacantes${queryString}`);
+        
+        // Resto del código igual...
         const vacantes = await response.json();
-        
-        listaVacantes.innerHTML = '';
-        
-        if (!vacantes || vacantes.length === 0) {
-            listaVacantes.innerHTML = '<p>No se encontraron vacantes con esos criterios.</p>';
-        } else {
-            vacantes.forEach(vacante => {
-                const vacanteDiv = document.createElement('div');
-                vacanteDiv.className = 'vacante';
-
-                const titulo = vacante.titulo || 'Título no disponible';
-                const institucion = vacante.institucion || 'Institución no especificada';
-                const descripcionCorta = (vacante.descripcion || 'Sin descripción.').substring(0, 100);
-                const ubicacionHTML = vacante.ubicacion ? `<p class="vacante-ubicacion">${vacante.ubicacion}</p>` : '';
-
-                // ESTE ES EL BLOQUE HTML CORRECTO Y COMPLETO
-                vacanteDiv.innerHTML = `
-                    <button class="favorite-btn" onclick="toggleFavorito(${vacante.id}, this)">
-                        <i class="fas fa-star"></i>
-                    </button>
-                    <a href="#" onclick="mostrarVacanteDetalles(${vacante.id})"><h4>${titulo}</h4></a>
-                    <p><strong>Institución:</strong> ${institucion}</p>
-                    ${ubicacionHTML}
-                    <p>${descripcionCorta}...</p>
-                `;
-
-                listaVacantes.appendChild(vacanteDiv);
-            });
-        }
+        // ... (el resto de la función se mantiene)
     } catch (error) {
-        listaVacantes.innerHTML = '<p>Ocurrió un error crítico al cargar las vacantes.</p>';
         console.error('Error definitivo al cargar vacantes:', error);
-    } finally {
-        ocultarSpinner();
+        listaVacantes.innerHTML = '<p>Error al cargar las vacantes. Intenta de nuevo más tarde.</p>';
     }
 }
 

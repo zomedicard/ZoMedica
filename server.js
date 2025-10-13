@@ -41,6 +41,11 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
+    origin: '*',  // Cambia a '*' temporalmente para probar
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Añade métodos explícitos
+    allowedHeaders: ['Content-Type', 'Authorization'],  // Permite headers que usas
+    optionsSuccessStatus: 200
+}));
 app.use(express.json());
 
 // Variables de entorno y de ruta
@@ -1672,4 +1677,23 @@ server.listen(PORT, () => {
     console.log(`🚀 Servidor (HTTP y WebSocket) escuchando en el puerto ${PORT}`);
 });
 
+// Ruta de vacantes (ya la tienes, pero añade logs)
+app.get('/vacantes', async (req, res) => {
+    console.log('📥 Request recibida en /vacantes desde Origin:', req.headers.origin);  // Log para depurar
+    try {
+        const vacantes = await db.all('SELECT * FROM vacantes');
+        res.json(vacantes.map(v => ({
+            ...v,
+            keywords: JSON.parse(v.keywords || '[]')
+        })));
+    } catch (err) {
+        console.error('Error al obtener vacantes:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
 
+// Handler global para 404 (al final de todas las rutas)
+app.use((req, res, next) => {
+    console.log('⚠️ 404: Ruta no encontrada:', req.url);  // Log para depurar
+    res.status(404).json({ error: 'Ruta no encontrada.' });
+});
