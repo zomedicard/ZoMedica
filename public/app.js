@@ -2687,3 +2687,4 @@ async function reenviarVerificacion(correo) {
     } catch (error) {
         mostrarMensajeGlobal('No se pudo reenviar el correo. Inténtalo de nuevo más tarde.', 'error');
     }
+}
