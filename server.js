@@ -701,24 +701,6 @@ app.get('/instituciones/:id', async (req, res) => {
     }
 });
 
-
-app.get('/instituciones/:id', async (req, res) => {
-    const institucionId = req.params.id;
-    try {
-        const institucion = await db.get('SELECT id, nombre, direccion, telefono, sitioWeb, logoPath, bio FROM usuarios WHERE id = ? AND rol = "institucion"', institucionId);
-        
-        if (!institucion) {
-            return res.status(404).json({ error: 'Institución no encontrada.' });
-        }
-
-        const vacantes = await db.all('SELECT id, titulo, descripcion, ubicacion, tipoContrato FROM vacantes WHERE usuario_id = ? ORDER BY id DESC', institucionId);
-        res.json({ ...institucion, vacantes });
-    } catch (err) {
-        console.error('Error al obtener perfil de institución:', err);
-        res.status(500).json({ error: 'Error interno del servidor.' });
-    }
-});
-
 // Esta es la nueva ruta para la foto de perfil del profesional
 app.put('/perfil/foto', verificarToken, upload.single('foto'), async (req, res) => {
     // 1. Nos aseguramos de que solo los profesionales puedan usarla
@@ -738,23 +720,6 @@ app.put('/perfil/foto', verificarToken, upload.single('foto'), async (req, res) 
         res.json({ message: 'Foto de perfil actualizada con éxito.', fotoPath });
     } catch (err) {
         console.error('Error al actualizar la foto de perfil:', err);
-        res.status(500).json({ error: 'Error interno del servidor.' });
-    }
-});
-
-app.put('/perfil/logo', verificarToken, upload.single('logo'), async (req, res) => {
-    if (req.user.rol !== 'institucion') {
-        return res.status(403).json({ error: 'Acceso denegado.' });
-    }
-    if (!req.file) {
-        return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
-    }
-    try {
-        const logoPath = `uploads/${req.file.filename}`;
-        await db.run('UPDATE usuarios SET logoPath = ? WHERE id = ?', [logoPath, req.user.id]);
-        res.json({ message: 'Logo actualizado con éxito.', logoPath });
-    } catch (err) {
-        console.error('Error al actualizar el logo:', err);
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
