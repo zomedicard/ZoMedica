@@ -37,7 +37,7 @@ const transporter = nodemailer.createTransport({
 const app = express();
 // Configuración de CORS para permitir solo peticiones desde tu frontend en Vercel
 const corsOptions = {
-  origin: 'https://zo-medica.vercel.app' 
+  origin: 'https://zo-medica.vercel.app', 
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));;
