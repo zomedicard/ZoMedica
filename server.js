@@ -278,6 +278,38 @@ try {
     }
 })();
 
+// =================================================================
+// SECCIÓN: RUTA PÚBLICA PARA OBTENER VACANTES (compatible con SQLite)
+// =================================================================
+app.get('/vacantes', async (req, res) => {
+  const { q, ubicacion, tipoContrato } = req.query;
+  let query = 'SELECT * FROM vacantes WHERE 1=1';
+  const params = [];
+
+  if (q) {
+    query += ' AND (titulo LIKE ? OR descripcion LIKE ? OR institucion LIKE ?)';
+    params.push(`%${q}%`, `%${q}%`, `%${q}%`);
+  }
+  if (ubicacion) {
+    query += ' AND ubicacion LIKE ?';
+    params.push(`%${ubicacion}%`);
+  }
+  if (tipoContrato) {
+    query += ' AND tipoContrato LIKE ?';
+    params.push(`%${tipoContrato}%`);
+  }
+
+  query += ' ORDER BY id DESC';
+
+  try {
+    const vacantes = await db.all(query, params);
+    res.json(vacantes);
+  } catch (error) {
+    console.error('Error al obtener vacantes:', error);
+    res.status(500).json({ error: 'Error al obtener las vacantes.' });
+  }
+});
+
 // Hacer que la carpeta "public" sea accesible para el navegador
 app.use(express.static(path.join(__dirname, 'public')));
 
