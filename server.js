@@ -35,10 +35,6 @@ const transporter = nodemailer.createTransport({
 // =================================================================
 // Inicialización de Express y configuración de middlewares que se aplican a todas las peticiones.
 const app = express();
-// =================================================================
-// SECCIÓN: CONFIGURACIÓN DE CORS (ANTES DE LAS RUTAS)
-// =================================================================
-import cors from 'cors';
 
 const corsOptions = {
   origin: 'https://zo-medica.vercel.app',
