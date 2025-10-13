@@ -1707,13 +1707,32 @@ server.listen(PORT, () => {
     console.log(`🚀 Servidor (HTTP y WebSocket) escuchando en el puerto ${PORT}`);
 });
 
-// Ruta pública para obtener las vacantes
-app.get("/vacantes", async (req, res) => {
+// ✅ Ruta pública para obtener las vacantes (compatible con SQLite)
+app.get('/vacantes', async (req, res) => {
+  const { q, ubicacion, tipoContrato } = req.query;
+  let query = 'SELECT * FROM vacantes WHERE 1=1';
+  const params = [];
+
+  if (q) {
+    query += ' AND (titulo LIKE ? OR descripcion LIKE ? OR institucion LIKE ?)';
+    params.push(`%${q}%`, `%${q}%`, `%${q}%`);
+  }
+  if (ubicacion) {
+    query += ' AND ubicacion LIKE ?';
+    params.push(`%${ubicacion}%`);
+  }
+  if (tipoContrato) {
+    query += ' AND tipoContrato LIKE ?';
+    params.push(`%${tipoContrato}%`);
+  }
+
+  query += ' ORDER BY id DESC';
+
   try {
-    const vacantes = await Vacante.find().sort({ fechaPublicacion: -1 });
+    const vacantes = await db.all(query, params);
     res.json(vacantes);
   } catch (error) {
-    console.error("Error al obtener las vacantes:", error);
-    res.status(500).json({ error: "Error al obtener las vacantes" });
+    console.error('Error al obtener vacantes:', error);
+    res.status(500).json({ error: 'Error al obtener las vacantes.' });
   }
 });
