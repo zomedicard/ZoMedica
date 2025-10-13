@@ -2639,8 +2639,10 @@ function iniciarConexionWebSocket() {
         socket.close();
     }
 
-    // Conecta al servidor WebSocket que creamos, pasándole el token para identificarnos
-    socket = new WebSocket(`ws://localhost:3000?token=${token}`);
+ // ✅ CÓDIGO CORRECTO Y ROBUSTO
+const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const wsHost = 'zo-medica.onrender.com'; // ¡Tu URL de Render!
+socket = new WebSocket(`${wsProtocol}//${wsHost}?token=${token}`);
 
     socket.onopen = () => {
         console.log('Conexión WebSocket establecida.');
