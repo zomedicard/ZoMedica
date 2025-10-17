@@ -639,6 +639,8 @@ async function cargarFiltrosDeUbicacion() {
     // Marcamos los filtros como cargados
     filtrosCargados = true;
 }
+
+
 // AÑADE ESTA NUEVA FUNCIÓN REUTILIZABLE EN app.js
 
 function popularDropdownProvincias(selectElementId) {
@@ -1340,44 +1342,6 @@ async function verPerfilPostulante(postulacionId) {
 
         const perfil = await res.json();
 
-// Event listener para el formulario de edición
-document.getElementById('formEditarVacante').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const vacanteId = document.getElementById('editarVacanteId').value;
-    
-    // Recolectamos los datos del formulario
-    const datosActualizados = {
-        titulo: document.getElementById('vacanteTituloEditar').value,
-        institucion: document.getElementById('vacanteInstitucionEditar').value,
-        ubicacion: document.getElementById('vacanteUbicacionEditar').value,
-        tipoContrato: document.getElementById('vacanteTipoContratoEditar').value,
-        salario: document.getElementById('vacanteSalarioEditar').value,
-        descripcion: document.getElementById('vacanteDescripcionEditar').value,
-        requisitos_obligatorios: document.getElementById('vacanteRequisitosObligatoriosEditar').value,
-        requisitos_deseables: document.getElementById('vacanteRequisitosDeseablesEditar').value,
-    };
-
-    try {
-        const response = await fetch(`https://zo-medica.onrender.com/vacantes/${vacanteId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify(datosActualizados)
-        });
-
-        const data = await response.json();
-        
-        if (data.error) {
-            alert(`Error: ${data.error}`);
-        } else {
-            alert(data.message);
-            mostrarInstituciones(); // Volvemos al panel principal
-        }
-    } catch (error) {
-        console.error('Error al actualizar la vacante:', error);
-        alert('Ocurrió un error al guardar los cambios.');
-    }
-});
 
         // ==========================================================
         // PUNTO DE CONTROL 1: VERIFICAR LOS DATOS RECIBIDOS
@@ -1782,6 +1746,84 @@ async function cargarDatosPerfilInstitucion() {
         console.error('Error al cargar datos de la institución:', err);
     }
 }
+
+// Event listener para el formulario de edición
+
+document.getElementById('formEditarVacante').addEventListener('submit', async (e) => {
+
+    e.preventDefault();
+
+    
+
+    const vacanteId = document.getElementById('editarVacanteId').value;
+
+    
+
+    // Recolectamos los datos del formulario
+
+    const datosActualizados = {
+
+        titulo: document.getElementById('vacanteTituloEditar').value,
+
+        institucion: document.getElementById('vacanteInstitucionEditar').value,
+
+        ubicacion: document.getElementById('vacanteUbicacionEditar').value,
+
+        tipoContrato: document.getElementById('vacanteTipoContratoEditar').value,
+
+        salario: document.getElementById('vacanteSalarioEditar').value,
+
+        descripcion: document.getElementById('vacanteDescripcionEditar').value,
+
+        requisitos_obligatorios: document.getElementById('vacanteRequisitosObligatoriosEditar').value,
+
+        requisitos_deseables: document.getElementById('vacanteRequisitosDeseablesEditar').value,
+
+    };
+
+
+
+    try {
+
+        const response = await fetch(`https://zo-medica.onrender.com/vacantes/${vacanteId}`, {
+
+            method: 'PUT',
+
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+
+            body: JSON.stringify(datosActualizados)
+
+        });
+
+
+
+        const data = await response.json();
+
+        
+
+        if (data.error) {
+
+            alert(`Error: ${data.error}`);
+
+        } else {
+
+            alert(data.message);
+
+            mostrarInstituciones(); // Volvemos al panel principal
+
+        }
+
+    } catch (error) {
+
+        console.error('Error al actualizar la vacante:', error);
+
+        alert('Ocurrió un error al guardar los cambios.');
+
+    }
+
+});
+
+
 async function subirLogoInstitucion() {
     const logoInput = document.getElementById('logoEditar');
     const file = logoInput.files[0];
