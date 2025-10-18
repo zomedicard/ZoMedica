@@ -29,7 +29,7 @@ const spinner = document.getElementById('loadingSpinner');
 
 document.addEventListener('DOMContentLoaded', () => {
     handleUrlParams();
-    window.addEventListener('hashchange', handleUrlParams); 
+    window.addEventListener('hashchange', handleUrlParams);
     actualizarNav();
     if (token) {
         actualizarContadorNotificaciones();
@@ -175,12 +175,12 @@ async function mostrarInstituciones() {
         return mostrarLogin();
     }
     mostrarSeccion('instituciones');
-document.getElementById('nombreInstitucionPanel').textContent = userName;
+    document.getElementById('nombreInstitucionPanel').textContent = userName;
     try {
         const [vacantesRes, postulacionesRes] = await Promise.all([
-    fetchProtegido(`${API_BASE_URL}/institucion/vacantes`),
-    fetchProtegido(`${API_BASE_URL}/institucion/postulaciones`)
-]);
+            fetchProtegido(`${API_BASE_URL}/institucion/vacantes`),
+            fetchProtegido(`${API_BASE_URL}/institucion/postulaciones`)
+        ]);
         const vacantes = await vacantesRes.json();
         const postulaciones = await postulacionesRes.json();
         document.getElementById('statTotalVacantes').textContent = vacantes.length;
@@ -313,7 +313,7 @@ function mostrarMensajeria() {
 
 async function resendVerification(correo) {
     try {
-        const response = await fetch('${API_BASE_URL}/resend-verification', {
+        const response = await fetch(`${API_BASE_URL}/resend-verification`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ correo })
@@ -321,13 +321,26 @@ async function resendVerification(correo) {
         const data = await response.json();
         mostrarMensajeGlobal(data.message, 'success');
     } catch (error) {
-        mostrarMensajeGlobal('No se pudo reenviar el correo. Inténtalo de nuevo.', 'error');
+        mostrarMensajeGlobal('No se pudo reenviar el correo. Inténtalo de nuevo más tarde.', 'error');
     }
 }
 
 // =================================================================
 // # --- MANEJO DE EVENTOS (EVENT LISTENERS) ---
 // =================================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('brandLogo').addEventListener('click', (e) => { e.preventDefault(); mostrarInicio(); });
+    document.getElementById('btnInicio').addEventListener('click', (e) => { e.preventDefault(); mostrarInicio(); });
+    document.getElementById('btnVacantes').addEventListener('click', (e) => { e.preventDefault(); mostrarVacantes(); });
+    document.getElementById('btnRegistrarse').addEventListener('click', (e) => { e.preventDefault(); mostrarRegistro(); });
+    document.getElementById('btnLogin').addEventListener('click', (e) => { e.preventDefault(); mostrarLogin(); });
+    document.getElementById('btnMisPostulaciones').addEventListener('click', (e) => { e.preventDefault(); mostrarProfesionales(); });
+    document.getElementById('btnMiPanel').addEventListener('click', (e) => { e.preventDefault(); mostrarInstituciones(); });
+    document.getElementById('btnNotificaciones').addEventListener('click', (e) => { e.preventDefault(); mostrarNotificaciones(); });
+    document.getElementById('btnMensajes').addEventListener('click', (e) => { e.preventDefault(); mostrarMensajeria(); });
+    document.getElementById('btnMiCuenta').addEventListener('click', (e) => { e.preventDefault(); toggleDropdown(); });
+});
 
 if (document.getElementById('formRegistro')) {
     document.getElementById('formRegistro').addEventListener('submit', async (e) => {
@@ -340,9 +353,7 @@ if (document.getElementById('formRegistro')) {
         errorRegistro.textContent = '';
         try {
             const response = await fetch(`${API_BASE_URL}/register`, {
-    method: 'POST',
-    // ... a lot of other options
-});
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -366,20 +377,6 @@ if (document.getElementById('formRegistro')) {
     });
 }
 
-async function resendVerification(correo) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/resend-verification`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ correo })
-});
-        const data = await response.json();
-        mostrarMensajeGlobal(data.message, 'success');
-    } catch (error) {
-        mostrarMensajeGlobal('No se pudo reenviar el correo. Inténtalo de nuevo más tarde.', 'error');
-    }
-}
-
 if (document.getElementById('formLogin')) {
     document.getElementById('formLogin').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -387,23 +384,19 @@ if (document.getElementById('formLogin')) {
         const password = document.getElementById('passwordLogin').value;
         const errorLogin = document.getElementById('errorLogin');
         errorLogin.textContent = '';
-        errorLogin.style.display = 'none'; // Asegúrate de ocultarlo al empezar
+        errorLogin.style.display = 'none';
 
         try {
-            // Las comillas simples NO funcionan aquí
-// Usa comillas invertidas ` ` para que la variable funcione
-const response = await fetch(`${API_BASE_URL}/login`, 
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ correo, password })
-});
+            const response = await fetch(`${API_BASE_URL}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ correo, password })
+            });
             const data = await response.json();
 
-            // --- ¡AQUÍ ESTÁ LA LÓGICA ACTUALIZADA! ---
-            // Reemplaza el bloque if (data.requiereVerificacion) con esto:
-            if (data.requiereVerificacion) { 
+            if (data.requiereVerificacion) {
                 errorLogin.innerHTML = `${data.error} <a href="#" onclick="resendVerification('${correo}')">Reenviar correo</a>`;
-                errorLogin.style.display = 'block'; // Muestra el mensaje de error
+                errorLogin.style.display = 'block';
                 return;
             }
 
@@ -473,7 +466,7 @@ if (document.getElementById('formEditarPerfil')) {
 
         try {
             const res = await fetch(`${API_BASE_URL}/perfil`, {
-    method: 'PUT',
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -518,7 +511,7 @@ if (document.getElementById('formEditarPerfilInstitucion')) {
 
         try {
             const res = await fetch(`${API_BASE_URL}/perfil`, {
-    method: 'PUT',
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -642,7 +635,7 @@ if (document.getElementById('formRecuperarPassword')) {
         btn.textContent = 'Enviando...';
 
         try {
-            const response = await fetch('${API_BASE_URL}/forgot-password', {
+            const response = await fetch(`${API_BASE_URL}/forgot-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -678,7 +671,7 @@ if (document.getElementById('formResetPassword')) {
         }
 
         try {
-            const response = await fetch('${API_BASE_URL}/reset-password', {
+            const response = await fetch(`${API_BASE_URL}/reset-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -696,7 +689,7 @@ if (document.getElementById('formResetPassword')) {
                 mostrarLogin();
             }
         } catch (error) {
-            mostrarMensajeGlobal('Ocurrió un error. Inténtalo de nuevo.', 'error');
+            mostrarMensajeGlobal('Ocurrió un error al intentar restablecer la contraseña. Inténtalo de nuevo.', 'error');
         }
     });
 }
@@ -813,7 +806,7 @@ async function actualizarContadorNotificaciones() {
     }
     const notifCountSpan = document.getElementById('notification-count');
     try {
-        const response = await fetchProtegido('${API_BASE_URL}/notificaciones');
+        const response = await fetchProtegido(`${API_BASE_URL}/notificaciones`);
         if (!response.ok) {
             return;
         }
@@ -1118,15 +1111,11 @@ async function mostrarVacanteDetalles(vacanteId) {
 // # --- LÓGICA DE AUTENTICACIÓN Y SESIÓN ---
 // =================================================================
 
-// REEMPLAZA ESTA FUNCIÓN COMPLETA EN app.js
-
-async function handleUrlParams() {
-    // Usamos URLSearchParams para parsear los parámetros después del '?' en el hash
+function handleUrlParams() {
     const hashParams = new URLSearchParams(window.location.hash.split('?')[1]);
     const verifiedStatus = hashParams.get('verified');
-    const resetToken = hashParams.get('resetToken');
+    const resetToken = hashParams.get('reset');
 
-    // --- NUEVA LÓGICA PARA MANEJAR LA VERIFICACIÓN ---
     if (verifiedStatus) {
         if (verifiedStatus === 'true') {
             mostrarMensajeGlobal('¡Tu correo ha sido verificado con éxito! Ya puedes iniciar sesión.', 'success');
@@ -1135,28 +1124,17 @@ async function handleUrlParams() {
         } else {
             mostrarMensajeGlobal('Ocurrió un error durante la verificación. Inténtalo de nuevo.', 'error');
         }
-        // Navegamos a la sección de login
         mostrarLogin();
-    } 
-    // --- FIN DE LA NUEVA LÓGICA ---
+    }
     else if (resetToken) {
         mostrarFormularioReset(resetToken);
     }
 
-    // Limpia la URL para no mostrar los parámetros sensibles
     if (verifiedStatus || resetToken) {
         const cleanHash = window.location.hash.split('?')[0] || '#';
-        // Usamos history.replaceState para limpiar la URL sin recargar la página
         history.replaceState(null, '', window.location.pathname + cleanHash);
     }
 }
-
-// Asegúrate de que esta lógica se ejecute cuando se cargue la página
-document.addEventListener('DOMContentLoaded', () => {
-    handleUrlParams();
-    window.addEventListener('hashchange', handleUrlParams);
-    // ...resto de tu código de inicialización...
-});
 
 function cerrarSesion(mensaje = 'Sesión cerrada correctamente.') {
     if (socket && socket.readyState === WebSocket.OPEN) {
@@ -1183,7 +1161,7 @@ async function postularse(vacanteId) {
     try {
         const vacanteRes = await fetchProtegido(`${API_BASE_URL}/vacantes/${vacanteId}`);
         const vacante = await vacanteRes.json();
-        const perfilRes = await fetchProtegido('${API_BASE_URL}/perfil');
+        const perfilRes = await fetchProtegido(`${API_BASE_URL}/perfil`);
         const perfil = await perfilRes.json();
         let textoCompletoDelPerfil = `${perfil.especialidad || ''} ${perfil.bio || ''} ${(perfil.habilidades || []).join(' ')} ${(perfil.experiencias || []).map(e => `${e.puesto} ${e.descripcion}`).join(' ')} ${(perfil.educacion || []).map(e => e.titulo).join(' ')} ${(perfil.certificaciones || []).map(c => c.nombre).join(' ')}`.toLowerCase();
         const requisitosFaltantes = (vacante.requisitos_obligatorios || []).filter(req => {
@@ -1294,7 +1272,7 @@ async function cargarPostulacionesProfesional(postulacionIdParaResaltar = null) 
     }
     listaPostulaciones.innerHTML = 'Cargando postulaciones...';
     try {
-        const response = await fetch('${API_BASE_URL}/postulaciones', {
+        const response = await fetch(`${API_BASE_URL}/postulaciones`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -1393,7 +1371,7 @@ async function cargarFavoritos() {
     listaFavoritos.innerHTML = 'Cargando tus vacantes guardadas...';
 
     try {
-        const response = await fetch('${API_BASE_URL}/favoritos', {
+        const response = await fetch(`${API_BASE_URL}/favoritos`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -1472,7 +1450,7 @@ async function cargarAlertas() {
     const listaAlertas = document.getElementById('listaAlertas');
     listaAlertas.innerHTML = 'Cargando tus alertas...';
     try {
-        const response = await fetch('${API_BASE_URL}/alertas', {
+        const response = await fetch(`${API_BASE_URL}/alertas`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -1518,7 +1496,7 @@ async function crearAlertaDesdeFiltros() {
         return;
     }
     try {
-        const response = await fetch('${API_BASE_URL}/alertas', {
+        const response = await fetch(`${API_BASE_URL}/alertas`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1566,7 +1544,7 @@ async function eliminarAlerta(id) {
 
 async function cargarPerfilProfesional() {
     try {
-        const res = await fetchProtegido('${API_BASE_URL}/perfil');
+        const res = await fetchProtegido(`${API_BASE_URL}/perfil`);
         if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);
         }
@@ -1641,7 +1619,7 @@ async function cargarPerfilProfesional() {
 
 async function cargarDatosPerfilProfesional() {
     try {
-        const res = await fetchProtegido('${API_BASE_URL}/perfil');
+        const res = await fetchProtegido(`${API_BASE_URL}/perfil`);
         const perfil = await res.json();
         document.getElementById('nombreEditar').value = perfil.nombre || '';
         document.getElementById('especialidadEditar').value = perfil.especialidad || '';
@@ -1706,7 +1684,7 @@ async function subirCV() {
     cvActualP.textContent = 'Subiendo CV...';
 
     try {
-        const response = await fetch('${API_BASE_URL}/perfil/cv', {
+        const response = await fetch(`${API_BASE_URL}/perfil/cv`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -1730,7 +1708,7 @@ async function subirCV() {
 
 async function cargarDatosPerfilInstitucion() {
     try {
-        const res = await fetchProtegido('${API_BASE_URL}/perfil');
+        const res = await fetchProtegido(`${API_BASE_URL}/perfil`);
         if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);
         }
@@ -1855,7 +1833,7 @@ async function cargarVacantesInstitucion() {
     }
     misVacantesDiv.innerHTML = 'Cargando vacantes...';
     try {
-        const response = await fetchProtegido('${API_BASE_URL}/institucion/vacantes');
+        const response = await fetchProtegido(`${API_BASE_URL}/institucion/vacantes`);
         const vacantes = await response.json();
         misVacantesDiv.innerHTML = '';
         if (vacantes.length === 0) {
@@ -2295,7 +2273,7 @@ async function cargarNotificaciones() {
     marcarTodasBtn.style.display = 'none';
 
     try {
-        const response = await fetchProtegido('${API_BASE_URL}/notificaciones');
+        const response = await fetchProtegido(`${API_BASE_URL}/notificaciones`);
         const notificaciones = await response.json();
         actualizarContadorNotificaciones();
         listaNotificaciones.innerHTML = '';
@@ -2391,7 +2369,7 @@ async function marcarNotificacionComoLeida(notificacionId, elemento) {
 
 async function marcarTodasComoLeidas() {
     try {
-        const response = await fetchProtegido('${API_BASE_URL}/notificaciones/marcar-todas-leidas', {
+        const response = await fetchProtegido(`${API_BASE_URL}/notificaciones/marcar-todas-leidas`, {
             method: 'PUT'
         });
         if (!response.ok) {
@@ -2423,7 +2401,7 @@ async function cargarConversaciones() {
     const listaConversaciones = document.getElementById('listaConversaciones');
     listaConversaciones.innerHTML = '<p style="padding: 15px;">Cargando...</p>';
     try {
-        const response = await fetchProtegido('${API_BASE_URL}/conversaciones');
+        const response = await fetchProtegido(`${API_BASE_URL}/conversaciones`);
         const conversaciones = await response.json();
         listaConversaciones.innerHTML = '';
         if (conversaciones.length === 0) {
@@ -2490,7 +2468,7 @@ async function enviarMensaje() {
         return;
     }
     try {
-        const response = await fetch('${API_BASE_URL}/mensajes', {
+        const response = await fetch(`${API_BASE_URL}/mensajes`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -2528,7 +2506,7 @@ async function actualizarContadorMensajes() {
         return;
     }
     try {
-        const response = await fetchProtegido('${API_BASE_URL}/mensajes/no-leidos');
+        const response = await fetchProtegido(`${API_BASE_URL}/mensajes/no-leidos`);
         const data = await response.json();
         if (data.total > 0) {
             mensajesCountSpan.textContent = data.total;
