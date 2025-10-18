@@ -33,15 +33,25 @@ const transporter = nodemailer.createTransport({
 // =================================================================
 // SECCIÓN: CONFIGURACIÓN INICIAL DEL SERVIDOR
 // =================================================================
-// Inicialización de Express y configuración de middlewares que se aplican a todas las peticiones.
-const app = express();
+// Lista de orígenes permitidos
+const allowedOrigins = [
+    process.env.FRONTEND_URL, // Tu URL de Vercel para producción
+    'http://127.0.0.1:5500'    // La URL de Live Server (por si acaso)
+];
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL
+    origin: function (origin, callback) {
+        // AQUÍ ESTÁ EL CAMBIO: añadimos "|| origin === 'null'"
+        if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin === 'null') {
+            callback(null, true); // Permite el acceso
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    }
 }));
-app.use(express.json());
 
 // Variables de entorno y de ruta
-const JWT_SECRET = process.env.SECRET || "tu_secreto_secreto";
+const JWT_SECRET = process.env.SECRET || "wwbt mpou dier ngiu";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
