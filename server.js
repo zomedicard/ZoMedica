@@ -1,7 +1,6 @@
 // =================================================================
-// SECCIÓN: IMPORTACIONES DE MÓDulos
+// SECCIÓN: IMPORTACIONES DE MÓDULOS
 // =================================================================
-// Aquí se cargan todas las librerías necesarias para el servidor.
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
@@ -16,42 +15,42 @@ import { open } from 'sqlite';
 import crypto from 'crypto';
 import { WebSocketServer } from 'ws';
 import http from 'http';
+import nodemailer from 'nodemailer';
 
 // =================================================================
 // SECCIÓN: CONFIGURACIÓN DE NODEMAILER (SERVICIO DE CORREO)
 // =================================================================
-import nodemailer from 'nodemailer';
-
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER, // Tu correo desde el archivo .env
-        pass: process.env.EMAIL_PASS  // Tu contraseña de aplicación desde .env
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
 });
 
 // =================================================================
 // SECCIÓN: CONFIGURACIÓN INICIAL DEL SERVIDOR
 // =================================================================
-// Inicialización de Express y configuración de middlewares que se aplican a todas las peticiones.
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 // Variables de entorno y de ruta
-const JWT_SECRET = process.env.env_SECRET || "tu_secreto_secreto";
+const JWT_SECRET = process.env.JWT_SECRET || "tu_secreto_secreto";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Directorio persistente para Render
+const DATA_DIR = '/opt/render/project/data';
+const UPLOADS_DIR = '/opt/render/project/uploads';
 
 // =================================================================
 // SECCIÓN: CONFIGURACIÓN DE MULTER (SUBIDA DE ARCHIVOS)
 // =================================================================
-// Define cómo y dónde se guardarán los archivos subidos (imágenes, PDFs).
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, 'uploads');
-        fs.mkdir(uploadDir, { recursive: true }).then(() => cb(null, uploadDir));
+    destination: async (req, file, cb) => {
+        await fs.mkdir(UPLOADS_DIR, { recursive: true });
+        cb(null, UPLOADS_DIR);
     },
     filename: (req, file, cb) => {
         cb(null, `${Date.now()}-${file.originalname}`);
@@ -59,7 +58,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
     storage,
-    limits: { fileSize: 2 * 1024 * 1024 }, // Límite de 2 MB
+    limits: { fileSize: 2 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         if (file.mimetype === 'application/pdf' || file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
             cb(null, true);
@@ -69,173 +68,169 @@ const upload = multer({
     }
 });
 
-
 // =================================================================
 // SECCIÓN: CONEXIÓN A BASE DE DATOS Y CREACIÓN DE TABLAS
 // =================================================================
-// Se conecta a la base de datos SQLite y se asegura de que todas las tablas existan.
-// También realiza una migración de datos inicial si es necesario.
 let db;
 (async () => {
     try {
+        await fs.mkdir(DATA_DIR, { recursive: true });
         db = await open({
-            filename: './database.sqlite',
+            filename: path.join(DATA_DIR, 'database.sqlite'),
             driver: sqlite3.Database
         });
-       
-     await db.exec(`
-       CREATE TABLE IF NOT EXISTS usuarios (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT NOT NULL,
-    correo TEXT UNIQUE NOT NULL, 
-    password TEXT NOT NULL,
-    rol TEXT NOT NULL,
-    perfil_completo INTEGER DEFAULT 0,
-    verificado INTEGER DEFAULT 0, 
-    token_verificacion TEXT, 
-    especialidad TEXT,
-    bio TEXT,
-    direccion TEXT,
-    telefono TEXT,
-    sitioWeb TEXT,
-    logoPath TEXT,
-    fotoPath TEXT,
-    cvPath TEXT,
-    linkedinURL TEXT,
-    cedula TEXT,
-    fechaNacimiento TEXT,
-    habilidades TEXT -- Almacenado como JSON string,
-    reset_token TEXT,
-    reset_token_expires INTEGER
-);
-    
- CREATE TABLE IF NOT EXISTS vacantes (
-    id INTEGER PRIMARY KEY,
-    titulo TEXT,
-    institucion TEXT,
-    descripcion TEXT,
-    requisitos_obligatorios TEXT,
-    requisitos_deseables TEXT,
-    usuario_id INTEGER,
-    ubicacion TEXT,
-    tipoContrato TEXT,
-    salario TEXT,
-    vistas INTEGER NOT NULL DEFAULT 0,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-);
 
-    CREATE TABLE IF NOT EXISTS postulaciones (
-        id INTEGER PRIMARY KEY,
-        usuario_id INTEGER,
-        vacante_id INTEGER,
-        fecha TEXT,
-        cvPath TEXT,
-        estado TEXT,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-        FOREIGN KEY (vacante_id) REFERENCES vacantes(id)
-    );
+        await db.exec(`
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre TEXT NOT NULL,
+                correo TEXT UNIQUE NOT NULL, 
+                password TEXT NOT NULL,
+                rol TEXT NOT NULL,
+                perfil_completo INTEGER DEFAULT 0,
+                verificado INTEGER DEFAULT 0, 
+                token_verificacion TEXT, 
+                especialidad TEXT,
+                bio TEXT,
+                direccion TEXT,
+                telefono TEXT,
+                sitioWeb TEXT,
+                logoPath TEXT,
+                fotoPath TEXT,
+                cvPath TEXT,
+                linkedinURL TEXT,
+                cedula TEXT,
+                fechaNacimiento TEXT,
+                habilidades TEXT,
+                reset_token TEXT,
+                reset_token_expires INTEGER
+            );
 
-    CREATE TABLE IF NOT EXISTS notificaciones (
-        id INTEGER PRIMARY KEY,
-        usuario_id INTEGER,
-        mensaje TEXT,
-        leida INTEGER DEFAULT 0,
-        fecha TEXT,
-        url TEXT,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-    );
+            CREATE TABLE IF NOT EXISTS vacantes (
+                id INTEGER PRIMARY KEY,
+                titulo TEXT,
+                institucion TEXT,
+                descripcion TEXT,
+                requisitos_obligatorios TEXT,
+                requisitos_deseables TEXT,
+                usuario_id INTEGER,
+                ubicacion TEXT,
+                tipoContrato TEXT,
+                salario TEXT,
+                vistas INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+            );
 
-    CREATE TABLE IF NOT EXISTS experiencias (
-        id INTEGER PRIMARY KEY,
-        usuario_id INTEGER,
-        puesto TEXT,
-        institucion TEXT,
-        periodo TEXT,
-        descripcion TEXT,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
-    );
-    
-    CREATE TABLE IF NOT EXISTS educacion (
-        id INTEGER PRIMARY KEY,
-        usuario_id INTEGER,
-        titulo TEXT,
-        institucion TEXT,
-        periodo TEXT,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
-    );
-    
-    CREATE TABLE IF NOT EXISTS certificaciones (
-        id INTEGER PRIMARY KEY,
-        usuario_id INTEGER,
-        nombre TEXT,
-        institucion TEXT,
-        periodo TEXT,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
-    );
-    
-    CREATE TABLE IF NOT EXISTS favoritos (
-       usuario_id INTEGER,
-       vacante_id INTEGER,
-       PRIMARY KEY (usuario_id, vacante_id),
-       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-       FOREIGN KEY (vacante_id) REFERENCES vacantes(id) ON DELETE CASCADE
-   );
-    
-    CREATE TABLE IF NOT EXISTS alertas (
-       id INTEGER PRIMARY KEY AUTOINCREMENT,
-       usuario_id INTEGER NOT NULL,
-       palabras_clave TEXT,
-       ubicacion TEXT,
-       tipo_contrato TEXT,
-       fecha_creacion TEXT NOT NULL,
-       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
-    );
-    
-    CREATE TABLE IF NOT EXISTS conversaciones (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    postulacion_id INTEGER UNIQUE NOT NULL,
-    profesional_id INTEGER NOT NULL,
-    institucion_id INTEGER NOT NULL,
-    activa INTEGER DEFAULT 0,
-    fecha_creacion TEXT NOT NULL,
-    FOREIGN KEY (postulacion_id) REFERENCES postulaciones(id) ON DELETE CASCADE,
-    FOREIGN KEY (profesional_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-    FOREIGN KEY (institucion_id) REFERENCES usuarios(id) ON DELETE CASCADE
-);
+            CREATE TABLE IF NOT EXISTS postulaciones (
+                id INTEGER PRIMARY KEY,
+                usuario_id INTEGER,
+                vacante_id INTEGER,
+                fecha TEXT,
+                cvPath TEXT,
+                estado TEXT,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+                FOREIGN KEY (vacante_id) REFERENCES vacantes(id)
+            );
 
-CREATE TABLE IF NOT EXISTS mensajes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    conversacion_id INTEGER NOT NULL,
-    remitente_id INTEGER NOT NULL,
-    mensaje TEXT NOT NULL,
-    fecha_envio TEXT NOT NULL,
-    leido INTEGER DEFAULT 0,
-    FOREIGN KEY (conversacion_id) REFERENCES conversaciones(id) ON DELETE CASCADE,
-    FOREIGN KEY (remitente_id) REFERENCES usuarios(id) ON DELETE CASCADE
-);
+            CREATE TABLE IF NOT EXISTS notificaciones (
+                id INTEGER PRIMARY KEY,
+                usuario_id INTEGER,
+                mensaje TEXT,
+                leida INTEGER DEFAULT 0,
+                fecha TEXT,
+                url TEXT,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+            );
 
-    CREATE TABLE IF NOT EXISTS vistas_vacantes (
-            usuario_id INTEGER,
-            vacante_id INTEGER,
-            PRIMARY KEY (usuario_id, vacante_id),
-            FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-            FOREIGN KEY (vacante_id) REFERENCES vacantes(id) ON DELETE CASCADE
-        );
-`);
+            CREATE TABLE IF NOT EXISTS experiencias (
+                id INTEGER PRIMARY KEY,
+                usuario_id INTEGER,
+                puesto TEXT,
+                institucion TEXT,
+                periodo TEXT,
+                descripcion TEXT,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            );
 
-            // Pega este código justo después de la línea que contiene ');' del db.exec
+            CREATE TABLE IF NOT EXISTS educacion (
+                id INTEGER PRIMARY KEY,
+                usuario_id INTEGER,
+                titulo TEXT,
+                institucion TEXT,
+                periodo TEXT,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            );
 
-try {
-    await db.exec('ALTER TABLE vacantes ADD COLUMN vistas INTEGER NOT NULL DEFAULT 0');
-    await db.exec('ALTER TABLE vacantes ADD COLUMN requisitos_obligatorios TEXT');
-    await db.exec('ALTER TABLE vacantes ADD COLUMN requisitos_deseables TEXT');
-    console.log('Columnas de requisitos añadidas a la tabla de vacantes.');
-} catch (e) {
-    if (!e.message.includes('duplicate column name')) {
-        console.error('Error al añadir columnas de requisitos:', e);
-    }
-}        
-        // VERIFICA SI HAY VACANTES Y LAS MIGRA DESDE EL JSON SI LA TABLA ESTÁ VACÍA
+            CREATE TABLE IF NOT EXISTS certificaciones (
+                id INTEGER PRIMARY KEY,
+                usuario_id INTEGER,
+                nombre TEXT,
+                institucion TEXT,
+                periodo TEXT,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS favoritos (
+                usuario_id INTEGER,
+                vacante_id INTEGER,
+                PRIMARY KEY (usuario_id, vacante_id),
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (vacante_id) REFERENCES vacantes(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS alertas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario_id INTEGER NOT NULL,
+                palabras_clave TEXT,
+                ubicacion TEXT,
+                tipo_contrato TEXT,
+                fecha_creacion TEXT NOT NULL,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS conversaciones (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                postulacion_id INTEGER UNIQUE NOT NULL,
+                profesional_id INTEGER NOT NULL,
+                institucion_id INTEGER NOT NULL,
+                activa INTEGER DEFAULT 0,
+                fecha_creacion TEXT NOT NULL,
+                FOREIGN KEY (postulacion_id) REFERENCES postulaciones(id) ON DELETE CASCADE,
+                FOREIGN KEY (profesional_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (institucion_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS mensajes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                conversacion_id INTEGER NOT NULL,
+                remitente_id INTEGER NOT NULL,
+                mensaje TEXT NOT NULL,
+                fecha_envio TEXT NOT NULL,
+                leido INTEGER DEFAULT 0,
+                FOREIGN KEY (conversacion_id) REFERENCES conversaciones(id) ON DELETE CASCADE,
+                FOREIGN KEY (remitente_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS vistas_vacantes (
+                usuario_id INTEGER,
+                vacante_id INTEGER,
+                PRIMARY KEY (usuario_id, vacante_id),
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (vacante_id) REFERENCES vacantes(id) ON DELETE CASCADE
+            );
+        `);
+
+        try {
+            await db.exec('ALTER TABLE vacantes ADD COLUMN vistas INTEGER NOT NULL DEFAULT 0');
+            await db.exec('ALTER TABLE vacantes ADD COLUMN requisitos_obligatorios TEXT');
+            await db.exec('ALTER TABLE vacantes ADD COLUMN requisitos_deseables TEXT');
+            console.log('Columnas de requisitos añadidas a la tabla de vacantes.');
+        } catch (e) {
+            if (!e.message.includes('duplicate column name')) {
+                console.error('Error al añadir columnas de requisitos:', e);
+            }
+        }
+
         const vacantesExistentes = await db.get('SELECT COUNT(*) as count FROM vacantes');
         if (vacantesExistentes.count === 0) {
             try {
@@ -253,12 +248,11 @@ try {
         }
 
         console.log('¡Conectado a la base de datos de SQLite y tablas creadas!');
-     try {
+        try {
             await db.exec('ALTER TABLE usuarios ADD COLUMN reset_token TEXT');
             await db.exec('ALTER TABLE usuarios ADD COLUMN reset_token_expires INTEGER');
             console.log('Columnas de recuperación de contraseña añadidas por si faltaban.');
         } catch (e) {
-            // Esto es normal si las columnas ya existen, no hay que preocuparse.
             if (!e.message.includes('duplicate column name')) {
                 console.error("Error añadiendo columnas de recuperación:", e);
             }
@@ -268,11 +262,9 @@ try {
     }
 })();
 
-
 // =================================================================
 // SECCIÓN: MIDDLEWARE DE AUTENTICACIÓN
 // =================================================================
-// Esta función protege las rutas que requieren que un usuario haya iniciado sesión.
 const verificarToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     if (!authHeader) return res.status(403).json({ error: 'Token no proporcionado.' });
@@ -287,36 +279,30 @@ const verificarToken = (req, res, next) => {
     });
 };
 
-// AÑADE ESTE NUEVO MIDDLEWARE DEBAJO DE TU FUNCIÓN verificarToken
-
 const verificarTokenOpcional = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     if (!authHeader) {
-        return next(); // No hay token, pero continuamos
+        return next();
     }
 
     const token = authHeader.split(' ')[1];
     if (!token) {
-        return next(); // Token malformado, pero continuamos
+        return next();
     }
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (!err) {
-            req.user = user; // El token es válido, adjuntamos el usuario
+            req.user = user;
         }
-        next(); // Continuamos sin importar si hubo un error o no
+        next();
     });
 };
 
 // =================================================================
 // SECCIÓN: RUTAS (ENDPOINTS) DE LA API
 // =================================================================
-// Aquí se definen todas las URLs a las que el frontend puede llamar.
 
 // --- Rutas de Autenticación ---
-
-// server.js (Dentro de la ruta app.post('/register', ...))
-
 app.post('/register', async (req, res) => {
     const { nombre, correo, password, rol } = req.body;
     
@@ -338,8 +324,7 @@ app.post('/register', async (req, res) => {
             [nombre, correo, hashedPassword, rol, 0, tokenVerificacion]
         );
 
-        // --- INICIO: LÓGICA DE ENVÍO DE CORREO REAL ---
-        const linkVerificacion = `http://localhost:3000/verify-email/${tokenVerificacion}`; 
+        const linkVerificacion = `https://zomedica.onrender.com/verify-email/${tokenVerificacion}`;
         
         const mailOptions = {
             from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
@@ -360,13 +345,10 @@ app.post('/register', async (req, res) => {
 
         await transporter.sendMail(mailOptions);
         console.log(`Correo de verificación enviado a ${correo}`);
-        // --- FIN: LÓGICA DE ENVÍO DE CORREO REAL ---
-
         res.status(201).json({ 
             message: 'Registro exitoso. Se ha enviado un enlace de verificación a su correo electrónico.',
             alerta: '¡Debe verificar su correo para poder iniciar sesión!'
         });
-
     } catch (err) {
         if (err.message.includes('SQLITE_CONSTRAINT_UNIQUE')) {
             return res.status(409).json({ error: 'El correo ya está registrado.' });
@@ -376,13 +358,8 @@ app.post('/register', async (req, res) => {
     }
 });
 
-
-// server.js (Añadir esta ruta en una sección de "Autenticación Avanzada")
-
 app.get('/verify-email/:token', async (req, res) => {
-    // La URL de tu frontend. Asegúrate de que el puerto (5500) sea correcto.
-    const frontendUrl = 'http://127.0.0.1:5501/index.html';
-
+    const frontendUrl = 'https://zomedica.onrender.com';
     try {
         const token = req.params.token;
         const result = await db.run(
@@ -391,17 +368,15 @@ app.get('/verify-email/:token', async (req, res) => {
         );
 
         if (result.changes > 0) {
-            // Éxito: Redirige al login con un parámetro de éxito
             console.log(`✅ ÉXITO: Usuario con token ${token} ha sido verificado.`);
-            res.redirect(`${frontendUrl}#login?verified=true`);
+            res.redirect(`${frontendUrl}/#login?verified=true`);
         } else {
-            // Fracaso: Redirige al login con un parámetro de error
             console.log(`⚠️ ALERTA: No se pudo verificar el token ${token}.`);
-            res.redirect(`${frontendUrl}#login?verified=false`);
+            res.redirect(`${frontendUrl}/#login?verified=false`);
         }
     } catch (error) {
         console.error('Error al verificar correo:', error);
-        res.redirect(`${frontendUrl}#login?verified=error`);
+        res.redirect(`${frontendUrl}/#login?verified=error`);
     }
 });
 
@@ -409,11 +384,7 @@ app.post('/login', async (req, res) => {
     const { correo, password } = req.body;
     try {
         const user = await db.get('SELECT * FROM usuarios WHERE correo = ?', correo);
-        
-        // --- LÍNEA DE DEPURACIÓN CLAVE ---
-        console.log('🔎 Intentando iniciar sesión para:', user); 
-        // ------------------------------------
-
+        console.log('🔎 Intentando iniciar sesión para:', user);
         if (!user) {
             return res.status(401).json({ error: 'Credenciales inválidas.' });
         }
@@ -430,28 +401,26 @@ app.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Credenciales inválidas.' });
         }
         
-       const token = jwt.sign({ id: user.id, rol: user.rol, correo: user.correo, nombre: user.nombre }, JWT_SECRET, { expiresIn: '15m' });
+        const token = jwt.sign({ id: user.id, rol: user.rol, correo: user.correo, nombre: user.nombre }, JWT_SECRET, { expiresIn: '15m' });
         res.json({ token, user: { id: user.id, nombre: user.nombre, rol: user.rol, correo: user.correo } });
-
     } catch (err) {
         console.error('Error al iniciar sesión:', err);
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
 
-// RUTA 1: PARA SOLICITAR EL CORREO DE RECUPERACIÓN
 app.post('/forgot-password', async (req, res) => {
     const { correo } = req.body;
     try {
         const user = await db.get('SELECT * FROM usuarios WHERE correo = ?', [correo]);
         if (user) {
             const token = crypto.randomBytes(32).toString('hex');
-            const expires = Date.now() + 3600000; // Expira en 1 hora
+            const expires = Date.now() + 3600000;
             await db.run(
                 'UPDATE usuarios SET reset_token = ?, reset_token_expires = ? WHERE id = ?',
                 [token, expires, user.id]
             );
-            const resetLink = `http://127.0.0.1:5501/index.html?resetToken=${token}`;
+            const resetLink = `https://zomedica.onrender.com/?resetToken=${token}`;
             const mailOptions = {
                 from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
                 to: user.correo,
@@ -475,7 +444,6 @@ app.post('/forgot-password', async (req, res) => {
     }
 });
 
-// RUTA 2: PARA PROCESAR LA NUEVA CONTRASEÑA
 app.post('/reset-password', async (req, res) => {
     const { token, password } = req.body;
     try {
@@ -498,9 +466,7 @@ app.post('/reset-password', async (req, res) => {
     }
 });
 
-// --- Rutas de Perfil (Profesional e Institución) ---
-// REEMPLAZA ESTA FUNCIÓN COMPLETA EN server.js
-
+// --- Rutas de Perfil ---
 app.get('/perfil', verificarToken, async (req, res) => {
     try {
         const user = await db.get('SELECT id, nombre, correo, rol, especialidad, bio, direccion, telefono, sitioWeb, logoPath, habilidades, fotoPath, cvPath, linkedinURL, cedula, fechaNacimiento FROM usuarios WHERE id = ?', req.user.id);
@@ -508,74 +474,54 @@ app.get('/perfil', verificarToken, async (req, res) => {
             return res.status(404).json({ error: 'Usuario no encontrado.' });
         }
 
-        // --- INICIO DE LA MODIFICACIÓN ---
-        // Pide a la base de datos que cuente (COUNT) todas las filas en "postulaciones"
-        // donde el 'usuario_id' coincida con el del usuario que ha iniciado sesión.
         const postulationCount = await db.get('SELECT COUNT(*) AS total FROM postulaciones WHERE usuario_id = ?', req.user.id);
-        // --- FIN DE LA MODIFICACIÓN ---
-
-        // Parsea las habilidades
         if (user.habilidades) {
             try { user.habilidades = JSON.parse(user.habilidades); } catch (e) { user.habilidades = []; }
         } else {
             user.habilidades = [];
         }
 
-        // Obtiene el resto de la información
         const experiencias = await db.all('SELECT puesto, institucion, periodo, descripcion FROM experiencias WHERE usuario_id = ? ORDER BY id DESC', req.user.id);
         const educacion = await db.all('SELECT titulo, institucion, periodo FROM educacion WHERE usuario_id = ? ORDER BY id DESC', req.user.id);
         const certificaciones = await db.all('SELECT nombre, institucion, periodo FROM certificaciones WHERE usuario_id = ? ORDER BY id DESC', req.user.id);
 
-        // --- INICIO DE LA MODIFICACIÓN ---
-        // Ahora, en la respuesta que enviamos al frontend, incluimos el nuevo contador.
-        // Lo llamaremos 'totalPostulaciones'.
         res.json({ 
             ...user, 
-            totalPostulaciones: postulationCount.total, // <-- ¡AÑADIDO AQUÍ!
+            totalPostulaciones: postulationCount.total,
             experiencias, 
             educacion, 
             certificaciones 
         });
-        // --- FIN DE LA MODIFICACIÓN ---
-
     } catch (err) {
         console.error('Error al obtener perfil:', err);
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
 
-
-
 app.put('/perfil', verificarToken, async (req, res) => {
     try {
         await db.run('BEGIN TRANSACTION');
-
-        // Lógica separada para actualizar profesional o institución
-       if (req.user.rol === 'profesional') {
+        if (req.user.rol === 'profesional') {
             const { nombre, especialidad, bio, telefono, linkedinURL, cedula, fechaNacimiento, habilidades, experiencias, educacion, certificaciones } = req.body;
             await db.run(
                 'UPDATE usuarios SET nombre = ?, especialidad = ?, bio = ?, telefono = ?, linkedinURL = ?, cedula = ?, fechaNacimiento = ?, habilidades = ? WHERE id = ?',
                 [nombre, especialidad, bio, telefono, linkedinURL, cedula, fechaNacimiento, JSON.stringify(habilidades), req.user.id]
             );
 
-            // Eliminar y re-insertar Experiencias
             await db.run('DELETE FROM experiencias WHERE usuario_id = ?', req.user.id);
             const stmtExp = await db.prepare('INSERT INTO experiencias (usuario_id, puesto, institucion, periodo, descripcion) VALUES (?, ?, ?, ?, ?)');
             for (const exp of experiencias || []) { await stmtExp.run(req.user.id, exp.puesto, exp.institucion, exp.periodo, exp.descripcion); }
             await stmtExp.finalize();
 
-            // Eliminar y re-insertar Educación
             await db.run('DELETE FROM educacion WHERE usuario_id = ?', req.user.id);
             const stmtEdu = await db.prepare('INSERT INTO educacion (usuario_id, titulo, institucion, periodo) VALUES (?, ?, ?, ?)');
             for (const edu of educacion || []) { await stmtEdu.run(req.user.id, edu.titulo, edu.institucion, edu.periodo); }
             await stmtEdu.finalize();
 
-            // Eliminar y re-insertar Certificaciones (¡El cambio clave!)
             await db.run('DELETE FROM certificaciones WHERE usuario_id = ?', req.user.id);
             const stmtCert = await db.prepare('INSERT INTO certificaciones (usuario_id, nombre, institucion, periodo) VALUES (?, ?, ?, ?)');
             for (const cert of certificaciones || []) { await stmtCert.run(req.user.id, cert.nombre, cert.institucion, cert.periodo); }
             await stmtCert.finalize();
-            
         } else if (req.user.rol === 'institucion') {
             const { nombre, direccion, telefono, sitioWeb, bio } = req.body;
             await db.run(
@@ -601,7 +547,7 @@ app.put('/perfil/cv', verificarToken, upload.single('cv'), async (req, res) => {
         return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
     }
     try {
-        const cvPath = `uploads/${req.file.filename}`;
+        const cvPath = path.join('uploads', req.file.filename);
         await db.run('UPDATE usuarios SET cvPath = ? WHERE id = ?', [cvPath, req.user.id]);
         res.json({ message: 'CV actualizado con éxito.', cvPath });
     } catch (err) {
@@ -618,7 +564,7 @@ app.put('/perfil/foto', verificarToken, upload.single('foto'), async (req, res) 
         return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
     }
     try {
-        const fotoPath = `uploads/${req.file.filename}`;
+        const fotoPath = path.join('uploads', req.file.filename);
         await db.run('UPDATE usuarios SET fotoPath = ? WHERE id = ?', [fotoPath, req.user.id]);
         res.json({ message: 'Foto de perfil actualizada con éxito.', fotoPath });
     } catch (err) {
@@ -635,7 +581,7 @@ app.put('/perfil/logo', verificarToken, upload.single('logo'), async (req, res) 
         return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
     }
     try {
-        const logoPath = `uploads/${req.file.filename}`;
+        const logoPath = path.join('uploads', req.file.filename);
         await db.run('UPDATE usuarios SET logoPath = ? WHERE id = ?', [logoPath, req.user.id]);
         res.json({ message: 'Logo actualizado con éxito.', logoPath });
     } catch (err) {
@@ -657,71 +603,11 @@ app.get('/instituciones/:id', async (req, res) => {
         res.json({ ...institucion, vacantes });
     } catch (err) {
         console.error('Error al obtener perfil de institución:', err);
-        res.status(500).json({ error: 'Error interno del servidor.' });
-    }
-});
-
-
-app.get('/instituciones/:id', async (req, res) => {
-    const institucionId = req.params.id;
-    try {
-        const institucion = await db.get('SELECT id, nombre, direccion, telefono, sitioWeb, logoPath, bio FROM usuarios WHERE id = ? AND rol = "institucion"', institucionId);
-        
-        if (!institucion) {
-            return res.status(404).json({ error: 'Institución no encontrada.' });
-        }
-
-        const vacantes = await db.all('SELECT id, titulo, descripcion, ubicacion, tipoContrato FROM vacantes WHERE usuario_id = ? ORDER BY id DESC', institucionId);
-        res.json({ ...institucion, vacantes });
-    } catch (err) {
-        console.error('Error al obtener perfil de institución:', err);
-        res.status(500).json({ error: 'Error interno del servidor.' });
-    }
-});
-
-// Esta es la nueva ruta para la foto de perfil del profesional
-app.put('/perfil/foto', verificarToken, upload.single('foto'), async (req, res) => {
-    // 1. Nos aseguramos de que solo los profesionales puedan usarla
-    if (req.user.rol !== 'profesional') {
-        return res.status(403).json({ error: 'Acceso denegado.' });
-    }
-    // 2. Verificamos que se haya subido un archivo
-    if (!req.file) {
-        return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
-    }
-    try {
-        // 3. Creamos la ruta para guardarla en la base de datos
-        const fotoPath = `uploads/${req.file.filename}`;
-        // 4. Actualizamos la base de datos con la nueva ruta de la foto
-        await db.run('UPDATE usuarios SET fotoPath = ? WHERE id = ?', [fotoPath, req.user.id]);
-        // 5. Enviamos una respuesta de éxito
-        res.json({ message: 'Foto de perfil actualizada con éxito.', fotoPath });
-    } catch (err) {
-        console.error('Error al actualizar la foto de perfil:', err);
-        res.status(500).json({ error: 'Error interno del servidor.' });
-    }
-});
-
-app.put('/perfil/logo', verificarToken, upload.single('logo'), async (req, res) => {
-    if (req.user.rol !== 'institucion') {
-        return res.status(403).json({ error: 'Acceso denegado.' });
-    }
-    if (!req.file) {
-        return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
-    }
-    try {
-        const logoPath = `uploads/${req.file.filename}`;
-        await db.run('UPDATE usuarios SET logoPath = ? WHERE id = ?', [logoPath, req.user.id]);
-        res.json({ message: 'Logo actualizado con éxito.', logoPath });
-    } catch (err) {
-        console.error('Error al actualizar el logo:', err);
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
 
 // --- Rutas de Vacantes ---
-
-// REEMPLAZA ESTA FUNCIÓN COMPLETA
 app.get('/vacantes/:id', verificarTokenOpcional, async (req, res) => {
     const vacanteId = req.params.id;
     const usuarioId = req.user ? req.user.id : null;
@@ -733,13 +619,12 @@ app.get('/vacantes/:id', verificarTokenOpcional, async (req, res) => {
                 await db.run('UPDATE vacantes SET vistas = vistas + 1 WHERE id = ?', vacanteId);
             } catch (error) {
                 if (!error.message.includes('SQLITE_CONSTRAINT')) {
-    console.error('Error inesperado al registrar vista:', error);
-}
+                    console.error('Error inesperado al registrar vista:', error);
+                }
             }
         }
 
         const vacante = await db.get('SELECT * FROM vacantes WHERE id = ?', vacanteId);
-
         if (!vacante) {
             return res.status(404).json({ error: 'Vacante no encontrada.' });
         }
@@ -749,8 +634,6 @@ app.get('/vacantes/:id', verificarTokenOpcional, async (req, res) => {
 
         const institucion = await db.get('SELECT id, nombre, logoPath FROM usuarios WHERE id = ?', vacante.usuario_id);
 
-        // --- ¡NUEVA LÓGICA! ---
-        // Convierte el texto de requisitos (separado por comas) en una lista (array)
         try {
             vacante.requisitos_obligatorios = vacante.requisitos_obligatorios ? vacante.requisitos_obligatorios.split(',').map(r => r.trim()) : [];
             vacante.requisitos_deseables = vacante.requisitos_deseables ? vacante.requisitos_deseables.split(',').map(r => r.trim()) : [];
@@ -760,28 +643,23 @@ app.get('/vacantes/:id', verificarTokenOpcional, async (req, res) => {
         }
 
         const institucionInfo = institucion || { id: null, nombre: 'Institución no disponible', logoPath: 'placeholder-logo.png' };
-
         res.json({ ...vacante, institucion: institucionInfo });
-
     } catch (err) {
         console.error('Error al obtener vacante:', err);
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
 
-// REEMPLAZA ESTA FUNCIÓN COMPLETA
 app.post('/vacantes', verificarToken, async (req, res) => {
     if (req.user.rol !== 'institucion') {
         return res.status(403).json({ error: 'Acceso denegado.' });
     }
-    // 1. OBTENEMOS LOS NUEVOS DATOS DEL BODY, INCLUYENDO LOS REQUISITOS
     const { titulo, institucion, descripcion, requisitos_obligatorios, requisitos_deseables, ubicacion, tipoContrato, salario } = req.body;
 
     if (!titulo || !institucion || !descripcion) {
         return res.status(400).json({ error: 'Por favor, completa todos los campos obligatorios.' });
     }
     try {
-        // 2. AÑADIMOS LAS NUEVAS VARIABLES A LA CONSULTA SQL
         const result = await db.run(
             'INSERT INTO vacantes (titulo, institucion, descripcion, requisitos_obligatorios, requisitos_deseables, usuario_id, ubicacion, tipoContrato, salario) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [titulo, institucion, descripcion, requisitos_obligatorios, requisitos_deseables, req.user.id, ubicacion, tipoContrato, salario]
@@ -818,18 +696,11 @@ app.delete('/vacantes/:id', verificarToken, async (req, res) => {
 
 app.get('/vacantes', async (req, res) => {
     const { q, ubicacion, tipoContrato } = req.query;
-
-    // --- INICIO DE LA MODIFICACIÓN ---
-    // Ahora la consulta es más potente: une vacantes con postulaciones
-    // y cuenta (COUNT) cuántas postulaciones (p.id) tiene cada vacante.
-    // Usamos LEFT JOIN para que las vacantes sin postulaciones también aparezcan (con contador 0).
     let sql = `
         SELECT v.*, COUNT(p.id) as totalPostulaciones
         FROM vacantes v
         LEFT JOIN postulaciones p ON v.id = p.vacante_id
     `;
-    // --- FIN DE LA MODIFICACIÓN ---
-
     let params = [];
     let conditions = [];
 
@@ -852,11 +723,7 @@ app.get('/vacantes', async (req, res) => {
     if (conditions.length > 0) {
         sql += ' WHERE ' + conditions.join(' AND ');
     }
-
-    // --- INICIO DE LA MODIFICACIÓN ---
-    // Agrupamos por vacante para que el contador funcione correctamente.
     sql += ' GROUP BY v.id ORDER BY v.id DESC';
-    // --- FIN DE LA MODIFICACIÓN ---
 
     try {
         const vacantes = await db.all(sql, params);
@@ -886,10 +753,7 @@ app.get('/institucion/vacantes', verificarToken, async (req, res) => {
     }
 });
 
-// AÑADE ESTA NUEVA RUTA DEBAJO DE app.post('/vacantes', ...)
-
 app.put('/vacantes/:id', verificarToken, async (req, res) => {
-    // 1. Solo las instituciones pueden editar
     if (req.user.rol !== 'institucion') {
         return res.status(403).json({ error: 'Acceso denegado.' });
     }
@@ -897,13 +761,11 @@ app.put('/vacantes/:id', verificarToken, async (req, res) => {
     const vacanteId = req.params.id;
     const { titulo, institucion, descripcion, requisitos_obligatorios, requisitos_deseables, ubicacion, tipoContrato, salario } = req.body;
 
-    // Validación básica de datos
     if (!titulo || !institucion || !descripcion) {
         return res.status(400).json({ error: 'Por favor, completa los campos obligatorios.' });
     }
 
     try {
-        // 2. Verificación de seguridad: ¿Esta vacante pertenece a la institución que la edita?
         const vacanteExistente = await db.get('SELECT usuario_id FROM vacantes WHERE id = ?', vacanteId);
         if (!vacanteExistente) {
             return res.status(404).json({ error: 'Vacante no encontrada.' });
@@ -912,7 +774,6 @@ app.put('/vacantes/:id', verificarToken, async (req, res) => {
             return res.status(403).json({ error: 'No tienes permiso para editar esta vacante.' });
         }
 
-        // 3. Si todo está en orden, actualizamos la base de datos
         await db.run(
             `UPDATE vacantes SET 
                 titulo = ?, institucion = ?, descripcion = ?, requisitos_obligatorios = ?, 
@@ -923,7 +784,6 @@ app.put('/vacantes/:id', verificarToken, async (req, res) => {
 
         res.json({ message: 'Vacante actualizada con éxito.' });
         procesarAlertasParaNuevaVacante({ ...req.body, id: vacanteId });
-
     } catch (err) {
         console.error('Error al actualizar vacante:', err);
         res.status(500).json({ error: 'Error interno del servidor.' });
@@ -931,17 +791,12 @@ app.put('/vacantes/:id', verificarToken, async (req, res) => {
 });
 
 // --- Rutas de Postulaciones ---
-// --- INICIO DEL CÓDIGO A AÑADIR ---
-
 app.get('/institucion/postulaciones', verificarToken, async (req, res) => {
     if (req.user.rol !== 'institucion') {
         return res.status(403).json({ error: 'Acceso denegado.' });
     }
 
-    // Obtenemos los filtros de la URL (req.query)
     const { vacanteId, estado, nombre } = req.query;
-
-    // Base de la consulta SQL
     let sql = `
         SELECT
             p.id, p.fecha, p.estado,
@@ -951,10 +806,8 @@ app.get('/institucion/postulaciones', verificarToken, async (req, res) => {
         JOIN usuarios u ON p.usuario_id = u.id
         JOIN vacantes v ON p.vacante_id = v.id
         WHERE v.usuario_id = ?`;
-
     const params = [req.user.id];
 
-    // Añadimos filtros a la consulta dinámicamente
     if (vacanteId) {
         sql += ' AND v.id = ?';
         params.push(vacanteId);
@@ -967,7 +820,6 @@ app.get('/institucion/postulaciones', verificarToken, async (req, res) => {
         sql += ' AND u.nombre LIKE ?';
         params.push(`%${nombre}%`);
     }
-
     sql += ' ORDER BY p.fecha DESC';
 
     try {
@@ -979,14 +831,13 @@ app.get('/institucion/postulaciones', verificarToken, async (req, res) => {
     }
 });
 
-// --- FIN DEL CÓDIGO A AÑADIR ---
 app.post('/postular/:id', verificarToken, upload.single('cv'), async (req, res) => {
     if (req.user.rol !== 'profesional') {
         return res.status(403).json({ error: 'Acceso denegado.' });
     }
     const vacanteId = req.params.id;
     const usuarioId = req.user.id;
-    const cvPath = req.file ? req.file.path : null;
+    const cvPath = req.file ? path.join('uploads', req.file.filename) : null;
     try {
         const existingPostulacion = await db.get(
             'SELECT id FROM postulaciones WHERE usuario_id = ? AND vacante_id = ?',
@@ -1003,7 +854,7 @@ app.post('/postular/:id', verificarToken, upload.single('cv'), async (req, res) 
             'INSERT INTO postulaciones (usuario_id, vacante_id, fecha, cvPath, estado) VALUES (?, ?, ?, ?, ?)',
             [usuarioId, vacanteId, new Date().toISOString(), cvPath, 'Enviada']
         );
-const mensaje = `¡${req.user.nombre} se postuló a tu vacante "${vacante.titulo}"!`;
+        const mensaje = `¡${req.user.nombre} se postuló a tu vacante "${vacante.titulo}"!`;
         const url = `pipeline/${vacanteId}/${encodeURIComponent(vacante.titulo)}`;
         await db.run(
             'INSERT INTO notificaciones (usuario_id, mensaje, fecha, url) VALUES (?, ?, ?, ?)',
@@ -1015,7 +866,6 @@ const mensaje = `¡${req.user.nombre} se postuló a tu vacante "${vacante.titulo
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
-// REEMPLAZA ESTA FUNCIÓN COMPLETA EN server.js
 
 app.get('/postulaciones', verificarToken, async (req, res) => {
     if (req.user.rol !== 'profesional') {
@@ -1025,7 +875,7 @@ app.get('/postulaciones', verificarToken, async (req, res) => {
         const postulaciones = await db.all(
             `SELECT
                 p.id, p.fecha, p.cvPath, p.estado,
-                v.id AS vacante_id, -- <-- ¡AQUÍ ESTÁ LA CORRECCIÓN!
+                v.id AS vacante_id,
                 v.titulo as vacante_titulo, 
                 v.institucion as vacante_institucion
             FROM postulaciones p
@@ -1039,7 +889,6 @@ app.get('/postulaciones', verificarToken, async (req, res) => {
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
-
 
 app.delete('/postulaciones/:id', verificarToken, async (req, res) => {
     const postulacionId = req.params.id;
@@ -1065,19 +914,13 @@ app.delete('/postulaciones/:id', verificarToken, async (req, res) => {
     }
 });
 
-// --- INICIO DEL CÓDIGO A AÑADIR ---
-
 app.get('/institucion/postulaciones/:id/profesional', verificarToken, async (req, res) => {
     const postulacionId = req.params.id;
-
-    // 1. Solo las instituciones pueden usar esta ruta
     if (req.user.rol !== 'institucion') {
         return res.status(403).json({ error: 'Acceso denegado.' });
     }
 
     try {
-        // 2. Verificación de seguridad:
-        // Comprobamos que la postulación solicitada pertenece a una vacante de la institución que hace la petición.
         const postulacion = await db.get(
             `SELECT p.usuario_id AS profesional_id, v.usuario_id AS institucion_id
              FROM postulaciones p
@@ -1089,13 +932,10 @@ app.get('/institucion/postulaciones/:id/profesional', verificarToken, async (req
         if (!postulacion) {
             return res.status(404).json({ error: 'Postulación no encontrada.' });
         }
-
-        // Si el ID de la institución dueña de la vacante no coincide con el ID del usuario logueado, denegamos el acceso.
         if (postulacion.institucion_id !== req.user.id) {
             return res.status(403).json({ error: 'No tienes permiso para ver este perfil.' });
         }
 
-        // 3. Si la verificación es exitosa, obtenemos el perfil completo del profesional
         const profesionalId = postulacion.profesional_id;
         const profesional = await db.get('SELECT id, nombre, correo, especialidad, bio, habilidades, fotoPath, cvPath, linkedinURL, cedula, fechaNacimiento, telefono FROM usuarios WHERE id = ?', profesionalId);
 
@@ -1103,7 +943,6 @@ app.get('/institucion/postulaciones/:id/profesional', verificarToken, async (req
             return res.status(404).json({ error: 'Profesional no encontrado.' });
         }
 
-        // Parseamos las habilidades y adjuntamos el resto de la información
         try {
             profesional.habilidades = JSON.parse(profesional.habilidades);
         } catch (e) {
@@ -1114,21 +953,18 @@ app.get('/institucion/postulaciones/:id/profesional', verificarToken, async (req
         const educacion = await db.all('SELECT titulo, institucion, periodo FROM educacion WHERE usuario_id = ? ORDER BY id DESC', profesionalId);
         const certificaciones = await db.all('SELECT nombre, institucion, periodo FROM certificaciones WHERE usuario_id = ? ORDER BY id DESC', profesionalId);
 
-        // 4. Enviamos el perfil completo
         res.json({
             ...profesional,
             experiencias,
             educacion,
             certificaciones
         });
-
     } catch (err) {
         console.error('Error al obtener perfil del profesional:', err);
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
 
-// REEMPLAZA ESTA FUNCIÓN COMPLETA
 app.put('/postulaciones/:id/estado', verificarToken, async (req, res) => {
     const postulacionId = req.params.id;
     const { estado } = req.body;
@@ -1153,21 +989,17 @@ app.put('/postulaciones/:id/estado', verificarToken, async (req, res) => {
 
         await db.run('UPDATE postulaciones SET estado = ? WHERE id = ?', [estado, postulacionId]);
 
-        // --- LÓGICA DE ACTIVACIÓN DEL CHAT ---
         if (estado === 'Entrevistado') {
-            // Intenta crear una conversación si no existe
             await db.run(
                 `INSERT OR IGNORE INTO conversaciones (postulacion_id, profesional_id, institucion_id, fecha_creacion) 
                 VALUES (?, ?, ?, ?)`,
                 [postulacionId, postulacion.profesional_id, postulacion.institucion_id, new Date().toISOString()]
             );
-            // La activa
             await db.run(
                 'UPDATE conversaciones SET activa = 1 WHERE postulacion_id = ?',
                 [postulacionId]
             );
         }
-        // --- FIN DE LA LÓGICA DEL CHAT ---
 
         const institucion = await db.get('SELECT nombre FROM usuarios WHERE id = ?', req.user.id);
         const mensaje = `La institución "${institucion.nombre}" actualizó tu postulación a "${postulacion.vacante_titulo}" al estado: "${estado}".`;
@@ -1229,16 +1061,13 @@ app.put('/notificaciones/marcar-todas-leidas', verificarToken, async (req, res) 
     }
 });
 
-// --- INICIO: Rutas para el Buscador de Talentos ---
-
-// Ruta 1: Para buscar perfiles según filtros
+// --- Rutas para el Buscador de Talentos ---
 app.get('/institucion/buscar-profesionales', verificarToken, async (req, res) => {
     if (req.user.rol !== 'institucion') {
         return res.status(403).json({ error: 'Acceso denegado.' });
     }
 
     const { especialidad, habilidades, keyword } = req.query;
-
     let sql = `SELECT id, nombre, especialidad, bio, fotoPath, habilidades FROM usuarios WHERE rol = 'profesional'`;
     const params = [];
 
@@ -1267,7 +1096,6 @@ app.get('/institucion/buscar-profesionales', verificarToken, async (req, res) =>
     }
 });
 
-// Ruta 2: Para obtener un perfil profesional específico por su ID
 app.get('/profesionales/:id', verificarToken, async (req, res) => {
     if (req.user.rol !== 'institucion') {
         return res.status(403).json({ error: 'Acceso denegado.' });
@@ -1279,7 +1107,6 @@ app.get('/profesionales/:id', verificarToken, async (req, res) => {
             return res.status(404).json({ error: 'Profesional no encontrado.' });
         }
 
-        // AÑADIMOS LA BÚSQUEDA DE DATOS ADICIONALES
         profesional.experiencias = await db.all('SELECT puesto, institucion, periodo, descripcion FROM experiencias WHERE usuario_id = ?', req.params.id);
         profesional.educacion = await db.all('SELECT titulo, institucion, periodo FROM educacion WHERE usuario_id = ?', req.params.id);
 
@@ -1291,16 +1118,13 @@ app.get('/profesionales/:id', verificarToken, async (req, res) => {
         }
 
         res.json(profesional);
-
     } catch (error) {
         console.error('Error al obtener perfil de profesional:', error);
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
 
-// --- Rutas y Lógica para Alertas de Empleo ---
-
-// RUTA 1: Para que un usuario cree una nueva alerta
+// --- Rutas para Alertas de Empleo ---
 app.post('/alertas', verificarToken, async (req, res) => {
     if (req.user.rol !== 'profesional') {
         return res.status(403).json({ error: 'Solo los profesionales pueden crear alertas.' });
@@ -1321,7 +1145,6 @@ app.post('/alertas', verificarToken, async (req, res) => {
     }
 });
 
-// RUTA 2: Para que un usuario vea sus alertas guardadas
 app.get('/alertas', verificarToken, async (req, res) => {
     if (req.user.rol !== 'profesional') {
         return res.status(403).json({ error: 'Acceso denegado.' });
@@ -1335,7 +1158,6 @@ app.get('/alertas', verificarToken, async (req, res) => {
     }
 });
 
-// RUTA 3: Para que un usuario elimine una alerta
 app.delete('/alertas/:id', verificarToken, async (req, res) => {
     try {
         const result = await db.run(
@@ -1352,8 +1174,6 @@ app.delete('/alertas/:id', verificarToken, async (req, res) => {
     }
 });
 
-
-// FUNCIÓN CENTRAL: Compara una vacante nueva con todas las alertas guardadas
 async function procesarAlertasParaNuevaVacante(vacante) {
     console.log(`🔎 Procesando alertas para la nueva vacante: "${vacante.titulo}"`);
     const alertas = await db.all(`
@@ -1363,28 +1183,20 @@ async function procesarAlertasParaNuevaVacante(vacante) {
 
     for (const alerta of alertas) {
         let coincide = true;
-
-        // Comprueba si la ubicación de la alerta coincide (si existe)
         if (alerta.ubicacion && !vacante.ubicacion.toLowerCase().includes(alerta.ubicacion.toLowerCase())) {
             coincide = false;
         }
-
-        // Comprueba si el tipo de contrato coincide (si existe)
         if (alerta.tipo_contrato && vacante.tipoContrato !== alerta.tipo_contrato) {
             coincide = false;
         }
-
-        // Comprueba si las palabras clave coinciden (si existen)
         if (alerta.palabras_clave) {
             const textoVacante = `${vacante.titulo} ${vacante.descripcion}`.toLowerCase();
             if (!textoVacante.includes(alerta.palabras_clave.toLowerCase())) {
                 coincide = false;
             }
         }
-
         if (coincide) {
             console.log(`✅ Coincidencia encontrada para ${alerta.correo}. Enviando email...`);
-            // Si todo coincide, envía el correo
             const mailOptions = {
                 from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
                 to: alerta.correo,
@@ -1399,14 +1211,13 @@ async function procesarAlertasParaNuevaVacante(vacante) {
                             ${vacante.ubicacion ? `<p style="margin: 5px 0;"><strong>Ubicación:</strong> ${vacante.ubicacion}</p>` : ''}
                         </div>
                         <p>¡No pierdas la oportunidad! Haz clic en el siguiente botón para ver los detalles y postularte.</p>
-                        <a href="http://127.0.0.1:5501/index.html" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                        <a href="https://zomedica.onrender.com" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block;">
                             Ver Vacante Ahora
                         </a>
                         <p style="font-size: 0.8em; color: #777; margin-top: 30px;">Recibes este correo porque creaste una alerta de empleo en ZoMedica.</p>
                     </div>
                 `
             };
-
             try {
                 await transporter.sendMail(mailOptions);
             } catch (emailError) {
@@ -1417,9 +1228,6 @@ async function procesarAlertasParaNuevaVacante(vacante) {
 }
 
 // --- Rutas para el Sistema de Mensajería ---
-
-// --- NUEVA RUTA ---
-// Cuenta los mensajes no leídos para el usuario logueado
 app.get('/mensajes/no-leidos', verificarToken, async (req, res) => {
     try {
         const count = await db.get(`
@@ -1428,7 +1236,6 @@ app.get('/mensajes/no-leidos', verificarToken, async (req, res) => {
             JOIN conversaciones c ON m.conversacion_id = c.id
             WHERE m.remitente_id != ? AND m.leido = 0 AND (c.profesional_id = ? OR c.institucion_id = ?)
         `, [req.user.id, req.user.id, req.user.id]);
-
         res.json({ total: count.total || 0 });
     } catch (err) {
         console.error('Error al contar mensajes no leídos:', err);
@@ -1436,8 +1243,6 @@ app.get('/mensajes/no-leidos', verificarToken, async (req, res) => {
     }
 });
 
-
-// Obtiene todas las conversaciones activas para el usuario logueado
 app.get('/conversaciones', verificarToken, async (req, res) => {
     try {
         let conversaciones;
@@ -1450,7 +1255,7 @@ app.get('/conversaciones', verificarToken, async (req, res) => {
                 JOIN vacantes v ON p.vacante_id = v.id
                 WHERE c.profesional_id = ? AND c.activa = 1
             `, req.user.id);
-        } else { // Rol es 'institucion'
+        } else {
             conversaciones = await db.all(`
                 SELECT c.id, c.postulacion_id, u.nombre AS nombre_interlocutor, v.titulo AS titulo_vacante
                 FROM conversaciones c
@@ -1467,12 +1272,9 @@ app.get('/conversaciones', verificarToken, async (req, res) => {
     }
 });
 
-
-// Obtiene todos los mensajes de una conversación específica
 app.get('/conversaciones/:id/mensajes', verificarToken, async (req, res) => {
     try {
         const conversacion = await db.get('SELECT * FROM conversaciones WHERE id = ?', req.params.id);
-        // Verificación de seguridad: el usuario debe ser parte de la conversación
         if (req.user.id !== conversacion.profesional_id && req.user.id !== conversacion.institucion_id) {
             return res.status(403).json({ error: 'Acceso denegado.' });
         }
@@ -1484,16 +1286,12 @@ app.get('/conversaciones/:id/mensajes', verificarToken, async (req, res) => {
     }
 });
 
-// --- NUEVA RUTA ---
-// Marca los mensajes de una conversación como leídos
 app.put('/conversaciones/:id/leido', verificarToken, async (req, res) => {
     try {
-        // Verificación de seguridad (similar a la que ya tenemos)
         const conversacion = await db.get('SELECT * FROM conversaciones WHERE id = ?', req.params.id);
         if (req.user.id !== conversacion.profesional_id && req.user.id !== conversacion.institucion_id) {
             return res.status(403).json({ error: 'Acceso denegado.' });
         }
-        // Actualiza solo los mensajes recibidos por el usuario actual
         await db.run(
             'UPDATE mensajes SET leido = 1 WHERE conversacion_id = ? AND remitente_id != ?',
             [req.params.id, req.user.id]
@@ -1505,7 +1303,6 @@ app.put('/conversaciones/:id/leido', verificarToken, async (req, res) => {
     }
 });
 
-// Envía un nuevo mensaje
 app.post('/mensajes', verificarToken, async (req, res) => {
     const { conversacion_id, mensaje } = req.body;
     try {
@@ -1518,7 +1315,6 @@ app.post('/mensajes', verificarToken, async (req, res) => {
             [conversacion_id, req.user.id, mensaje, new Date().toISOString()]
         );
 
-        // --- INICIO DE LA LÓGICA DE WEBSOCKETS ---
         const destinatarioId = req.user.id === conversacion.profesional_id ? conversacion.institucion_id : conversacion.profesional_id;
         const destinatarioSocket = clients.get(destinatarioId);
 
@@ -1526,7 +1322,6 @@ app.post('/mensajes', verificarToken, async (req, res) => {
             destinatarioSocket.send(JSON.stringify({ type: 'nuevo_mensaje' }));
             console.log(`📢 Notificación de nuevo mensaje enviada en tiempo real al usuario ${destinatarioId}`);
         }
-        // --- FIN DE LA LÓGICA DE WEBSOCKETS ---
 
         res.status(201).json({ message: 'Mensaje enviado.', id: result.lastID });
     } catch (err) {
@@ -1535,13 +1330,7 @@ app.post('/mensajes', verificarToken, async (req, res) => {
     }
 });
 
-
-// =================================================================
-// SECCIÓN: SERVIDOR DE ARCHIVOS ESTÁTICOS Y ARRANQUE DEL SERVIDOR
-// =================================================================
 // --- Rutas para Vacantes Favoritas ---
-
-// RUTA 1: Para marcar/desmarcar una vacante como favorita
 app.post('/favoritos/:vacanteId', verificarToken, async (req, res) => {
     if (req.user.rol !== 'profesional') {
         return res.status(403).json({ error: 'Solo los profesionales pueden guardar favoritos.' });
@@ -1553,11 +1342,9 @@ app.post('/favoritos/:vacanteId', verificarToken, async (req, res) => {
         const esFavorito = await db.get('SELECT * FROM favoritos WHERE usuario_id = ? AND vacante_id = ?', [usuarioId, vacanteId]);
 
         if (esFavorito) {
-            // Si ya es favorito, lo quitamos
             await db.run('DELETE FROM favoritos WHERE usuario_id = ? AND vacante_id = ?', [usuarioId, vacanteId]);
             res.json({ message: 'Vacante eliminada de favoritos.', esFavorito: false });
         } else {
-            // Si no es favorito, lo añadimos
             await db.run('INSERT INTO favoritos (usuario_id, vacante_id) VALUES (?, ?)', [usuarioId, vacanteId]);
             res.json({ message: 'Vacante guardada en favoritos.', esFavorito: true });
         }
@@ -1567,7 +1354,6 @@ app.post('/favoritos/:vacanteId', verificarToken, async (req, res) => {
     }
 });
 
-// RUTA 2: Para obtener todas las vacantes favoritas de un usuario
 app.get('/favoritos', verificarToken, async (req, res) => {
     if (req.user.rol !== 'profesional') {
         return res.status(403).json({ error: 'Acceso denegado.' });
@@ -1586,72 +1372,54 @@ app.get('/favoritos', verificarToken, async (req, res) => {
 });
 
 // --- Ruta de Analíticas para Vacantes ---
-
 app.get('/institucion/vacantes/:id/analiticas', verificarToken, async (req, res) => {
     if (req.user.rol !== 'institucion') {
         return res.status(403).json({ error: 'Acceso denegado.' });
     }
 
     const vacanteId = req.params.id;
-
     try {
-        // 1. Verificamos que la vacante pertenece a la institución que la solicita
         const vacante = await db.get('SELECT * FROM vacantes WHERE id = ? AND usuario_id = ?', [vacanteId, req.user.id]);
         if (!vacante) {
             return res.status(404).json({ error: 'Vacante no encontrada o no te pertenece.' });
         }
 
-        // 2. Contamos las postulaciones totales para esa vacante
         const postulaciones = await db.get('SELECT COUNT(*) AS total FROM postulaciones WHERE vacante_id = ?', vacanteId);
-
-        // 3. Calculamos la tasa de conversión
-        const vistasUnicas = vacante.vistas; // Ya tenemos este dato en la tabla de vacantes
+        const vistasUnicas = vacante.vistas;
         const totalPostulaciones = postulaciones.total;
         let tasaConversion = 0;
         if (vistasUnicas > 0) {
             tasaConversion = ((totalPostulaciones / vistasUnicas) * 100).toFixed(1);
         }
 
-        // 4. Enviamos todos los datos juntos
         res.json({
             vistas: vistasUnicas,
             postulaciones: totalPostulaciones,
             tasa_conversion: tasaConversion
         });
-
     } catch (err) {
         console.error('Error al obtener analíticas de la vacante:', err);
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
 
-// --- PEGA ESTE NUEVO BLOQUE DE CÓDIGO EN LUGAR DEL ANTERIOR ---
-
-// Mantenemos estas líneas para que el servidor siga sirviendo archivos
+// =================================================================
+// SECCIÓN: SERVIDOR DE ARCHIVOS ESTÁTICOS Y ARRANQUE DEL SERVIDOR
+// =================================================================
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(UPLOADS_DIR));
 
-// 1. Creamos un servidor HTTP base y le pasamos nuestra aplicación Express.
 const server = http.createServer(app);
-
-// 2. Creamos el servidor de WebSockets y lo "enganchamos" al servidor HTTP principal.
 const wss = new WebSocketServer({ server });
-
-// 3. Este mapa nos ayudará a saber qué conexión WebSocket pertenece a qué usuario.
 const clients = new Map();
 
-// 4. Lógica que se ejecuta cada vez que un nuevo usuario se conecta por WebSocket.
 wss.on('connection', (ws, req) => {
-    // Extraemos el token de la URL para identificar al usuario.
     const token = req.url.split('?token=')[1];
     if (token) {
         jwt.verify(token, JWT_SECRET, (err, user) => {
             if (!err) {
-                // Si el token es válido, guardamos la conexión del usuario.
                 clients.set(user.id, ws);
                 console.log(`✅ WebSocket conectado para el usuario: ${user.id}`);
-                
-                // Si el usuario cierra la pestaña, eliminamos su conexión.
                 ws.on('close', () => {
                     clients.delete(user.id);
                     console.log(`🔌 WebSocket desconectado para el usuario: ${user.id}`);
@@ -1661,7 +1429,6 @@ wss.on('connection', (ws, req) => {
     }
 });
 
-// 5. Finalmente, le decimos a nuestro nuevo servidor "combinado" que empiece a escuchar.
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`🚀 Servidor (HTTP y WebSocket) escuchando en el puerto ${PORT}`);
