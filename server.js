@@ -33,25 +33,13 @@ const transporter = nodemailer.createTransport({
 // =================================================================
 // SECCIÓN: CONFIGURACIÓN INICIAL DEL SERVIDOR
 // =================================================================
-// Lista de orígenes permitidos
-const allowedOrigins = [
-    process.env.FRONTEND_URL, // Tu URL de Vercel para producción
-    'http://127.0.0.1:5500'    // La URL de Live Server (por si acaso)
-];
-
-app.use(cors({
-    origin: function (origin, callback) {
-        // AQUÍ ESTÁ EL CAMBIO: añadimos "|| origin === 'null'"
-        if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin === 'null') {
-            callback(null, true); // Permite el acceso
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    }
-}));
+// Inicialización de Express y configuración de middlewares que se aplican a todas las peticiones.
+const app = express();
+app.use(cors());
+app.use(express.json());
 
 // Variables de entorno y de ruta
-const JWT_SECRET = process.env.SECRET || "wwbt mpou dier ngiu";
+const JWT_SECRET = process.env.env_SECRET || "tu_secreto_secreto";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -327,7 +315,7 @@ const verificarTokenOpcional = (req, res, next) => {
 
 // --- Rutas de Autenticación ---
 
-// REEMPLAZA ESTA RUTA COMPLETA EN server.js
+// server.js (Dentro de la ruta app.post('/register', ...))
 
 app.post('/register', async (req, res) => {
     const { nombre, correo, password, rol } = req.body;
@@ -343,46 +331,40 @@ app.post('/register', async (req, res) => {
         }
         
         const hashedPassword = await bcrypt.hash(password, 10);
-        // 1. Generamos un token seguro y único
         const tokenVerificacion = crypto.randomBytes(32).toString('hex');
         
-        // 2. Insertamos el usuario con el token y el estado 'no verificado' (0)
-        await db.run(
+        const result = await db.run(
             'INSERT INTO usuarios (nombre, correo, password, rol, verificado, token_verificacion) VALUES (?, ?, ?, ?, ?, ?)',
             [nombre, correo, hashedPassword, rol, 0, tokenVerificacion]
         );
 
-        // 3. Creamos el link de verificación que el usuario recibirá
-        //    (Asegúrate de que el puerto 3000 sea correcto para tu backend)
-        const linkVerificacion = `${process.env.BACKEND_URL}/verify-email/${tokenVerificacion}`;
+        // --- INICIO: LÓGICA DE ENVÍO DE CORREO REAL ---
+        const linkVerificacion = `http://localhost:3000/verify-email/${tokenVerificacion}`; 
         
         const mailOptions = {
             from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
             to: correo,
             subject: 'Verifica tu cuenta en ZoMedica',
             html: `
-                <div style="font-family: Arial, sans-serif; text-align: center; color: #333; padding: 20px;">
-                    <h2 style="color: #0A66C2;">¡Bienvenido a ZoMedica!</h2>
+                <div style="font-family: Arial, sans-serif; text-align: center; color: #333;">
+                    <h2>¡Bienvenido a ZoMedica!</h2>
                     <p>Gracias por registrarte. Por favor, haz clic en el siguiente botón para verificar tu correo electrónico y activar tu cuenta.</p>
-                    <a href="${linkVerificacion}" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0; font-weight: bold;">
+                    <a href="${linkVerificacion}" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0;">
                         Verificar mi Cuenta
                     </a>
-                    <p style="font-size: 0.9em;">Si el botón no funciona, copia y pega el siguiente enlace en tu navegador:</p>
-                    <p style="font-size: 0.9em; word-break: break-all;"><a href="${linkVerificacion}">${linkVerificacion}</a></p>
-                    <hr style="border-top: 1px solid #e9ecef; margin-top: 20px;">
-                    <p style="font-size: 0.8em; color: #6c757d;">Si no creaste esta cuenta, puedes ignorar este correo de forma segura.</p>
+                    <p>Si el botón no funciona, copia y pega el siguiente enlace en tu navegador:</p>
+                    <p><a href="${linkVerificacion}">${linkVerificacion}</a></p>
                 </div>
             `
         };
 
-        // 4. Usamos el transporter de Nodemailer para enviar el correo
         await transporter.sendMail(mailOptions);
         console.log(`Correo de verificación enviado a ${correo}`);
+        // --- FIN: LÓGICA DE ENVÍO DE CORREO REAL ---
 
-        // 5. Enviamos una respuesta clara al frontend
         res.status(201).json({ 
-            message: 'Registro exitoso. Se ha enviado un enlace de verificación a tu correo electrónico.',
-            alerta: '¡Debes verificar tu correo para poder iniciar sesión!'
+            message: 'Registro exitoso. Se ha enviado un enlace de verificación a su correo electrónico.',
+            alerta: '¡Debe verificar su correo para poder iniciar sesión!'
         });
 
     } catch (err) {
@@ -394,7 +376,13 @@ app.post('/register', async (req, res) => {
     }
 });
 
+
+// server.js (Añadir esta ruta en una sección de "Autenticación Avanzada")
+
 app.get('/verify-email/:token', async (req, res) => {
+    // La URL de tu frontend. Asegúrate de que el puerto (5500) sea correcto.
+    const frontendUrl = 'http://127.0.0.1:5501/index.html';
+
     try {
         const token = req.params.token;
         const result = await db.run(
@@ -403,17 +391,17 @@ app.get('/verify-email/:token', async (req, res) => {
         );
 
         if (result.changes > 0) {
+            // Éxito: Redirige al login con un parámetro de éxito
             console.log(`✅ ÉXITO: Usuario con token ${token} ha sido verificado.`);
-            // Redirige al frontend en Vercel con un parámetro de éxito.
-            res.redirect(`${process.env.FRONTEND_URL}/index.html#login?verified=true`);
+            res.redirect(`${frontendUrl}#login?verified=true`);
         } else {
+            // Fracaso: Redirige al login con un parámetro de error
             console.log(`⚠️ ALERTA: No se pudo verificar el token ${token}.`);
-            // Redirige al frontend en Vercel con un parámetro de error.
-            res.redirect(`${process.env.FRONTEND_URL}/index.html#login?verified=false`);
+            res.redirect(`${frontendUrl}#login?verified=false`);
         }
     } catch (error) {
         console.error('Error al verificar correo:', error);
-        res.redirect(`${process.env.FRONTEND_URL}/index.html#login?verified=error`);
+        res.redirect(`${frontendUrl}#login?verified=error`);
     }
 });
 
@@ -422,59 +410,31 @@ app.post('/login', async (req, res) => {
     try {
         const user = await db.get('SELECT * FROM usuarios WHERE correo = ?', correo);
         
+        // --- LÍNEA DE DEPURACIÓN CLAVE ---
+        console.log('🔎 Intentando iniciar sesión para:', user); 
+        // ------------------------------------
+
         if (!user) {
             return res.status(401).json({ error: 'Credenciales inválidas.' });
         }
 
-        // --- ¡NUEVO BLOQUE DE SEGURIDAD! ---
-        // Verificamos si la columna 'verificado' es 0 (falso)
         if (user.verificado === 0) {
-            // Si no está verificado, denegamos el acceso con un mensaje específico.
             return res.status(403).json({ 
                 error: 'Debes verificar tu correo electrónico antes de iniciar sesión.',
-                requiereVerificacion: true // Esta bandera ayudará al frontend.
+                requiereVerificacion: true 
             });
         }
-        // --- FIN DEL BLOQUE DE SEGURIDAD ---
 
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
             return res.status(401).json({ error: 'Credenciales inválidas.' });
         }
         
-        const token = jwt.sign({ id: user.id, rol: user.rol, correo: user.correo, nombre: user.nombre }, JWT_SECRET, { expiresIn: '1d' }); // Aumentado a 1 día
+       const token = jwt.sign({ id: user.id, rol: user.rol, correo: user.correo, nombre: user.nombre }, JWT_SECRET, { expiresIn: '15m' });
         res.json({ token, user: { id: user.id, nombre: user.nombre, rol: user.rol, correo: user.correo } });
 
     } catch (err) {
         console.error('Error al iniciar sesión:', err);
-        res.status(500).json({ error: 'Error interno del servidor.' });
-    }
-});
-
-app.post('/resend-verification', async (req, res) => {
-    const { correo } = req.body;
-    try {
-        const user = await db.get('SELECT * FROM usuarios WHERE correo = ?', [correo]);
-        if (user && user.verificado === 0) {
-            const tokenVerificacion = crypto.randomBytes(32).toString('hex');
-            await db.run('UPDATE usuarios SET token_verificacion = ? WHERE id = ?', [tokenVerificacion, user.id]);
-
-            // Se usa la variable de entorno del backend
-            const linkVerificacion = `${process.env.BACKEND_URL}/verify-email/${tokenVerificacion}`;
-            
-            // Recrea el objeto 'mailOptions' aquí, igual que en /register
-            const mailOptions = {
-                from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
-                to: correo,
-                subject: 'Verifica tu cuenta en ZoMedica (Reenvío)',
-                // (Usa tu plantilla HTML completa aquí, similar a la de /register)
-                html: `<p>Haz clic aquí para verificar tu cuenta: <a href="${linkVerificacion}">${linkVerificacion}</a></p>`
-            };
-            await transporter.sendMail(mailOptions);
-        }
-        res.json({ message: 'Si tu cuenta existe y no está verificada, se ha enviado un nuevo enlace a tu correo.' });
-    } catch (error) {
-        console.error("Error al reenviar correo de verificación:", error);
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
@@ -491,7 +451,7 @@ app.post('/forgot-password', async (req, res) => {
                 'UPDATE usuarios SET reset_token = ?, reset_token_expires = ? WHERE id = ?',
                 [token, expires, user.id]
             );
-            const resetLink = `${process.env.FRONTEND_URL}/index.html?reset=${token}`;
+            const resetLink = `http://127.0.0.1:5501/index.html?resetToken=${token}`;
             const mailOptions = {
                 from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
                 to: user.correo,
@@ -701,6 +661,63 @@ app.get('/instituciones/:id', async (req, res) => {
     }
 });
 
+
+app.get('/instituciones/:id', async (req, res) => {
+    const institucionId = req.params.id;
+    try {
+        const institucion = await db.get('SELECT id, nombre, direccion, telefono, sitioWeb, logoPath, bio FROM usuarios WHERE id = ? AND rol = "institucion"', institucionId);
+        
+        if (!institucion) {
+            return res.status(404).json({ error: 'Institución no encontrada.' });
+        }
+
+        const vacantes = await db.all('SELECT id, titulo, descripcion, ubicacion, tipoContrato FROM vacantes WHERE usuario_id = ? ORDER BY id DESC', institucionId);
+        res.json({ ...institucion, vacantes });
+    } catch (err) {
+        console.error('Error al obtener perfil de institución:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
+// Esta es la nueva ruta para la foto de perfil del profesional
+app.put('/perfil/foto', verificarToken, upload.single('foto'), async (req, res) => {
+    // 1. Nos aseguramos de que solo los profesionales puedan usarla
+    if (req.user.rol !== 'profesional') {
+        return res.status(403).json({ error: 'Acceso denegado.' });
+    }
+    // 2. Verificamos que se haya subido un archivo
+    if (!req.file) {
+        return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
+    }
+    try {
+        // 3. Creamos la ruta para guardarla en la base de datos
+        const fotoPath = `uploads/${req.file.filename}`;
+        // 4. Actualizamos la base de datos con la nueva ruta de la foto
+        await db.run('UPDATE usuarios SET fotoPath = ? WHERE id = ?', [fotoPath, req.user.id]);
+        // 5. Enviamos una respuesta de éxito
+        res.json({ message: 'Foto de perfil actualizada con éxito.', fotoPath });
+    } catch (err) {
+        console.error('Error al actualizar la foto de perfil:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
+app.put('/perfil/logo', verificarToken, upload.single('logo'), async (req, res) => {
+    if (req.user.rol !== 'institucion') {
+        return res.status(403).json({ error: 'Acceso denegado.' });
+    }
+    if (!req.file) {
+        return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
+    }
+    try {
+        const logoPath = `uploads/${req.file.filename}`;
+        await db.run('UPDATE usuarios SET logoPath = ? WHERE id = ?', [logoPath, req.user.id]);
+        res.json({ message: 'Logo actualizado con éxito.', logoPath });
+    } catch (err) {
+        console.error('Error al actualizar el logo:', err);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
 
 // --- Rutas de Vacantes ---
 
@@ -1382,9 +1399,9 @@ async function procesarAlertasParaNuevaVacante(vacante) {
                             ${vacante.ubicacion ? `<p style="margin: 5px 0;"><strong>Ubicación:</strong> ${vacante.ubicacion}</p>` : ''}
                         </div>
                         <p>¡No pierdas la oportunidad! Haz clic en el siguiente botón para ver los detalles y postularte.</p>
-                        <a href="${process.env.FRONTEND_URL}/index.html" style="...">
-    Ver Vacante Ahora
-</a>
+                        <a href="http://127.0.0.1:5501/index.html" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                            Ver Vacante Ahora
+                        </a>
                         <p style="font-size: 0.8em; color: #777; margin-top: 30px;">Recibes este correo porque creaste una alerta de empleo en ZoMedica.</p>
                     </div>
                 `
