@@ -1692,31 +1692,36 @@ async function subirFotoDePerfil() {
     }
     const formData = new FormData();
     formData.append('foto', file);
+    
     try {
-    const response = await fetchProtegido(`${API_BASE_URL}/perfil/foto`, {
-        method: 'PUT',
-        body: formData
-    });
+        // ⭐ Uso de API_BASE_URL para la ruta correcta
+        const response = await fetchProtegido(`${API_BASE_URL}/perfil/foto`, {
+            method: 'PUT',
+            body: formData
+        });
 
-    // ⭐ CORRECCIÓN 52: Verifica si la respuesta es HTML (lo que causa el error)
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-        // Si no es JSON, lanza un error que será capturado, indicando un fallo de Multer/Render
-        throw new Error("El servidor devolvió un error de HTML. Posible fallo al guardar el archivo.");
+        // ⭐ Corrección Defensiva (Manejo de errores de Multer/Render)
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            // Si el servidor (Render/Express) falló al escribir el archivo, 
+            // a menudo devuelve una página HTML de error 500.
+            throw new Error("El servidor devolvió una respuesta inesperada (HTML en lugar de JSON). Posible fallo de permisos al subir el archivo.");
+        }
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert(data.message);
+            // Recargar el perfil para mostrar la nueva foto
+            mostrarPerfilProfesional(); 
+        }
+    } catch (error) {
+        console.error('Error al subir la foto:', error);
+        // Si la excepción fue la nuestra, muestra el mensaje específico
+        alert(`Ocurrió un error al subir la foto: ${error.message}`); 
     }
-    // Fin de la corrección
-
-    const data = await response.json();
-    if (data.error) {
-        alert(data.error);
-    } else {
-        alert(data.message);
-        mostrarPerfilProfesional();
-    }
-} catch (error) {
-    console.error('Error al subir la foto:', error);
-    // Ahora, si recibimos HTML, el mensaje será más claro
-    alert(`Ocurrió un error al subir la foto: ${error.message}`); 
 }
 
 async function subirCV() {
