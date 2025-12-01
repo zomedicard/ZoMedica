@@ -2,6 +2,11 @@
 // # --- ESTADO GLOBAL E INICIALIZACIÓN ---
 // =================================================================
 
+// ⭐ CORRECCIÓN 30: URL BASE DINÁMICA (Local vs. Producción)
+const API_BASE_URL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000' // URL para correrlo en tu PC
+    : 'https://zomedica.onrender.com'; // ¡Tu nueva URL de Render!
+
 let token = localStorage.getItem('token');
 let userName = localStorage.getItem('nombre');
 let userTipo = localStorage.getItem('rol');
