@@ -341,7 +341,7 @@ app.post('/register', async (req, res) => {
         // CONVERSION: db.run() -> db.query() + RETURNING id
         const insertResult = await db.query(
             'INSERT INTO usuarios (nombre, correo, password, rol, verificado, token_verificacion) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-            [nombre, correo, hashedPassword, rol, 0, tokenVerificacion]
+            [nombre, correo, hashedPassword, rol, 1, tokenVerificacion]
         );
 
         const apiBaseUrl = process.env.FRONTEND_URL.replace('/index.html', ''); const linkVerificacion = `${apiBaseUrl}/verify-email/${tokenVerificacion}`;
