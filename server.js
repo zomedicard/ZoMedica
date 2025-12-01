@@ -330,7 +330,7 @@ app.post('/register', async (req, res) => {
             [nombre, correo, hashedPassword, rol, 0, tokenVerificacion]
         );
 
-        const linkVerificacion = `http://localhost:3000/verify-email/${tokenVerificacion}`;
+        const apiBaseUrl = process.env.FRONTEND_URL.replace('/index.html', ''); const linkVerificacion = `${apiBaseUrl}/verify-email/${tokenVerificacion}`;
 
         const mailOptions = {
             from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
@@ -435,7 +435,7 @@ app.post('/forgot-password', async (req, res) => {
                 'UPDATE usuarios SET reset_token = $1, reset_token_expires = $2 WHERE id = $3',
                 [token, expires, user.id]
             );
-            const resetLink = `http://127.0.0.1:5501/index.html?resetToken=${token}`;
+            const resetLink = `${process.env.FRONTEND_URL}?resetToken=${token}`;
             const mailOptions = {
                 from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
                 to: user.correo,
@@ -1383,7 +1383,7 @@ async function procesarAlertasParaNuevaVacante(vacante) {
                             ${vacante.ubicacion ? `<p style="margin: 5px 0;"><strong>Ubicación:</strong> ${vacante.ubicacion}</p>` : ''}
                         </div>
                         <p>¡No pierdas la oportunidad! Haz clic en el siguiente botón para ver los detalles y postularte.</p>
-                        <a href="http://127.0.0.1:5501/index.html" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                        <a href="${process.env.FRONTEND_URL}" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block;">
                             Ver Vacante Ahora
                         </a>
                         <p style="font-size: 0.8em; color: #777; margin-top: 30px;">Recibes este correo porque creaste una alerta de empleo en ZoMedica.</p>
