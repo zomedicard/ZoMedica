@@ -636,7 +636,7 @@ app.put('/perfil/foto', verificarToken, upload.single('foto'), async (req, res) 
         return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
     }
     try {
-        const fotoPath = req.file.filename;\
+        const fotoPath = req.file.filename;
         // CONVERSION: db.run() -> db.query()
         await db.query('UPDATE usuarios SET fotoPath = $1 WHERE id = $2', [fotoPath, req.user.id]);
         res.json({ message: 'Foto de perfil actualizada con éxito.', fotoPath });
