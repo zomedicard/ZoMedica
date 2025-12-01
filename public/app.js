@@ -2018,7 +2018,7 @@ async function verPerfilPostulante(postulacionId) {
         }
         const perfil = await res.json();
         // ⭐ CORRECCIÓN 47: Usar API_BASE_URL para rutas de archivos
-        const imagenSrc = perfil.fotoPath ? \${API_BASE_URL}/${perfil.fotoPath}` : 'default-avatar.png';`
+       const imagenSrc = perfil.fotoPath ? \${API_BASE_URL}/uploads/${perfil.fotoPath}` : 'default-avatar.png';`
 
         let perfilHTML = `
             <div class="perfil-header">
