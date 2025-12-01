@@ -1574,15 +1574,18 @@ async function eliminarAlerta(id) {
 // # --- LÓGICA DE PERFIL (VISTA Y EDICIÓN) ---
 // =================================================================
 
+// app.js (Reemplazar la función cargarPerfilProfesional COMPLETA)
 async function cargarPerfilProfesional() {
+    // ⭐ El contenedor se obtiene al inicio
+    const perfilContainer = document.getElementById('infoProfesional'); 
+    
     try {
-        // ⭐ CORRECCIÓN 47: Usar API_BASE_URL
         const res = await fetchProtegido(`${API_BASE_URL}/perfil`);
         if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);
         }
         const perfil = await res.json();
-        // ⭐ CORRECCIÓN 47: Usar API_BASE_URL para rutas de archivos
+        // ⭐ Usar API_BASE_URL para rutas de archivos
         const imagenSrc = perfil.fotoPath ? `${API_BASE_URL}/${perfil.fotoPath}` : 'uploads/default-avatar.png';
 
         let perfilHTML = `
@@ -1646,7 +1649,8 @@ async function cargarPerfilProfesional() {
         perfilContainer.innerHTML = perfilHTML;
     } catch (err) {
         console.error('Error al cargar perfil:', err);
-        document.getElementById('infoProfesional').innerHTML = '<p>Error al cargar el perfil.</p>';
+        // ⭐ Corregido el ámbito: Usamos el ID global en lugar de la variable local
+        document.getElementById('infoProfesional').innerHTML = '<p>Error al cargar el perfil.</p>'; 
     }
 }
 
