@@ -2010,15 +2010,15 @@ async function verPerfilPostulante(postulacionId) {
     perfilContainer.innerHTML = '<p>Cargando perfil del candidato...</p>';
 
     try {
-        // ⭐ CORRECCIÓN 47: Usar API_BASE_URL
         const res = await fetchProtegido(`${API_BASE_URL}/institucion/postulaciones/${postulacionId}/profesional`);
         if (!res.ok) {
             const errData = await res.json();
             throw new Error(errData.error || 'No se pudo cargar el perfil.');
         }
         const perfil = await res.json();
-        // ⭐ CORRECCIÓN 47: Usar API_BASE_URL para rutas de archivos
-       const imagenSrc = perfil.fotoPath ? \${API_BASE_URL}/uploads/${perfil.fotoPath}` : 'default-avatar.png';`
+        
+        // ⭐ CÓDIGO CORREGIDO (Línea crítica de la URL de imagen)
+        const imagenSrc = perfil.fotoPath ? `${API_BASE_URL}/uploads/${perfil.fotoPath}` : 'default-avatar.png';
 
         let perfilHTML = `
             <div class="perfil-header">
@@ -2031,7 +2031,7 @@ async function verPerfilPostulante(postulacionId) {
                 <p><strong>Correo:</strong> ${perfil.correo}</p>
                 <p><strong>Teléfono:</strong> ${perfil.telefono || 'No especificado'}</p>
                 ${perfil.linkedinURL ? `<p><strong>LinkedIn:</strong> <a href="${perfil.linkedinURL}" target="_blank">Ver Perfil</a></p>` : ''}
-                ${perfil.cvPath ? `<p><a href="${API_BASE_URL}/${perfil.cvPath}" target="_blank" class="button">Descargar CV</a></p>` : ''}
+                ${perfil.cvPath ? `<p><a href="${API_BASE_URL}/uploads/${perfil.cvPath}" target="_blank" class="button">Descargar CV</a></p>` : ''}
             </div>
             <div class="perfil-seccion">
                 <h4>Acerca del Profesional</h4>
