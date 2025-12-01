@@ -1,0 +1,1851 @@
+/* --- Paleta de Colores para MediJobs (Basado en #0A66C2) --- */
+:root {
+    --primary-blue: #0A66C2;   /* Azul Principal para botones y enlaces */
+    --nav-blue: #063a6b;       /* Azul oscuro para la barra de navegación */
+    --accent-green: #00C853;   /* Verde para acentos, íconos y éxito */
+    --dark-text: #333333;      /* Gris Grafito para texto principal */
+    --light-bg: #F5F9FF;      /* Fondo general de la página con un toque azul */
+    --white: #ffffff;        /* Fondo de tarjetas y contenedores principales */
+    --medium-grey: #6c757d;    /* Texto secundario y bordes sutiles */
+    --border-light: #e9ecef;   /* Borde más claro para elementos */
+    --shadow-light: rgba(0, 0, 0, 0.08); /* Sombra suave para elevación */
+    --shadow-medium: rgba(0, 0, 0, 0.15); /* Sombra más fuerte para hover */
+    --success-green: #28a745;  /* Mensajes de éxito */
+    --error-red: #dc3545;      /* Mensajes de error */
+    --tag-bg: #e2e6ea;         /* Fondo de tags/keywords */
+    --tag-text: #495057;       /* Texto de tags/keywords */
+}
+
+/* --- ESTILOS GENERALES Y RESET --- */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--light-bg);
+    color: var(--dark-text);
+    line-height: 1.6;
+    scroll-behavior: smooth;
+}
+
+.container {
+    max-width: 960px;
+    margin: 30px auto;
+    padding: 30px;
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 8px 16px var(--shadow-light);
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+h1, h2, h3, h4 {
+    font-family: 'Poppins', sans-serif;
+    color: var(--dark-text);
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+h2 {
+    font-size: 2rem;
+    border-bottom: 2px solid var(--border-light);
+    padding-bottom: 10px;
+    margin-bottom: 25px;
+}
+
+a {
+    color: var(--primary-blue);
+    text-decoration: none;
+    transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+a:hover {
+    color: #074a8a;
+    text-decoration: underline;
+}
+
+/* --- NUEVO ESTILO: Saludo de Bienvenida (Más grande y centrado) --- */
+#inicio .saludo-dinamico {
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-align: center;
+    color: var(--primary-blue);
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: none; /* Quitamos el borde inferior que hereda de h2 */
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- ESTILOS DE NAVEGACIÓN (SIN CAMBIOS RESPECTO A TU VERSIÓN) --- */
+/* --- ESTILOS DE NAVEGACIÓN (MEJORADOS) --- */
+nav {
+    max-width: 90%; 
+    margin: 20px auto 30px auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    background-color: var(--primary-blue);
+    padding: 15px 30px; 
+    color: var(--white); 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+}
+nav .brand {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: 0.5px;
+}
+nav .nav-links a {
+    color: var(--white); 
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
+    font-weight: 500;
+    margin-left: 5px;
+    position: relative; /* Para el punto de notificación */
+}
+nav .nav-links a:hover {
+    background-color: #074a8a;
+    color: var(--white);
+    transform: translateY(-1px);
+}
+.nav-icon i {
+    color: var(--white);
+    font-size: 20px !important;
+}
+
+.notification-dot {
+    position: absolute;
+    top: -2px;   
+    right: -2px; 
+    min-width: 18px; 
+    height: 18px;
+    background-color: #dc3545;
+    border-radius: 50%;
+    border: 1.5px solid var(--primary-blue); /* Borde con el color de la nav */
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* --- BOTONES Y FORMULARIOS (SIN CAMBIOS RESPECTO A TU VERSIÓN) --- */
+button, .button {
+    background-color: var(--primary-blue);
+    color: var(--white);
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.05rem;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(10, 102, 194, 0.2); 
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    margin-top: 15px;
+    display: inline-block;
+}
+button:hover, .button:hover {
+    background-color: #074a8a;
+    transform: translateY(-4px); 
+    box-shadow: 0 8px 20px rgba(10, 102, 194, 0.45); 
+}
+.delete, .delete:hover { background-color: var(--error-red); }
+.delete:hover { background-color: #c82333; box-shadow: 4px 4px 10px rgba(220, 53, 69, 0.3); }
+form { display: flex; flex-direction: column; gap: 15px; }
+form label { font-weight: 600; color: var(--dark-text); margin-bottom: 5px; }
+form input, form textarea, form select {
+    padding: 12px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #495057;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+form input:focus, form textarea:focus, form select:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 0.2rem rgba(10, 102, 194, 0.25);
+}
+/* --- MENSAJES DE FEEDBACK (SIN CAMBIOS RESPECTO A TU VERSIÓN) --- */
+.message-inline {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    text-align: center;
+    font-weight: 600;
+    animation: slideIn 0.3s ease-out;
+}
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.success { background-color: #d4edda; color: var(--success-green); border: 1px solid #c3e6cb; }
+.error { background-color: #f8d7da; color: var(--error-red); border: 1px solid #f5c6cb; }
+section { display: none; padding: 25px; }
+/* Filtros y Busqueda */
+.modern-filter-bar {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+.modern-filter-bar input[type="text"], 
+.modern-filter-bar select {
+    flex: 1 1 180px;
+    padding: 10px 15px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+.modern-filter-bar button {
+    flex-shrink: 0;
+    margin-top: 0;
+    padding: 10px 25px;
+    font-size: 1rem;
+}
+#searchInput, #filtroKeyword { flex-grow: 2; min-width: 250px; }
+}
+
+/* Grid de Vacantes con Flexbox */
+.vacante-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px;
+    justify-content: flex-start; /* Alineación a la izquierda */
+    margin-top: 20px;
+}
+
+/* --- NUEVO ESTILO: Tarjeta de Vacante Moderna --- */
+.vacante, .postulacion-institucion {
+    flex: 1 1 calc(33% - 25px);
+    min-width: 280px;
+    background-color: var(--white);
+    border: none; /* Quitamos el borde */
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 6px 15px var(--shadow-light);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative; /* Para el pseudo-elemento de borde */
+    overflow: hidden;
+}
+
+/* Efecto de borde dinámico */
+.vacante::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px; /* Borde superior más grueso */
+    background-color: var(--primary-blue);
+    transition: transform 0.3s ease;
+    transform: translateY(-100%); /* Oculto arriba por defecto */
+}
+
+.vacante:hover {
+    transform: translateY(-5px); /* Movimiento de elevación sutil */
+    box-shadow: 0 10px 25px var(--shadow-medium); /* Sombra más pronunciada */
+}
+
+.vacante:hover::before {
+    transform: translateY(0); /* Muestra la línea azul al pasar el mouse */
+}
+
+.vacante a {
+    color: var(--dark-text);
+    font-weight: 700;
+    font-size: 1.15rem;
+    margin-bottom: 5px;
+}
+
+.vacante h4, .postulacion-institucion h4 {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    color: var(--dark-text);
+}
+
+.vacante p {
+    color: var(--medium-grey);
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+
+.keyword-tag {
+    display: inline-block;
+    background-color: var(--tag-bg);
+    color: var(--tag-text);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-right: 8px;
+    margin-top: 10px;
+    font-weight: 500;
+}
+
+.descripcion-vacante {
+    background-color: #f1f8e9;
+    padding: 20px;
+    border-left: 4px solid var(--accent-green);
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-size: 1.05rem;
+    color: #333;
+}
+/* ... otros estilos se mantienen ... */
+.logo-institucion-vacante {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-right: 18px;
+    border: 1px solid var(--border-light);
+}
+.institucion-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #fcfcfc;
+    border-radius: 10px;
+    border: 1px solid var(--border-light);
+}
+/* --- ESTILOS ESPECÍFICOS DE POSTULACIONES Y NOTIFICACIONES --- */
+.postulacion {
+    background-color: var(--white);
+    border: 1px solid var(--border-light);
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+.notificacion {
+    padding: 18px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    background-color: #e3f2fd;
+    border: 1px solid #bbdefb;
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+.notificacion:hover {
+    background-color: #cfedfD;
+    box-shadow: 4px 4px 10px rgba(10, 102, 194, 0.1);
+}
+.notificacion.leida {
+    background-color: var(--light-bg);
+    color: var(--medium-grey);
+    border-color: #dee2e6;
+}
+
+/* --- PERFIL PROFESIONAL Y DETALLES DE VACANTE (SIN CAMBIOS) --- */
+.perfil-seccion { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-light); }
+.detalles-grid { display: flex; flex-wrap: wrap; gap: 20px; background-color: var(--light-bg); padding: 20px; border-radius: 8px; margin: 20px 0; }
+.match-score { background-color: #e3f2fd; border: 1px solid #bbdefb; border-radius: 8px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; }
+.score-percentage { font-size: 1.8rem; font-weight: 700; color: var(--primary-blue); background-color: #ffffff; border: 3px solid var(--primary-blue); border-radius: 50%; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; }
+
+/* --- ESTILOS MODERNOS PARA MIS POSTULACIONES --- */
+.postulacion-card {
+    background-color: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.postulacion-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.postulacion-info {
+    flex-grow: 1;
+}
+
+.postulacion-info h4 {
+    font-size: 1.4rem;
+    color: var(--primary-blue);
+    margin: 0 0 5px 0;
+}
+
+.postulacion-info p {
+    margin: 3px 0;
+    font-size: 0.95rem;
+    color: var(--medium-grey);
+}
+
+.postulacion-estado {
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    min-width: 120px; /* Asegura un ancho mínimo */
+    text-align: center;
+    margin-left: 20px;
+}
+
+/* --- Colores Intuitivos y MÁS NOTORIOS para el Estado (CLASES ESTANDARIZADAS) --- */
+
+/* Enviada: Verde agua/Cian para indicar el inicio del proceso */
+.estado-enviada {
+    background-color: #00bcd4; /* Cian brillante */
+    color: var(--white);
+    border: 1px solid #00bcd4;
+}
+
+/* EN REVISIÓN (¡CORREGIDO!) */
+.estado-en-revisión {
+    background-color: #ff9800; /* Naranja intenso */
+    color: var(--white);
+    border: 1px solid #ff9800;
+}
+
+/* Entrevistado: Verde Esmeralda para indicar avance clave */
+.estado-entrevistado {
+    background-color: #4caf50; /* Verde brillante */
+    color: var(--white);
+    border: 1px solid #4caf50;
+}
+
+/* Aceptado: Azul Intenso para indicar ÉXITO */
+.estado-aceptado {
+    background-color: var(--primary-blue); /* Azul principal fuerte */
+    color: var(--white);
+    border: 1px solid var(--primary-blue);
+}
+
+/* Rechazado: Rojo Fuerte para indicar finalización */
+.estado-rechazado {
+    background-color: var(--error-red); /* Rojo de error */
+    color: var(--white);
+    border: 1px solid var(--error-red);
+}
+
+.postulacion-acciones {
+    display: flex;
+    align-items: center;
+    margin-left: 20px;
+    /* AÑADIR ESTA LÍNEA */
+    gap: 10px; 
+}
+
+.postulacion-acciones .delete {
+    padding: 8px 15px;
+    margin-top: 0;
+    font-size: 0.9rem;
+}
+
+/* --- NUEVOS ESTILOS PARA PERFIL PROFESIONAL MODERNO --- */
+
+/* Estilo para la foto de perfil */
+.perfil-foto {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 50%; /* Foto redonda */
+    border: 5px solid var(--border-light); /* Borde sutil */
+    box-shadow: 0 4px 10px var(--shadow-light);
+    margin-bottom: 15px;
+}
+
+/* Encabezado del perfil */
+.perfil-header {
+    text-align: center;
+    padding-bottom: 25px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.perfil-header h3 {
+    font-size: 2rem;
+    color: var(--dark-text);
+    margin-bottom: 5px;
+}
+
+.perfil-titulo-puesto {
+    font-size: 1.15rem;
+    color: var(--medium-grey);
+    font-weight: 500;
+}
+
+/* Secciones generales del perfil */
+.perfil-seccion {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-light);
+}
+
+.perfil-seccion h4 {
+    color: var(--primary-blue);
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    padding-left: 10px; /* Pequeña indentación para visual */
+    border-left: 4px solid var(--accent-green); /* Tira de color para destacar la sección */
+}
+
+/* Contenedor para información personal en formato de cuadrícula */
+.info-personal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 15px;
+    background-color: var(--light-bg); /* Un poco de fondo para agrupar */
+    border-radius: 8px;
+}
+
+.info-personal-grid div strong {
+    display: block;
+    color: var(--dark-text);
+    margin-bottom: 3px;
+    font-weight: 600;
+}
+
+.info-personal-grid div p {
+    margin: 0;
+    color: var(--medium-grey);
+}
+
+/* Estilo para las listas de Experiencia/Educación (Efecto Tarjeta) */
+.lista-experiencia, .lista-educacion {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.lista-experiencia li, .lista-educacion li {
+    background-color: var(--white);
+    border: 1px solid var(--border-light);
+    border-left: 5px solid var(--primary-blue); /* Tira de color a la izquierda */
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px var(--shadow-light);
+    transition: box-shadow 0.3s ease;
+}
+
+.lista-experiencia li:hover, .lista-educacion li:hover {
+    box-shadow: 0 4px 12px var(--shadow-medium);
+}
+
+.lista-experiencia li strong {
+    font-size: 1.1rem;
+    color: var(--dark-text);
+    display: block;
+    margin-bottom: 5px;
+}
+
+.lista-experiencia li p {
+    color: var(--medium-grey);
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+/* Contenedor de etiquetas para habilidades */
+.tags-container {
+    padding: 10px 0;
+}
+
+/* --- CORRECCIONES PARA EL BOTÓN 'AÑADIR CERTIFICACIÓN' --- */
+
+/* Estilo para los contenedores dinámicos */
+.campo-dinamico {
+    padding: 15px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    margin-bottom: 15px;
+    background-color: #f7f7f7;
+    position: relative; 
+    z-index: 10; /* Eleva el contenedor para que no cubra los botones */
+}
+
+/* --- AÑADE ESTOS ESTILOS AL FINAL DE TU ARCHIVO style.css --- */
+
+/* Estilo para el saludo personalizado */
+.saludo-personal {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    padding-bottom: 10px;
+    border: none;
+}
+
+/* Hero Section */
+.hero-section {
+    text-align: center;
+    padding: 40px 20px;
+    margin-bottom: 40px;
+}
+
+.hero-title {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: var(--dark-text);
+    margin-bottom: 15px;
+    line-height: 1.2;
+}
+
+.hero-subtitle {
+    font-size: 1.15rem;
+    color: var(--medium-grey);
+    max-width: 700px;
+    margin: 0 auto 30px auto;
+}
+
+.cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.button-secondary {
+    background-color: var(--white);
+    color: var(--primary-blue);
+    padding: 12px 25px;
+    border: 2px solid var(--primary-blue);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.05rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+    display: inline-block;
+}
+
+.button-secondary:hover {
+    background-color: var(--primary-blue);
+    color: var(--white);
+    transform: translateY(-4px);
+}
+
+/* Benefits Section */
+.benefits-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-top: 40px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border-light);
+}
+
+.benefit-card {
+    background-color: #fcfcfc;
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.benefit-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px var(--shadow-light);
+}
+
+.benefit-icon {
+    font-size: 2.5rem;
+    color: var(--accent-green);
+    margin-bottom: 15px;
+}
+
+.benefit-card h4 {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+}
+
+.benefit-card p {
+    color: var(--medium-grey);
+    font-size: 0.95rem;
+}
+
+/* --- AÑADE ESTOS ESTILOS PARA EL NUEVO DASHBOARD INSTITUCIONAL --- */
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.dashboard-actions .button, .dashboard-actions .button-secondary {
+    margin-top: 0;
+    padding: 10px 15px;
+    font-size: 0.95rem;
+}
+
+/* Barra de Estadísticas */
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background-color: var(--light-bg);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+}
+
+.stat-card h4 {
+    font-size: 1rem;
+    color: var(--medium-grey);
+    margin: 0 0 5px 0;
+}
+
+.stat-card p {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin: 0;
+}
+
+.stat-card .card-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 2rem;
+    color: var(--primary-blue);
+    opacity: 0.15;
+}
+
+/* Contenido Principal */
+.dashboard-main-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+}
+
+/* --- AÑADE ESTA CLASE AL FINAL DE TU ARCHIVO style.css --- */
+
+/* Estilo para manejar texto largo que se desborda */
+.texto-largo {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+/* --- ESTILOS PARA LA BARRA DE ESTADÍSTICAS DEL PERFIL --- */
+
+/* Barra de Estadísticas (Contenedor principal) */
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+/* Tarjeta individual para cada estadística */
+.stat-card {
+    background-color: var(--light-bg); /* Un fondo gris claro para destacar */
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border-light); /* Borde sutil */
+}
+
+/* Título de la tarjeta (Ej: "Postulaciones Realizadas") */
+.stat-card h4 {
+    font-size: 1rem;
+    color: var(--medium-grey);
+    margin: 0 0 5px 0;
+    border: none; /* Quitamos cualquier borde heredado */
+    padding: 0;   /* Quitamos cualquier padding heredado */
+}
+
+/* El número del contador (grande y en negrita) */
+.stat-card p {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin: 0;
+}
+
+/* Icono decorativo en la esquina de la tarjeta */
+.stat-card .card-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 2rem;
+    color: var(--primary-blue);
+    opacity: 0.15;
+}
+
+/* === ESTILOS AJUSTADOS PARA MARCA (SOLO TEXTO) === */
+
+/* El enlace que envuelve la marca */
+nav .brand-link {
+    text-decoration: none;
+    display: inline-block;
+}
+
+/* Contenedor del texto */
+nav .brand {
+    display: flex; 
+    align-items: center;
+    transition: transform 0.3s ease;
+}
+
+/* Efecto de hover en el texto */
+nav .brand-link:hover .brand {
+    transform: scale(1.05); /* Aumentamos un poco el efecto */
+}
+
+/* Estilo para el texto "Zomedica" */
+nav .brand span {
+    font-size: 1.8rem; /* Hacemos el texto aún más grande para que sea el foco principal */
+    font-weight: 800;  /* Más grueso para mayor impacto */
+    color: var(--white);
+}
+
+/* --- ESTILOS PARA LA LISTA DE REQUISITOS EN LA VISTA DE VACANTE --- */
+.lista-requisitos {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 10px;
+}
+.lista-requisitos li {
+    background-color: var(--light-bg);
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--primary-blue);
+}
+
+/* --- ESTILOS PARA EL MODAL DE COMPATIBILIDAD --- */
+
+.modal-overlay {
+    position: fixed; /* <-- LA PROPIEDAD CLAVE: Hace que flote sobre todo */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro semitransparente */
+    display: flex;
+    justify-content: center; /* Centra horizontalmente */
+    align-items: center;     /* Centra verticalmente */
+    z-index: 2000;           /* Se asegura de que esté por encima de todo */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal-content {
+    background-color: var(--white);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    position: relative;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-overlay.visible .modal-content {
+    transform: translateY(0);
+}
+
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 2rem;
+    color: var(--medium-grey);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.modal-close:hover {
+    color: var(--dark-text);
+}
+
+.modal-content h2 {
+    color: var(--primary-blue);
+    margin-bottom: 15px;
+}
+
+.missing-skills-container {
+    background-color: #fffbe6; /* Amarillo pálido */
+    border: 1px solid #ffe58f;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+    text-align: left;
+}
+
+.missing-skills-container h4 {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    color: var(--dark-text);
+    border: none;
+    padding: 0;
+}
+
+#missingSkillsList {
+    list-style: none;
+    padding-left: 0;
+}
+
+#missingSkillsList li {
+    padding: 5px 0;
+    font-weight: 500;
+    color: #d93025; /* Rojo de advertencia */
+}
+
+#missingSkillsList li::before {
+    content: '❌'; /* Icono de error */
+    margin-right: 8px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.modal-actions button {
+    margin-top: 0;
+}
+/* --- MEJORA PARA TARJETAS DE POSTULACIÓN CLICABLES --- */
+
+.postulacion-link {
+    text-decoration: none; /* Quita el subrayado del enlace */
+    color: inherit;       /* Hace que el texto herede el color normal */
+    display: block;       /* Permite que el enlace ocupe todo el espacio disponible */
+    flex-grow: 1;         /* Asegura que ocupe el espacio sobrante en el contenedor flex */
+}
+
+/* --- AÑADE ESTOS ESTILOS AL FINAL DE style.css --- */
+
+.vacante-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.vacante-header h4 {
+    margin-bottom: 0;
+    flex-grow: 1;
+}
+
+.vacante-link {
+    text-decoration: none;
+    color: inherit;
+    flex-grow: 1;
+}
+
+.vacante-acciones {
+    display: flex;
+    gap: 8px;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    color: var(--medium-grey);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 5px;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.icon-button:hover {
+    color: var(--primary-blue);
+    transform: scale(1.1);
+}
+
+.icon-button.delete:hover {
+    color: var(--error-red);
+}
+
+.vacante-stats {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-light);
+    font-size: 0.9rem;
+    color: var(--medium-grey);
+}
+
+/* Encabezado de la sección de notificaciones */
+.notificaciones-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+/* Rediseño de la tarjeta de notificación */
+.notificacion {
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Espacio entre icono, contenido y punto */
+    border-bottom: 1px solid var(--border-light);
+}
+
+.notificacion:last-child {
+    border-bottom: none;
+}
+
+.notificacion-icon {
+    font-size: 1.5rem;
+    color: var(--primary-blue);
+    width: 30px; /* Ancho fijo para alineación */
+    text-align: center;
+}
+
+.notificacion-contenido {
+    flex-grow: 1; /* Ocupa el espacio restante */
+}
+
+.notificacion-contenido p {
+    margin: 0 0 5px 0;
+    font-weight: 500;
+}
+
+.notificacion-contenido small {
+    color: var(--medium-grey);
+}
+
+.unread-dot {
+    width: 10px;
+    height: 10px;
+    background-color: var(--primary-blue);
+    border-radius: 50%;
+    flex-shrink: 0; /* Evita que el punto se encoja */
+}
+
+/* Estilos para notificaciones leídas */
+.notificacion.leida {
+    background-color: transparent; /* Quitamos el fondo gris claro */
+    color: var(--medium-grey);
+}
+
+.notificacion.leida .notificacion-icon {
+    color: var(--medium-grey);
+    opacity: 0.7;
+}
+
+/* === ESTILOS MODERNOS PARA FORMULARIOS DE AUTENTICACIÓN === */
+
+/* Contenedor principal para los formularios */
+.auth-container {
+    max-width: 450px; /* Hacemos el contenedor más estrecho y centrado */
+    margin: 50px auto;
+    padding: 40px;
+    text-align: center;
+    border-top: 5px solid var(--primary-blue); /* Detalle de color superior */
+}
+
+.auth-container h2 {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+}
+
+.auth-subtitle {
+    color: var(--medium-grey);
+    margin-bottom: 30px;
+}
+
+/* Ocultamos las etiquetas <label> porque usamos placeholders */
+.auth-container form label {
+    display: none;
+}
+
+/* Grupo de formulario (para el icono y el input) */
+.form-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.form-group i {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--medium-grey);
+}
+
+.auth-container form input,
+.auth-container form select {
+    padding-left: 45px; /* Hacemos espacio para el icono */
+    width: 100%;
+    height: 50px;
+    background-color: var(--light-bg); /* Un fondo sutil para los campos */
+    border: 1px solid var(--border-light);
+}
+
+/* Botón de acción principal */
+.auth-container form button {
+    width: 100%; /* El botón ocupa todo el ancho */
+    padding: 15px;
+    font-size: 1.1rem;
+    margin-top: 10px;
+}
+
+/* Pie de formulario con enlaces */
+.form-footer {
+    margin-top: 25px;
+    font-size: 0.95rem;
+}
+
+.form-footer p {
+    margin: 8px 0;
+}
+
+.form-footer a {
+    font-weight: 600;
+    color: var(--primary-blue);
+    text-decoration: underline;
+}
+
+/* --- ESTILOS PARA EL BOTÓN DE FAVORITOS --- */
+.favorite-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--medium-grey);
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+}
+
+.favorite-btn:hover {
+    transform: scale(1.2);
+}
+
+.favorite-btn.es-favorito {
+    color: #ffc107; /* Color dorado para indicar que es favorito */
+}
+
+/* --- ESTILOS PARA LA GESTIÓN DE ALERTAS --- */
+.alerta-card {
+    background-color: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.alerta-info p {
+    margin: 0;
+    color: var(--medium-grey);
+}
+.alerta-info strong {
+    color: var(--dark-text);
+}
+
+/* --- ESTILOS ADICIONALES PARA MODAL DE ANALÍTICAS --- */
+#analyticsModal .modal-content {
+    max-width: 650px; /* Un poco más ancho para las estadísticas */
+}
+
+#analyticsModal .stats-bar {
+    margin-top: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Columnas más pequeñas */
+}
+
+#analyticsModal .stat-card {
+    background-color: var(--white);
+    text-align: center;
+}
+
+#analyticsModal .stat-card p {
+    font-size: 2.2rem;
+}
+
+/* Pequeño ajuste para el ícono de analíticas */
+.icon-button.analytics:hover {
+    color: #4caf50; /* Verde */
+}
+
+/* --- ESTILOS PARA EL SISTEMA DE MENSAJERÍA --- */
+.chat-container {
+    display: flex;
+    height: 70vh; /* Aumentamos la altura para más espacio */
+    border: none; /* Quitamos el borde para un look más limpio */
+    border-radius: 15px; /* Bordes más redondeados */
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Sombra elegante */
+}
+.chat-sidebar {
+    width: 30%; /* La hacemos un poco más estrecha */
+    border-right: 1px solid var(--border-light);
+    overflow-y: auto;
+    background-color: #ffffff; /* Fondo blanco puro */
+    padding: 5px 0;
+}
+.chat-main {
+    width: 65%;
+    display: flex;
+    flex-direction: column;
+}
+.chat-window {
+    flex-grow: 1;
+    padding: 25px; /* Más padding para que respire */
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--light-bg); /* Fondo ligeramente azulado */
+}
+/* Área de Input: Hacemos que el input y el botón de envío se vean como un solo componente */
+.chat-input-area {
+    display: flex;
+    padding: 10px 15px;
+    background-color: var(--white);
+    border-top: 1px solid var(--border-light);
+}
+#mensajeInput {
+    flex-grow: 1;
+    border-radius: 25px; /* Más redondeado */
+    padding: 12px 20px;
+    border: 1px solid var(--border-light);
+    border-right: none;
+    transition: border-color 0.3s;
+}
+#mensajeInput:focus {
+    border-color: var(--primary-blue);
+    outline: none;
+    box-shadow: 0 0 0 1px var(--primary-blue);
+}
+#enviarMensajeBtn {
+    border-radius: 25px;
+    margin-top: 0;
+    margin-left: 10px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    box-shadow: none;
+}
+#enviarMensajeBtn {
+    border-radius: 0 20px 20px 0;
+    margin-top: 0;
+    box-shadow: none;
+}
+/* Elementos de la conversación */
+.conversation-item {
+    padding: 12px 18px; /* Menos padding */
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-light);
+    transition: background-color 0.2s;
+    position: relative;
+}
+
+.conversation-item:hover {
+    background-color: var(--light-bg);
+}
+
+/* Chat Activo: Color de fondo más notable */
+.conversation-item.active {
+    background-color: var(--primary-blue);
+    color: white;
+}
+
+.conversation-item.active h6, .conversation-item.active p {
+    color: white;
+    opacity: 1;
+}
+
+.conversation-item h6 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+.conversation-item p {
+    font-size: 0.8rem;
+    color: var(--medium-grey);
+    opacity: 0.9;
+}
+/* Estilo Base de la Burbuja */
+.message-bubble {
+    max-width: 80%; /* Aumentamos el ancho máximo para mensajes largos */
+    padding: 10px 14px; /* Un poco menos de padding */
+    margin-bottom: 10px;
+    line-height: 1.4;
+    font-size: 0.95rem; /* Letra un poco más pequeña */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Sombra muy sutil */
+    transition: opacity 0.3s ease;
+}
+
+/* Burbujas ENVIADAS (Usuario Logueado) */
+.message-bubble.sent {
+    background-color: var(--primary-blue); /* Color principal de ZoMedica */
+    color: white;
+    align-self: flex-end; /* A la derecha */
+    /* Bordes dinámicos: más redondeados arriba, más "afilada" la esquina de la ventana */
+    border-radius: 18px 18px 4px 18px; 
+}
+
+/* Burbujas RECIBIDAS (Interlocutor) */
+.message-bubble.received {
+    background-color: var(--white); /* Fondo blanco (o un color muy suave) */
+    color: var(--dark-text);
+    align-self: flex-start; /* A la izquierda */
+    /* Bordes dinámicos: más redondeados arriba, más "afilada" la esquina de la ventana */
+    border-radius: 18px 18px 18px 4px;
+    border: 1px solid var(--border-light); /* Borde suave */
+}
+.chat-placeholder {
+    margin: auto;
+    text-align: center;
+    color: var(--medium-grey);
+}
+.chat-placeholder i {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.pipeline-info-label {
+    background-color: #e3f2fd;
+    color: #0d47a1;
+    border: 1px solid #bbdefb;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+.pipeline-info-label i {
+    font-size: 1.2rem;
+}
+
+/* --- NUEVOS ESTILOS PARA MENÚ DESPLEGABLE DE PERFIL --- */
+
+/* Contenedor del menú desplegable */
+.dropdown-menu {
+    position: relative;
+    display: inline-block;
+    margin-left: 5px;
+    z-index: 1050; /* Más alto que el nav */
+}
+
+/* El botón que abre el menú (lo reutilizamos como un enlace nav) */
+.dropdown-menu > a {
+    color: var(--white); 
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
+    font-weight: 500;
+    margin-left: 0 !important; /* Reseteamos margen para no empujar */
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.dropdown-menu > a:hover {
+    background-color: #074a8a;
+    transform: translateY(-1px);
+}
+
+/* El contenido que se despliega */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0; /* Alineado a la derecha */
+    background-color: var(--white);
+    min-width: 200px;
+    box-shadow: 0 8px 16px var(--shadow-medium);
+    z-index: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 5px;
+    transform-origin: top right;
+    animation: scaleUp 0.2s ease-out;
+}
+
+.dropdown-content.visible {
+    display: block;
+}
+
+/* Estilo para los enlaces dentro del menú */
+.dropdown-content a {
+    color: var(--dark-text);
+    padding: 12px 16px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+}
+
+.dropdown-content a:hover {
+    background-color: var(--light-bg);
+    color: var(--primary-blue);
+    text-decoration: none;
+}
+
+.dropdown-content a i {
+    color: var(--primary-blue); /* Color del icono */
+    font-size: 16px !important;
+}
+
+/* Separador */
+.dropdown-divider {
+    height: 1px;
+    background-color: var(--border-light);
+    margin: 5px 0;
+}
+
+/* Animación de apertura */
+@keyframes scaleUp {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Aseguramos que los botones principales de rol sean visibles */
+#btnMisPostulaciones, #btnMiPanel {
+    padding: 8px 12px;
+    font-weight: 600;
+}
+
+#btnMisPostulaciones i, #btnMiPanel i {
+    font-size: 18px !important;
+    margin-right: 5px;
+}
+
+/* --- CORRECCIÓN FINAL PARA TEXTO DE DROPDOWN --- */
+/* Esta corrección se asegura de que el texto y el icono estén pegados para display:flex */
+.dropdown-content a i {
+    color: var(--primary-blue);
+    font-size: 16px !important;
+    
+    /* ¡LA ANULACIÓN CRÍTICA! */
+    margin-right: 10px !important; /* Añade un margen entre el ícono y el texto */
+    text-indent: 0 !important;     /* Asegura que el texto no se oculte */
+}
+/* Revisa también si existe este selector en tu código y asegúrate de que no tenga text-indent */
+nav .nav-links a {
+    color: var(--white); 
+    padding: 8px 12px;
+    /* ... (otros estilos) ... */
+    /* Asegúrate de que aquí NO exista una propiedad `text-indent` */
+}
+
+/* ================================================================= */
+/* # --- ESTILOS MODERNOS PARA EL PANEL DE INSTITUCIÓN --- */
+/* ================================================================= */
+
+/* --- Nuevos Colores para Botones de Acción --- */
+:root {
+    --success-color: #28a745; /* Verde para "Crear" */
+    --success-hover: #218838;
+    --warning-color: #ffc107; /* Amarillo para "Editar" */
+    --warning-hover: #e0a800;
+    --warning-text: #212529;   /* Texto oscuro para botones amarillos */
+    --info-color: #17a2b8;    /* Cian para "Ver" */
+    --info-hover: #117a8b;
+}
+
+.button-success {
+    background-color: var(--success-color);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+.button-success:hover {
+    background-color: var(--success-hover);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.button-warning {
+    background-color: var(--warning-color);
+    color: var(--warning-text); /* Texto oscuro para mejor legibilidad */
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.35);
+}
+.button-warning:hover {
+    background-color: var(--warning-hover);
+    color: var(--warning-text);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.45);
+}
+
+/* Encabezado del Panel */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    /* Eliminamos el borde inferior para un look más limpio */
+}
+
+.dashboard-welcome h2 {
+    font-size: 2rem;
+    color: var(--dark-text);
+    margin: 0;
+    border: none; /* Quitamos borde heredado */
+    padding: 0;
+}
+
+.dashboard-welcome p {
+    font-size: 1.1rem;
+    color: var(--medium-grey);
+    margin-top: 5px;
+}
+
+/* Tarjetas de Estadísticas Mejoradas */
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); /* Un poco más de espacio */
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background-color: var(--white); /* Fondo blanco puro */
+    border-radius: 12px;
+    padding: 25px;
+    position: relative;
+    overflow: hidden;
+    border: none; /* Sin borde */
+    border-left: 5px solid; /* Borde de color a la izquierda */
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Asignamos colores a cada tarjeta */
+.stat-card:nth-child(1) { border-color: var(--primary-blue); }
+.stat-card:nth-child(2) { border-color: var(--success-color); }
+.stat-card:nth-child(3) { border-color: var(--info-color); } /* Para la tercera tarjeta (opcional) */
+
+.stat-card h4 {
+    color: var(--medium-grey);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.stat-card p {
+    font-size: 2.8rem;
+    font-weight: 700;
+}
+
+.stat-card .card-icon {
+    font-size: 3.5rem; /* Icono más grande */
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    opacity: 0.1; /* Más sutil */
+}
+
+/* Colores de iconos por tarjeta */
+.stat-card:nth-child(1) .card-icon { color: var(--primary-blue); }
+.stat-card:nth-child(2) .card-icon { color: var(--success-color); }
+.stat-card:nth-child(3) .card-icon { color: var(--info-color); }
+
+/* Títulos de las columnas del dashboard */
+.dashboard-column h3 {
+    font-size: 1.5rem;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border-light);
+    margin-bottom: 20px;
+}
+
+/* ================================================================= */
+/* # --- ESTILOS MODERNOS PARA TARJETAS DE VACANTES --- */
+/* ================================================================= */
+
+/* Rediseño de la tarjeta base de la vacante */
+.vacante {
+    background-color: var(--white);
+    border: 1px solid var(--border-light); /* Borde sutil para definir la tarjeta */
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06); /* Sombra suave por defecto */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden; /* Oculta el borde superior hasta el hover */
+}
+
+/* Borde de color superior que aparece al pasar el ratón */
+.vacante::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px; /* Un poco más grueso */
+    background-color: var(--primary-blue);
+    transform: translateY(-100%); /* Oculto por defecto */
+    transition: transform 0.3s ease;
+}
+
+.vacante:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.vacante:hover::before {
+    transform: translateY(0); /* Muestra el borde */
+}
+
+/* Contenido de la tarjeta */
+.vacante-contenido a {
+    text-decoration: none;
+}
+
+.vacante-contenido .vacante-titulo {
+    font-size: 1.3rem; /* Título más grande y llamativo */
+    font-weight: 700;
+    color: var(--dark-text);
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+}
+
+.vacante-contenido .vacante-institucion {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--medium-grey);
+    margin-bottom: 15px;
+}
+
+/* Detalles con iconos (Ubicación, Contrato) */
+.vacante-detalles-iconos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-light);
+}
+
+.detalle-icono {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: var(--medium-grey);
+}
+
+.detalle-icono i {
+    color: var(--primary-blue);
+    font-size: 1.1rem;
+}
+
+/* Pie de la tarjeta */
+.vacante-footer {
+    margin-top: auto; /* Empuja el footer al final de la tarjeta */
+    padding-top: 15px;
+}
+
+.keywords-container .keyword-tag {
+    background-color: #e9ecef;
+    color: #495057;
+    font-weight: 500;
+    font-size: 0.8rem;
+    padding: 5px 10px;
+}
+
+/* ===================================================================== */
+/* # --- ESTILOS MEJORADOS PARA VACANTES PUBLICADAS (PANEL INSTITUCIÓN) --- */
+/* ===================================================================== */
+
+/* Estilo para la tarjeta específica dentro del panel de la institución */
+#misVacantes .vacante {
+    border-left: 4px solid var(--primary-blue); /* Borde de color distintivo */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: border-color 0.3s ease;
+}
+
+#misVacantes .vacante:hover {
+    border-color: var(--accent-green); /* Cambia el color del borde al pasar el ratón */
+}
+
+#misVacantes .vacante-header h4 {
+    color: var(--dark-text);
+    font-weight: 700;
+}
+
+/* Mejora de los botones de acción con colores */
+#misVacantes .icon-button {
+    font-size: 1.2rem; /* Iconos un poco más grandes */
+    padding: 8px;
+}
+
+/* Color para Editar (Amarillo) */
+#misVacantes .icon-button[title="Editar"]:hover {
+    color: #ffc107; 
+    transform: scale(1.15);
+}
+
+/* Color para Analíticas (Verde) */
+#misVacantes .icon-button[title="Analíticas"]:hover {
+    color: #28a745; 
+    transform: scale(1.15);
+}
+
+/* El color para Eliminar (Rojo) ya está definido, pero reforzamos el efecto */
+#misVacantes .icon-button[title="Eliminar"]:hover {
+    color: var(--error-red);
+    transform: scale(1.15);
+}
+
+/* Estilo mejorado para la barra de estadísticas */
+#misVacantes .vacante-stats {
+    background-color: var(--light-bg);
+    padding: 8px 12px;
+    border-radius: 20px; /* Bordes redondeados tipo "píldora" */
+    margin-top: 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--medium-grey);
+    align-self: flex-start; /* Lo alineamos a la izquierda */
+    display: inline-flex; /* Usamos flex para alinear el ícono */
+    align-items: center;
+    gap: 6px;
+}
+
+#misVacantes .vacante-stats i {
+    color: var(--primary-blue);
+}
+
+/* ===================================================================== */
+/* # --- ESTILOS MEJORADOS PARA VACANTES PUBLICADAS (PANEL INSTITUCIÓN) --- */
+/* ===================================================================== */
+
+/* Estilo para la tarjeta específica dentro del panel de la institución */
+#misVacantes .vacante {
+    border-left: 4px solid var(--primary-blue); /* Borde de color distintivo */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: border-color 0.3s ease;
+}
+
+#misVacantes .vacante:hover {
+    border-color: var(--accent-green); /* Cambia el color del borde al pasar el ratón */
+}
+
+#misVacantes .vacante-header h4 {
+    color: var(--dark-text);
+    font-weight: 700;
+}
+
+/* Mejora de los botones de acción con colores */
+#misVacantes .icon-button {
+    font-size: 1.2rem; /* Iconos un poco más grandes */
+    padding: 8px;
+}
+
+/* Color para Editar (Amarillo) */
+#misVacantes .icon-button[title="Editar"]:hover {
+    color: #ffc107; 
+    transform: scale(1.15);
+}
+
+/* Color para Analíticas (Verde) */
+#misVacantes .icon-button[title="Analíticas"]:hover {
+    color: #28a745; 
+    transform: scale(1.15);
+}
+
+/* El color para Eliminar (Rojo) ya está definido, pero reforzamos el efecto */
+#misVacantes .icon-button[title="Eliminar"]:hover {
+    color: var(--error-red);
+    transform: scale(1.15);
+}
+
+/* Estilo mejorado para la barra de estadísticas */
+#misVacantes .vacante-stats {
+    background-color: var(--light-bg);
+    padding: 8px 12px;
+    border-radius: 20px; /* Bordes redondeados tipo "píldora" */
+    margin-top: 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--medium-grey);
+    align-self: flex-start; /* Lo alineamos a la izquierda */
+    display: inline-flex; /* Usamos flex para alinear el ícono */
+    align-items: center;
+    gap: 6px;
+}
+
+#misVacantes .vacante-stats i {
+    color: var(--primary-blue);
+}
+
+/* ===================================================================== */
+/* # --- CORRECCIÓN DEFINITIVA: VISIBILIDAD DE TEXTO EN MENÚ DESPLEGABLE --- */
+/* ===================================================================== */
+
+/*
+  Esta regla fuerza a que el texto dentro de los enlaces del menú
+  desplegable sea siempre visible, anulando el estilo que hereda
+  de los botones de la barra de navegación.
+*/
+.dropdown-content a {
+    text-indent: 0 !important;
+    font-size: 1rem !important; /* Asegura que el texto tenga tamaño */
+}
