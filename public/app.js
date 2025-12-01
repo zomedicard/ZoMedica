@@ -1693,22 +1693,30 @@ async function subirFotoDePerfil() {
     const formData = new FormData();
     formData.append('foto', file);
     try {
-        // ⭐ CORRECCIÓN 47: Usar API_BASE_URL
-        const response = await fetchProtegido(`${API_BASE_URL}/perfil/foto`, {
-            method: 'PUT',
-            body: formData
-        });
-        const data = await response.json();
-        if (data.error) {
-            alert(data.error);
-        } else {
-            alert(data.message);
-            mostrarPerfilProfesional();
-        }
-    } catch (error) {
-        console.error('Error al subir la foto:', error);
-        alert('Ocurrió un error al subir la foto. Inténtalo de nuevo.');
+    const response = await fetchProtegido(`${API_BASE_URL}/perfil/foto`, {
+        method: 'PUT',
+        body: formData
+    });
+
+    // ⭐ CORRECCIÓN 52: Verifica si la respuesta es HTML (lo que causa el error)
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+        // Si no es JSON, lanza un error que será capturado, indicando un fallo de Multer/Render
+        throw new Error("El servidor devolvió un error de HTML. Posible fallo al guardar el archivo.");
     }
+    // Fin de la corrección
+
+    const data = await response.json();
+    if (data.error) {
+        alert(data.error);
+    } else {
+        alert(data.message);
+        mostrarPerfilProfesional();
+    }
+} catch (error) {
+    console.error('Error al subir la foto:', error);
+    // Ahora, si recibimos HTML, el mensaje será más claro
+    alert(`Ocurrió un error al subir la foto: ${error.message}`); 
 }
 
 async function subirCV() {
