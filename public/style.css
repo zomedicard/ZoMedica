@@ -1429,7 +1429,7 @@ nav .nav-links a:hover { /* Asegura que el hover se aplique bien */
 
 /* Estilo para los enlaces dentro del menú */
 .dropdown-content a {
-    color: var(--dark-text);
+    color: var(--dark-text) !important; /* ⭐ CORRECCIÓN: Fuerza el texto a color oscuro para anular el blanco heredado */
     padding: 12px 16px;
     text-decoration: none;
     display: flex;
@@ -1441,7 +1441,7 @@ nav .nav-links a:hover { /* Asegura que el hover se aplique bien */
 
 .dropdown-content a:hover {
     background-color: var(--light-bg);
-    color: var(--primary-blue);
+    color: var(--primary-blue) !important; /* Aseguramos que el hover sea visible en el color de la marca */
     text-decoration: none;
 }
 
