@@ -284,8 +284,18 @@ function mostrarBusquedaTalentos() {
     document.getElementById('resultadosBusquedaTalentos').innerHTML = '<p>Usa los filtros para encontrar profesionales.</p>';
 }
 
-function mostrarFormularioRecuperar() {
-    mostrarSeccion('recuperarPassword');
+function mostrarFormularioReset(token) {
+    mostrarSeccion('resetPassword'); 
+    
+    // ⭐ CORRECCIÓN: Usamos el ID CORRECTO del formulario: 'formResetPassword'
+    const tokenInput = document.getElementById('resetTokenInput'); 
+    
+    if (tokenInput) {
+        tokenInput.value = token;
+    } else {
+        // Esto solo es útil para depuración
+        console.error("❌ CRÍTICO: No se encontró el campo oculto con ID 'resetTokenInput'.");
+    }
 }
 
 function mostrarFormularioReset(token) {
