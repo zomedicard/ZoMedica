@@ -346,7 +346,7 @@ app.post('/register', async (req, res) => {
         const apiBaseUrl = process.env.FRONTEND_URL.replace('/index.html', ''); const linkVerificacion = `${apiBaseUrl}/verify-email/${tokenVerificacion}`;
 
         const mailOptions = {
-            from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
+            from: `"Emply" <zomedicard@gmail.com>`,
             to: correo,
             subject: 'Verifica tu cuenta en ZoMedica',
             html: `
@@ -450,7 +450,7 @@ app.post('/forgot-password', async (req, res) => {
             );
             const resetLink = `${process.env.FRONTEND_URL}?resetToken=${token}`;
             const mailOptions = {
-                from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
+                from: `"Emply" <zomedicard@gmail.com>`,
                 to: user.correo,
                 subject: 'Restablecimiento de Contraseña en ZoMedica',
                 html: `
@@ -1383,7 +1383,7 @@ async function procesarAlertasParaNuevaVacante(vacante) {
         if (coincide) {
             console.log(`✅ Coincidencia encontrada para ${alerta.correo}. Enviando email...`);
             const mailOptions = {
-                from: `"ZoMedica" <${process.env.EMAIL_USER}>`,
+                from: `"Emply" <zomedicard@gmail.com>`,
                 to: alerta.correo,
                 subject: `📢 Nueva Oportunidad en ZoMedica: ${vacante.titulo}`,
                 html: `
