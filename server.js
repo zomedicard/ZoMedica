@@ -24,17 +24,16 @@ import nodemailer from 'nodemailer';
 // =================================================================
 // SECCIÓN: CONFIGURACIÓN DE NODEMAILER (SERVICIO DE CORREO) - USANDO SENDGRID
 // =================================================================
-// ⭐ CORRECCIÓN 69: Migrar a SendGrid para evitar Connection Timeout
+// ⭐ CORRECCIÓN 69/70: Migrar a Puerto 465/SSL para conexión estable
 const transporter = nodemailer.createTransport({
-    host: 'smtp.sendgrid.net', // Servidor SMTP de SendGrid
-    port: 587,                 // Puerto estándar para TLS
-    secure: false,             // 'false' para puerto 587 (usa STARTTLS)
+    host: 'smtp.sendgrid.net', 
+    port: 465,                 // ⭐ CAMBIADO a 465
+    secure: true,              // ⭐ CAMBIADO a true
     auth: {
-        user: 'apikey', // SendGrid siempre requiere que el usuario sea 'apikey'
-        pass: process.env.SENDGRID_API_KEY // ¡La nueva variable de Render!
+        user: 'apikey', 
+        pass: process.env.SENDGRID_API_KEY
     }
 });
-
 // =================================================================
 // SECCIÓN: CONFIGURACIÓN INICIAL DEL SERVIDOR
 // =================================================================
