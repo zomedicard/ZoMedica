@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         actualizarContadorNotificaciones();
         iniciarConexionWebSocket();
     }
-    mostrarInicio();
+  
 });
 
 // =================================================================
