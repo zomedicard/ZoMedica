@@ -963,6 +963,17 @@ function actualizarContadoresPipeline() {
     });
 }
 
+function normalizarTextoBusqueda(texto) {
+    if (!texto) return '';
+    // 1. Convertir a minúsculas
+    let normalizado = texto.toLowerCase();
+    // 2. Eliminar acentos (Ej: 'á' -> 'a')
+    normalizado = normalizado.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    // 3. Eliminar caracteres no alfanuméricos (opcional, para limpieza extra)
+    normalizado = normalizado.replace(/[^a-z0-9\s]/g, ""); 
+    return normalizado.trim();
+}
+
 // =================================================================
 // # --- LÓGICA DE VACANTES (VISTA PÚBLICA) ---
 // =================================================================
@@ -982,9 +993,9 @@ async function cargarFiltrosDeUbicacion() {
 }
 
 function aplicarFiltros() {
-    const searchInput = document.getElementById('searchInput').value;
-    const ubicacionFilter = document.getElementById('ubicacionFilter').value;
-    const tipoContratoFilter = document.getElementById('tipoContratoFilter').value;
+   const searchInput = normalizarTextoBusqueda(document.getElementById('searchInput').value); 
+   const ubicacionFilter = normalizarTextoBusqueda(document.getElementById('ubicacionFilter').value); 
+   const tipoContratoFilter = document.getElementById('tipoContratoFilter').value;
     cargarVacantes(searchInput, ubicacionFilter, tipoContratoFilter);
 }
 
@@ -996,10 +1007,8 @@ async function cargarVacantes(query = '', ubicacion = '', tipoContrato = '') {
     mostrarSpinner('listaVacantes');
 
     try {
-        const params = new URLSearchParams();
-        if (query) {
-            params.append('q', query);
-        }
+        const params = new URLSearchParams(); const queryNormalizado = normalizarTextoBusqueda(query);
+ if (queryNormalizado) { params.append('q', queryNormalizado); }
         if (ubicacion) {
             params.append('ubicacion', ubicacion);
         }
