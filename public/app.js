@@ -1099,7 +1099,7 @@ async function mostrarVacanteDetalles(vacanteId) {
         requisitosHTML += '</div>';
 
         // ⭐ CORRECCIÓN 47: Usar API_BASE_URL para rutas de archivos
-        const logoUrl = vacante.institucion.logoPath ? `${API_BASE_URL}/${vacante.institucion.logoPath}` : 'uploads/default-avatar.png';
+        const logoUrl = vacante.institucion.logoPath ? `${API_BASE_URL}/${vacante.institucion.logoPath}` : 'default-avatar.png';
         const institucionLink = vacante.institucion.id ? `onclick="mostrarPerfilPublicoInstitucion(${vacante.institucion.id})"` : 'style="cursor: default; text-decoration: none;"';
 
         vacanteInfoDiv.innerHTML = `
@@ -1604,7 +1604,7 @@ async function cargarPerfilProfesional() {
         }
         const perfil = await res.json();
         // ⭐ Usar API_BASE_URL para rutas de archivos
-        const imagenSrc = perfil.fotoPath ? `${API_BASE_URL}/${perfil.fotoPath}` : 'uploads/default-avatar.png';
+        const imagenSrc = perfil.fotoPath ? `${API_BASE_URL}/${perfil.fotoPath}` : 'default-avatar.png';
 
         let perfilHTML = `
             <div class="perfil-header">
@@ -1842,7 +1842,7 @@ async function cargarPerfilPublicoInstitucion(institucionId) {
         }
 
         // ⭐ CORRECCIÓN 47: Usar API_BASE_URL para rutas de archivos
-        const logoUrl = perfil.logoPath ? `${API_BASE_URL}/${perfil.logoPath}` : 'uploads/default-avatar.png';
+        const logoUrl = perfil.logoPath ? `${API_BASE_URL}/${perfil.logoPath}` : 'default-avatar.png';
         let sitioWebHTML = '';
         if (perfil.sitioWeb) {
             let url = perfil.sitioWeb;
@@ -2209,7 +2209,7 @@ async function ejecutarBusquedaTalentos() {
                 const perfilDiv = document.createElement('div');
                 perfilDiv.className = 'vacante';
                 // ⭐ CORRECCIÓN 47: Usar API_BASE_URL para rutas de archivos
-                const imagenSrc = perfil.fotoPath ? `${API_BASE_URL}/${perfil.fotoPath}` : 'uploads/default-avatar.png';
+                const imagenSrc = perfil.fotoPath ? `${API_BASE_URL}/${perfil.fotoPath}` : 'default-avatar.png';
                 const habilidadesHTML = (perfil.habilidades || []).map(h => `<span class="keyword-tag">${h}</span>`).join(' ');
 
                 perfilDiv.innerHTML = `
@@ -2246,7 +2246,7 @@ async function verPerfilCompletoProfesional(profesionalId) {
         }
         const perfil = await res.json();
         // ⭐ CORRECCIÓN 47: Usar API_BASE_URL para rutas de archivos
-        const imagenSrc = perfil.fotoPath ? `${API_BASE_URL}/${perfil.fotoPath}` : 'uploads/default-avatar.png';
+        const imagenSrc = perfil.fotoPath ? `${API_BASE_URL}/${perfil.fotoPath}` : 'default-avatar.png';
 
         let perfilHTML = `
             <div class="perfil-header">
