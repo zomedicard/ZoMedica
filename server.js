@@ -407,18 +407,21 @@ app.get('/verify-email/:token', async (req, res) => {
 app.post('/login', async (req, res) => {
     const { correo, password } = req.body;
     
-    // ⭐ CORRECCIÓN: Convertir correo a minúsculas para la búsqueda
+    // ⭐ 1. Convertir el correo de entrada a minúsculas
     const correoLowerCase = correo.toLowerCase(); 
     
     try {
-        // CONVERSION: db.get() -> db.query().rows[0]
-        const userResult = await db.query('SELECT * FROM usuarios WHERE correo = $1', [correoLowerCase]);
+        // ⭐ 2. CORRECCIÓN CRÍTICA: Usar LOWER(correo) en el SQL para búsqueda case-insensitive.
+        // Esto encuentra al usuario sin importar cómo se guardó originalmente (Frank o frank).
+        const userResult = await db.query('SELECT * FROM usuarios WHERE LOWER(correo) = $1', [correoLowerCase]);
         const user = userResult.rows[0];
 
+        // 3. Verifica si el usuario existe (FALLO POR CORREO)
         if (!user) {
             return res.status(401).json({ error: 'Credenciales inválidas.' });
         }
 
+        // 4. Verifica si el correo está verificado (FALLO POR VERIFICACIÓN)
         if (user.verificado === 0) {
             return res.status(403).json({
                 error: 'Debes verificar tu correo electrónico antes de iniciar sesión.',
@@ -426,11 +429,13 @@ app.post('/login', async (req, res) => {
             });
         }
 
+        // 5. Verifica la contraseña (FALLO POR CONTRASEÑA)
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
             return res.status(401).json({ error: 'Credenciales inválidas.' });
         }
 
+        // 6. Login Exitoso
         const token = jwt.sign({ id: user.id, rol: user.rol, correo: user.correo, nombre: user.nombre }, JWT_SECRET, { expiresIn: '15m' });
         res.json({ token, user: { id: user.id, nombre: user.nombre, rol: user.rol, correo: user.correo } });
 
