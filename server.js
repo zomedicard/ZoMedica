@@ -1088,13 +1088,19 @@ app.get('/institucion/postulaciones', verificarToken, async (req, res) => {
     }
 });
 
-app.post('/postular/:id', verificarToken, upload.single('cv'), async (req, res) => {
+// =================================================================
+// RUTA: Postularse a Vacante (Ahora usa uploadCV)
+// =================================================================
+app.post('/postular/:id', verificarToken, uploadCV.single('cv'), async (req, res) => {
     if (req.user.rol !== 'profesional') {
         return res.status(403).json({ error: 'Acceso denegado.' });
     }
     const vacanteId = req.params.id;
     const usuarioId = req.user.id;
-    const cvPath = req.file ? req.file.path : null;
+    
+    // ⭐ CORRECCIÓN: Usamos req.file.path de Cloudinary.
+    const cvPath = req.file ? req.file.path : null; 
+    
     try {
         // CONVERSION: db.get() -> db.query().rows[0]
         const existingPostulacionResult = await db.query(
