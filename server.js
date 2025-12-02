@@ -1701,7 +1701,7 @@ async function sembrarDatos() {
 // ENDPOINT PARA EJECUTAR EL SEMBRADO
 // =================================================================
 
-app.post('/api/seed', async (req, res) => {
+app.get('/api/seed', async (req, res) => {
     try {
         await sembrarDatos();
         res.json({ message: 'Datos de prueba insertados con éxito.' });
