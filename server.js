@@ -705,6 +705,7 @@ app.put('/perfil/cv', verificarToken, uploadCV.single('cvFile'), async (req, res
         // 2. Eliminar el CV anterior de Cloudinary (Limpieza)
         if (oldCvPath && oldCvPath.startsWith('http')) {
             try {
+                // Lógica para extraer el public_id (la carpeta/nombre del archivo sin extensión)
                 const urlParts = oldCvPath.split('/');
                 const publicIdWithExt = urlParts.slice(urlParts.findIndex(part => part === 'upload') + 2).join('/');
                 const publicId = publicIdWithExt.replace(/\.\w+$/, '');
@@ -747,6 +748,7 @@ app.put('/perfil/foto', verificarToken, uploadImage.single('foto'), async (req, 
         // 2. Eliminar la foto anterior de Cloudinary (Limpieza)
         if (oldFotoPath && oldFotoPath.startsWith('http')) {
             try {
+                // Lógica para extraer el public_id y borrar el archivo 'image'
                 const urlParts = oldFotoPath.split('/');
                 const publicIdWithExt = urlParts.slice(urlParts.findIndex(part => part === 'upload') + 2).join('/');
                 const publicId = publicIdWithExt.replace(/\.\w+$/, '');
