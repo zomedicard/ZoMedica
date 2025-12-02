@@ -1722,10 +1722,21 @@ async function subirFotoDePerfil() {
     
     try {
         // ⭐ Uso de API_BASE_URL para la ruta correcta
-        const response = await fetchProtegido(`${API_BASE_URL}/perfil/foto`, {
+        // USAMOS raw fetch para evitar que fetchProtegido agregue 'Content-Type: application/json'
+        // lo cual rompe el envío de FormData (archivos).
+        const response = await fetch(`${API_BASE_URL}/perfil/foto`, {
             method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
             body: formData
         });
+
+        // Si la respuesta es 401, manejamos la expiración de sesión manualmente
+        if (response.status === 401) {
+            cerrarSesion('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
+            return;
+        }
 
         // ⭐ Corrección Defensiva (Manejo de errores de Multer/Render)
         const contentType = response.headers.get("content-type");
@@ -1758,6 +1769,7 @@ async function subirCV() {
         return alert('Por favor, selecciona un archivo PDF para tu CV.');
     }
     const formData = new FormData();
+    // NOTA: El campo 'cv' debe coincidir con uploadCV.single('cv') en server.js
     formData.append('cv', file);
     const cvActualP = document.getElementById('cvActual');
     cvActualP.textContent = 'Subiendo CV...';
