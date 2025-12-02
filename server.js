@@ -264,17 +264,6 @@ let clients = new Map(); // Se mantiene global para WebSockets
 
         console.log('✅ Estructura de tablas de PostgreSQL verificada/creada.');
 
-// --- CÓDIGO TEMPORAL PARA FORZAR VERIFICACIÓN DEL PRIMER USUARIO ---
-const CORREO_ADMIN_PARA_TEST = 'Frankgeorge59@gmail.com'; // ESTO YA ESTÁ CORRECTO
-
-await db.query(
-    // ⭐ CORRECCIÓN CRÍTICA: Cambiar el 1 final por 0
-    // Queremos actualizar a los usuarios que NO están verificados (verificado = 0)
-    'UPDATE usuarios SET verificado = 1 WHERE correo = $1 AND verificado = 0',
-    [CORREO_ADMIN_PARA_TEST]
-);
-console.log(`✅ NOTA: Usuario de prueba ${CORREO_ADMIN_PARA_TEST} forzado a verificado=1.`);
-// --- FIN DEL CÓDIGO TEMPORAL ---
 
 console.log('✅ Estructura de tablas de PostgreSQL verificada/creada.');
 
