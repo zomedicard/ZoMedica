@@ -729,9 +729,9 @@ app.put('/perfil/cv', verificarToken, uploadCV.single('cvFile'), async (req, res
     }
 });
 
-/ =================================================================
+
 // RUTA: Actualizar Foto de Perfil (Ahora usa Cloudinary)
-// =================================================================
+
 app.put('/perfil/foto', verificarToken, uploadImage.single('foto'), async (req, res) => {
     try {
         if (!req.file) {
@@ -772,9 +772,8 @@ app.put('/perfil/foto', verificarToken, uploadImage.single('foto'), async (req, 
     }
 });
 
-// =================================================================
 // RUTA: Actualizar Logo de Institución (Ahora usa Cloudinary)
-// =================================================================
+
 app.put('/perfil/logo', verificarToken, uploadImage.single('logo'), async (req, res) => {
     if (req.user.rol !== 'institucion') {
         return res.status(403).json({ error: 'Acceso denegado.' });
