@@ -762,7 +762,9 @@ app.put('/perfil/logo', verificarToken, uploadImage.single('logo'), async (req, 
         }
 
         const newLogoPath = req.file.path; 
-        const userResult = await db.query('SELECT logoPath FROM usuarios WHERE id = $1', [req.user.id]);
+        
+        // ⭐ CORRECCIÓN FINAL: Usar 'logopath' (minúsculas) en la consulta SQL para evitar el fallo 500
+        const userResult = await db.query('SELECT logopath FROM usuarios WHERE id = $1', [req.user.id]); 
         const oldLogoPath = userResult.rows[0]?.logopath;
 
         await db.query('UPDATE usuarios SET logoPath = $1 WHERE id = $2', [newLogoPath, req.user.id]);
@@ -770,6 +772,7 @@ app.put('/perfil/logo', verificarToken, uploadImage.single('logo'), async (req, 
         // 2. Eliminar el logo anterior de Cloudinary (Limpieza)
         if (oldLogoPath && oldLogoPath.startsWith('http')) {
             try {
+                // Lógica para extraer el public_id y borrar el archivo 'image'
                 const urlParts = oldLogoPath.split('/');
                 const publicIdWithExt = urlParts.slice(urlParts.findIndex(part => part === 'upload') + 2).join('/');
                 const publicId = publicIdWithExt.replace(/\.\w+$/, '');
@@ -789,7 +792,6 @@ app.put('/perfil/logo', verificarToken, uploadImage.single('logo'), async (req, 
 
     } catch (err) {
         console.error('Error al actualizar logo de institución con Cloudinary:', err);
-        // Devolvemos 500 limpio.
         res.status(500).json({ error: 'Error interno del servidor: Fallo al procesar el archivo en la nube.' });
     }
 });
