@@ -284,6 +284,11 @@ function mostrarBusquedaTalentos() {
     document.getElementById('resultadosBusquedaTalentos').innerHTML = '<p>Usa los filtros para encontrar profesionales.</p>';
 }
 
+function mostrarFormularioRecuperar() {
+    // Esta función llama a la función principal para mostrar la sección por su ID
+    mostrarSeccion('recuperarPassword'); 
+}
+
 function mostrarFormularioReset(token) {
     mostrarSeccion('resetPassword'); 
     
