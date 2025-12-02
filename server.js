@@ -326,8 +326,11 @@ app.post('/register', async (req, res) => {
     }
 
     try {
+        // ⭐ CORRECCIÓN: Convertir correo a minúsculas antes de usar la DB
+        const correoLowerCase = correo.toLowerCase(); 
+
         // CONVERSION: db.get() -> db.query().rows[0]
-        const existingUserResult = await db.query('SELECT id FROM usuarios WHERE correo = $1', [correo]);
+        const existingUserResult = await db.query('SELECT id FROM usuarios WHERE correo = $1', [correoLowerCase]);
         const existingUser = existingUserResult.rows[0];
 
         if (existingUser) {
@@ -340,18 +343,19 @@ app.post('/register', async (req, res) => {
         // CONVERSION: db.run() -> db.query() + RETURNING id
         const insertResult = await db.query(
             'INSERT INTO usuarios (nombre, correo, password, rol, verificado, token_verificacion) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-            [nombre, correo, hashedPassword, rol, 1, tokenVerificacion]
+            [nombre, correoLowerCase, hashedPassword, rol, 0, tokenVerificacion] // Usar correoLowerCase
         );
 
-        const apiBaseUrl = process.env.FRONTEND_URL.replace('/index.html', ''); const linkVerificacion = `${apiBaseUrl}/verify-email/${tokenVerificacion}`;
+        const apiBaseUrl = process.env.FRONTEND_URL.replace('/index.html', ''); 
+        const linkVerificacion = `${apiBaseUrl}/verify-email/${tokenVerificacion}`;
 
         const mailOptions = {
-            from: `"Emply" <zomedicard@gmail.com>`,
-            to: correo,
-            subject: 'Verifica tu cuenta en ZoMedica',
+            from: `"Emply" <zomedicard@gmail.com>`, // Correo del remitente fijo
+            to: correoLowerCase, // Usar correoLowerCase para el destinatario
+            subject: 'Verifica tu cuenta en Emply',
             html: `
                 <div style="font-family: Arial, sans-serif; text-align: center; color: #333;">
-                    <h2>¡Bienvenido a ZoMedica!</h2>
+                    <h2>¡Bienvenido a Emply!</h2>
                     <p>Gracias por registrarte. Por favor, haz clic en el siguiente botón para verificar tu correo electrónico y activar tu cuenta.</p>
                     <a href="${linkVerificacion}" style="background-color: #0A66C2; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0;">
                         Verificar mi Cuenta
@@ -363,7 +367,7 @@ app.post('/register', async (req, res) => {
         };
 
         await transporter.sendMail(mailOptions);
-        console.log(`Correo de verificación enviado a ${correo}`);
+        console.log(`Correo de verificación enviado a ${correoLowerCase}`);
 
         res.status(201).json({
             message: 'Registro exitoso. Se ha enviado un enlace de verificación a su correo electrónico.',
@@ -402,9 +406,13 @@ app.get('/verify-email/:token', async (req, res) => {
 
 app.post('/login', async (req, res) => {
     const { correo, password } = req.body;
+    
+    // ⭐ CORRECCIÓN: Convertir correo a minúsculas para la búsqueda
+    const correoLowerCase = correo.toLowerCase(); 
+    
     try {
         // CONVERSION: db.get() -> db.query().rows[0]
-        const userResult = await db.query('SELECT * FROM usuarios WHERE correo = $1', [correo]);
+        const userResult = await db.query('SELECT * FROM usuarios WHERE correo = $1', [correoLowerCase]);
         const user = userResult.rows[0];
 
         if (!user) {
