@@ -10,6 +10,8 @@ import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import multer from 'multer';
+import { v2 as cloudinary } from 'cloudinary'; 
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
 // --- NUEVAS IMPORTACIONES DE POSTGRES ---
 import pkg from 'pg';
@@ -31,6 +33,68 @@ const transporter = nodemailer.createTransport(sgTransport({
         api_key: process.env.SENDGRID_API_KEY // Usa la clave API larga que configuraste
     }
 }));
+
+// =================================================================
+// SECCIÓN: CONFIGURACIÓN DE CLOUDINARY Y MULTER (NUEVA VERSIÓN)
+// =================================================================
+
+// 1. Configurar Cloudinary con las variables de entorno
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// 2. Configurar el almacenamiento de Multer para usar Cloudinary
+
+// Almacenamiento para CVs (recurso 'raw' para PDF/DOCX)
+const cvStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'emply_cvs', // Carpeta en Cloudinary
+        resource_type: 'raw', // Fundamental para archivos no imagen
+        public_id: (req, file) => `cv-${req.user.id}-${Date.now()}`,
+    },
+});
+
+// Almacenamiento para Fotos/Logos (recurso 'image')
+const imageStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'emply_perfiles', // Carpeta en Cloudinary
+        resource_type: 'image', 
+        format: async (req, file) => 'jpg', // Opcional, forzar a jpg
+        public_id: (req, file) => `img-${req.user.id}-${Date.now()}`,
+    },
+});
+
+// 3. Crear instancias de upload separadas con filtros
+
+// uploadCV: Se usa para la ruta /perfil/cv
+const uploadCV = multer({ 
+    storage: cvStorage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // Límite de 5MB
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/pdf' || file.mimetype === 'application/msword' || file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            cb(null, true);
+        } else {
+            cb(new Error('Solo se permiten archivos PDF, DOC o DOCX.'), false);
+        }
+    }
+});
+
+// uploadImage: Se usa para las rutas /perfil/foto y /perfil/logo
+const uploadImage = multer({ 
+    storage: imageStorage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // Límite de 5MB
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Solo se permiten archivos de imagen.'), false);
+        }
+    }
+});
 
 // =================================================================
 // SECCIÓN: CONFIGURACIÓN INICIAL DEL SERVIDOR
@@ -622,57 +686,133 @@ app.put('/perfil', verificarToken, async (req, res) => {
     }
 });
 
-app.put('/perfil/cv', verificarToken, upload.single('cv'), async (req, res) => {
-    if (req.user.rol !== 'profesional') {
-        return res.status(403).json({ error: 'Acceso denegado.' });
-    }
-    if (!req.file) {
-        return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
-    }
+// =================================================================
+// RUTA: Actualizar CV (Ahora usa Cloudinary y elimina el anterior)
+// =================================================================
+app.put('/perfil/cv', verificarToken, uploadCV.single('cvFile'), async (req, res) => {
     try {
-        const cvPath = `uploads/${req.file.filename}`;
-        // CONVERSION: db.run() -> db.query()
-        await db.query('UPDATE usuarios SET cvPath = $1 WHERE id = $2', [cvPath, req.user.id]);
-        res.json({ message: 'CV actualizado con éxito.', cvPath });
+        if (!req.file) {
+            const error = req.fileFilterError || 'No se subió ningún archivo o el formato no es válido (solo PDF, DOC, DOCX).';
+            return res.status(400).json({ error: error });
+        }
+
+        const newCvPath = req.file.path; 
+        const userResult = await db.query('SELECT cvPath FROM usuarios WHERE id = $1', [req.user.id]);
+        const oldCvPath = userResult.rows[0]?.cvpath;
+
+        await db.query('UPDATE usuarios SET cvPath = $1 WHERE id = $2', [newCvPath, req.user.id]);
+
+        // 2. Eliminar el CV anterior de Cloudinary (Limpieza)
+        if (oldCvPath && oldCvPath.startsWith('http')) {
+            try {
+                const urlParts = oldCvPath.split('/');
+                const publicIdWithExt = urlParts.slice(urlParts.findIndex(part => part === 'upload') + 2).join('/');
+                const publicId = publicIdWithExt.replace(/\.\w+$/, '');
+                
+                if (publicId.startsWith('emply_cvs/')) { 
+                    await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+                }
+            } catch (err) {
+                console.warn('Advertencia: No se pudo borrar el CV anterior de Cloudinary:', err.message);
+            }
+        }
+
+        res.json({ 
+            message: 'CV actualizado con éxito en Cloudinary.', 
+            cvPath: newCvPath 
+        });
+
     } catch (err) {
-        console.error('Error al actualizar el CV:', err);
-        res.status(500).json({ error: 'Error interno del servidor.' });
+        console.error('Error al actualizar CV con Cloudinary:', err);
+        res.status(500).json({ error: 'Error interno del servidor al procesar el CV.' });
     }
 });
 
-app.put('/perfil/foto', verificarToken, upload.single('foto'), async (req, res) => {
-    if (req.user.rol !== 'profesional') {
-        return res.status(403).json({ error: 'Acceso denegado.' });
-    }
-    if (!req.file) {
-        return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
-    }
+/ =================================================================
+// RUTA: Actualizar Foto de Perfil (Ahora usa Cloudinary)
+// =================================================================
+app.put('/perfil/foto', verificarToken, uploadImage.single('foto'), async (req, res) => {
     try {
-        const fotoPath = req.file.filename;
-        // CONVERSION: db.run() -> db.query()
-        await db.query('UPDATE usuarios SET fotoPath = $1 WHERE id = $2', [fotoPath, req.user.id]);
-        res.json({ message: 'Foto de perfil actualizada con éxito.', fotoPath });
+        if (!req.file) {
+            const error = req.fileFilterError || 'No se subió ningún archivo o el formato no es válido (solo imágenes).';
+            return res.status(400).json({ error: error });
+        }
+
+        const newFotoPath = req.file.path; 
+        const userResult = await db.query('SELECT fotoPath FROM usuarios WHERE id = $1', [req.user.id]);
+        const oldFotoPath = userResult.rows[0]?.fotopath;
+
+        await db.query('UPDATE usuarios SET fotoPath = $1 WHERE id = $2', [newFotoPath, req.user.id]);
+
+        // 2. Eliminar la foto anterior de Cloudinary (Limpieza)
+        if (oldFotoPath && oldFotoPath.startsWith('http')) {
+            try {
+                const urlParts = oldFotoPath.split('/');
+                const publicIdWithExt = urlParts.slice(urlParts.findIndex(part => part === 'upload') + 2).join('/');
+                const publicId = publicIdWithExt.replace(/\.\w+$/, '');
+                
+                if (publicId.startsWith('emply_perfiles/')) { 
+                    await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+                }
+            } catch (err) {
+                console.warn('Advertencia: No se pudo borrar la foto anterior de Cloudinary:', err.message);
+            }
+        }
+
+        res.json({ 
+            message: 'Foto de perfil actualizada con éxito en Cloudinary.', 
+            fotoPath: newFotoPath 
+        });
+
     } catch (err) {
-        console.error('Error al actualizar la foto de perfil:', err);
-        res.status(500).json({ error: 'Error interno del servidor.' });
+        console.error('Error al actualizar foto de perfil con Cloudinary:', err);
+        res.status(500).json({ error: 'Error interno del servidor al procesar la foto.' });
     }
 });
 
-app.put('/perfil/logo', verificarToken, upload.single('logo'), async (req, res) => {
+// =================================================================
+// RUTA: Actualizar Logo de Institución (Ahora usa Cloudinary)
+// =================================================================
+app.put('/perfil/logo', verificarToken, uploadImage.single('logo'), async (req, res) => {
     if (req.user.rol !== 'institucion') {
         return res.status(403).json({ error: 'Acceso denegado.' });
     }
-    if (!req.file) {
-        return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
-    }
+    
     try {
-        const logoPath = `uploads/${req.file.filename}`;
-        // CONVERSION: db.run() -> db.query()
-        await db.query('UPDATE usuarios SET logoPath = $1 WHERE id = $2', [logoPath, req.user.id]);
-        res.json({ message: 'Logo actualizado con éxito.', logoPath });
+        if (!req.file) {
+            const error = req.fileFilterError || 'No se subió ningún archivo o el formato no es válido (solo imágenes).';
+            return res.status(400).json({ error: error });
+        }
+
+        const newLogoPath = req.file.path; 
+        const userResult = await db.query('SELECT logoPath FROM usuarios WHERE id = $1', [req.user.id]);
+        const oldLogoPath = userResult.rows[0]?.logopath;
+
+        await db.query('UPDATE usuarios SET logoPath = $1 WHERE id = $2', [newLogoPath, req.user.id]);
+
+        // 2. Eliminar el logo anterior de Cloudinary (Limpieza)
+        if (oldLogoPath && oldLogoPath.startsWith('http')) {
+            try {
+                const urlParts = oldLogoPath.split('/');
+                const publicIdWithExt = urlParts.slice(urlParts.findIndex(part => part === 'upload') + 2).join('/');
+                const publicId = publicIdWithExt.replace(/\.\w+$/, '');
+                
+                if (publicId.startsWith('emply_perfiles/')) { 
+                    await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+                }
+            } catch (err) {
+                console.warn('Advertencia: No se pudo borrar el logo anterior de Cloudinary:', err.message);
+            }
+        }
+
+        res.json({ 
+            message: 'Logo de institución actualizado con éxito en Cloudinary.', 
+            logoPath: newLogoPath 
+        });
+
     } catch (err) {
-        console.error('Error al actualizar el logo:', err);
-        res.status(500).json({ error: 'Error interno del servidor.' });
+        console.error('Error al actualizar logo de institución con Cloudinary:', err);
+        res.status(500).json({ error: 'Error interno del servidor al procesar el logo.' });
     }
 });
 
