@@ -22,14 +22,16 @@ import http from 'http';
 import nodemailer from 'nodemailer';
 
 // =================================================================
-// SECCIÓN: CONFIGURACIÓN DE NODEMAILER (SERVICIO DE CORREO)
+// SECCIÓN: CONFIGURACIÓN DE NODEMAILER (SERVICIO DE CORREO) - USANDO SENDGRID
 // =================================================================
-
+// ⭐ CORRECCIÓN 69: Migrar a SendGrid para evitar Connection Timeout
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.sendgrid.net', // Servidor SMTP de SendGrid
+    port: 587,                 // Puerto estándar para TLS
+    secure: false,             // 'false' para puerto 587 (usa STARTTLS)
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: 'apikey', // SendGrid siempre requiere que el usuario sea 'apikey'
+        pass: process.env.SENDGRID_API_KEY // ¡La nueva variable de Render!
     }
 });
 
