@@ -241,19 +241,23 @@
         <textarea id="bioEditar" rows="5" placeholder="Escribe un breve resumen sobre tu experiencia y objetivos..."></textarea>
 
         <h3>Información de Contacto y Personal</h3>
-        <label for="telefonoEditar">Teléfono:</label>
-        <input type="tel" id="telefonoEditar">
-
-        <label for="linkedinURLEditar">Perfil de LinkedIn:</label>
-        <input type="url" id="linkedinURLEditar" placeholder="https://www.linkedin.com/in/tu-perfil">
-
-        <label for="cedulaEditar">Cédula de Identidad:</label>
-        <input type="text" id="cedulaEditar">
-
-        <label for="fechaNacimientoEditar">Fecha de Nacimiento:</label>
-        <input type="date" id="fechaNacimientoEditar">
-        
-        <h3>Foto de Perfil</h3>
+        <div class="form-group-flex"> <div>
+                <label for="telefonoEditar">Teléfono:</label>
+                <input type="tel" id="telefonoEditar">
+            </div>
+            <div>
+                <label for="linkedinURLEditar">Perfil de LinkedIn:</label>
+                <input type="url" id="linkedinURLEditar" placeholder="https://www.linkedin.com/in/tu-perfil">
+            </div>
+            <div>
+                <label for="cedulaEditar">Cédula de Identidad:</label>
+                <input type="text" id="cedulaEditar">
+            </div>
+            <div>
+                <label for="fechaNacimientoEditar">Fecha de Nacimiento:</label>
+                <input type="date" id="fechaNacimientoEditar">
+            </div>
+        </div> <h3>Foto de Perfil</h3>
         <label for="fotoEditar">Subir nueva foto (JPG o PNG):</label>
         <input type="file" id="fotoEditar" name="foto" accept=".jpg, .jpeg, .png">
         <button type="button" class="button" onclick="subirFotoDePerfil()">Subir y Guardar Foto</button>

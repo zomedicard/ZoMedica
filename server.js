@@ -363,11 +363,11 @@ app.post('/register', async (req, res) => {
     if (!nombre || !correo || !password || !rol) {
         return res.status(400).json({ error: 'Por favor, completa todos los campos.' });
     }
+    
+    // ⭐ CORRECCIÓN: Normalizar el correo al principio
+    const correoLowerCase = correo.toLowerCase(); 
 
     try {
-        // ⭐ CORRECCIÓN: Convertir correo a minúsculas antes de usar la DB
-        const correoLowerCase = correo.toLowerCase(); 
-
         // CONVERSION: db.get() -> db.query().rows[0]
         const existingUserResult = await db.query('SELECT id FROM usuarios WHERE correo = $1', [correoLowerCase]);
         const existingUser = existingUserResult.rows[0];
@@ -424,7 +424,7 @@ app.get('/verify-email/:token', async (req, res) => {
 
     try {
         const token = req.params.token;
-        // CONVERSION: db.run() -> db.query() + rowCount
+        // CONVERSION: db.run() -> db.query().rowCount
         const result = await db.query(
             'UPDATE usuarios SET verificado = 1, token_verificacion = NULL WHERE token_verificacion = $1 AND verificado = 0',
             [token]
@@ -1093,55 +1093,76 @@ app.get('/institucion/postulaciones', verificarToken, async (req, res) => {
 });
 
 // =================================================================
-// RUTA: Postularse a Vacante (Ahora usa uploadCV)
+// RUTA: Postularse a Vacante (Ahora usa uploadCV y maneja errores de Multer)
 // =================================================================
-app.post('/postular/:id', verificarToken, uploadCV.single('cv'), async (req, res) => {
+app.post('/postular/:id', verificarToken, (req, res, next) => {
     if (req.user.rol !== 'profesional') {
         return res.status(403).json({ error: 'Acceso denegado.' });
     }
-    const vacanteId = req.params.id;
-    const usuarioId = req.user.id;
-    
-    // ⭐ CORRECCIÓN: Usamos req.file.path de Cloudinary.
-    const cvPath = req.file ? req.file.path : null; 
-    
-    try {
-        // CONVERSION: db.get() -> db.query().rows[0]
-        const existingPostulacionResult = await db.query(
-            'SELECT id FROM postulaciones WHERE usuario_id = $1 AND vacante_id = $2',
-            [usuarioId, vacanteId]
-        );
-        const existingPostulacion = existingPostulacionResult.rows[0];
 
-        if (existingPostulacion) {
-            return res.status(409).json({ error: 'Ya te has postulado a esta vacante.' });
+    uploadCV.single('cv')(req, res, async (err) => {
+        // --- 1. Manejo de Errores de Subida ---
+        if (err) {
+            console.error('Error de Multer/Cloudinary en postular:', err.message);
+            
+            // Error de límite de tamaño (si el archivo es demasiado grande)
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).json({ error: 'El archivo es demasiado grande. Máximo 5MB.' });
+            }
+            // Error de tipo de archivo (solo PDF, DOC, DOCX)
+            if (err.message.includes('Solo se permiten archivos')) {
+                return res.status(400).json({ error: err.message });
+            }
+            return res.status(500).json({ error: 'Error al procesar el archivo CV.' });
         }
-        // CONVERSION: db.get() -> db.query().rows[0]
-        const vacanteResult = await db.query('SELECT titulo, usuario_id FROM vacantes WHERE id = $1', [vacanteId]);
-        const vacante = vacanteResult.rows[0];
-
-        if (!vacante) {
-            return res.status(404).json({ error: 'Vacante no encontrada.' });
+        
+        // Si no hay archivo pero no hubo error explícito
+        if (!req.file) { 
+            return res.status(400).json({ error: 'No se subió ningún archivo de CV válido.' });
         }
-        // CONVERSION: db.run() -> db.query() + RETURNING id
-        const result = await db.query(
-            'INSERT INTO postulaciones (usuario_id, vacante_id, fecha, cvPath, estado) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-            [usuarioId, vacanteId, new Date().toISOString(), cvPath, 'Enviada']
-        );
-        const newPostulacionId = result.rows[0].id;
+        
+        // --- 2. Lógica de Base de Datos (Si la subida fue exitosa) ---
+        const vacanteId = req.params.id;
+        const usuarioId = req.user.id;
+        const cvPath = req.file.path; // URL de Cloudinary
 
-        const mensaje = `¡${req.user.nombre} se postuló a tu vacante "${vacante.titulo}"!`;
-        const url = `pipeline/${vacanteId}/${encodeURIComponent(vacante.titulo)}`;
-        // CONVERSION: db.run() -> db.query()
-        await db.query(
-            'INSERT INTO notificaciones (usuario_id, mensaje, fecha, url) VALUES ($1, $2, $3, $4)',
-            [vacante.usuario_id, mensaje, new Date().toISOString(), url]
-        );
-        res.status(201).json({ message: 'Postulación enviada con éxito.', id: newPostulacionId });
-    } catch (err) {
-        console.error('Error al postularse:', err);
-        res.status(500).json({ error: 'Error interno del servidor.' });
-    }
+        try {
+            const existingPostulacionResult = await db.query(
+                'SELECT id FROM postulaciones WHERE usuario_id = $1 AND vacante_id = $2',
+                [usuarioId, vacanteId]
+            );
+            const existingPostulacion = existingPostulacionResult.rows[0];
+
+            if (existingPostulacion) {
+                return res.status(409).json({ error: 'Ya te has postulado a esta vacante.' });
+            }
+            
+            const vacanteResult = await db.query('SELECT titulo, usuario_id FROM vacantes WHERE id = $1', [vacanteId]);
+            const vacante = vacanteResult.rows[0];
+
+            if (!vacante) {
+                return res.status(404).json({ error: 'Vacante no encontrada.' });
+            }
+            
+            const result = await db.query(
+                'INSERT INTO postulaciones (usuario_id, vacante_id, fecha, cvPath, estado) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+                [usuarioId, vacanteId, new Date().toISOString(), cvPath, 'Enviada']
+            );
+            const newPostulacionId = result.rows[0].id;
+
+            const mensaje = `¡${req.user.nombre} se postuló a tu vacante "${vacante.titulo}"!`;
+            const url = `pipeline/${vacanteId}/${encodeURIComponent(vacante.titulo)}`;
+            
+            await db.query(
+                'INSERT INTO notificaciones (usuario_id, mensaje, fecha, url) VALUES ($1, $2, $3, $4)',
+                [vacante.usuario_id, mensaje, new Date().toISOString(), url]
+            );
+            res.status(201).json({ message: 'Postulación enviada con éxito.', id: newPostulacionId });
+        } catch (dbErr) {
+            console.error('Error al postularse:', dbErr);
+            res.status(500).json({ error: 'Error interno del servidor al procesar la postulación.' });
+        }
+    });
 });
 
 app.get('/postulaciones', verificarToken, async (req, res) => {

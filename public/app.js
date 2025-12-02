@@ -33,6 +33,37 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =================================================================
+// ⭐ MEJORA 1: FUNCIÓN DE UTILERÍA PARA GESTIONAR RUTAS DE ARCHIVOS (Cloudinary o Local)
+// =================================================================
+
+function obtenerUrlArchivo(path, fallback = 'default-avatar.png') {
+    if (!path) {
+        return fallback;
+    }
+    // Si ya es una URL completa (Cloudinary), devuélvela tal cual
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+    }
+    // Si es una ruta relativa (local), prefijala con la API_BASE_URL
+    return `${API_BASE_URL}/${path}`;
+}
+
+// --- Función Auxiliar para determinar la posición de inserción en Drag and Drop ---
+function obtenerElementoDespues(contenedor, y) {
+    const draggableElements = [...contenedor.querySelectorAll('.candidate-card:not(.dragging)')];
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+
+// =================================================================
 // # --- MANEJO DE NAVEGACIÓN Y VISTAS ---
 // =================================================================
 
@@ -303,11 +334,6 @@ function mostrarFormularioReset(token) {
     }
 }
 
-function mostrarFormularioReset(token) {
-    mostrarSeccion('resetPassword');
-    document.getElementById('resetTokenInput').value = token;
-}
-
 function mostrarMensajeria() {
     if (!token) {
         return mostrarLogin();
@@ -512,12 +538,8 @@ if (document.getElementById('formEditarPerfilInstitucion')) {
 
         try {
             // ⭐ CORRECCIÓN 47: Usar API_BASE_URL
-            const res = await fetch(`${API_BASE_URL}/perfil`, {
+            const res = await fetchProtegido(`${API_BASE_URL}/perfil`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
                 body: JSON.stringify({
                     nombre,
                     direccion,
@@ -1069,6 +1091,7 @@ async function cargarVacantes(query = '', ubicacion = '', tipoContrato = '') {
     }
 }
 
+// ⭐ MEJORA 2: Función actualizada para mostrar el estado de postulación
 async function mostrarVacanteDetalles(vacanteId) {
     mostrarSeccion('vacanteDetalles');
     const vacanteInfoDiv = document.getElementById('vacanteInfo');
@@ -1090,6 +1113,24 @@ async function mostrarVacanteDetalles(vacanteId) {
             return;
         }
 
+        // --- INICIO: LÓGICA DE BOTÓN CON ESTADO ---
+        let botonPostularHTML = '';
+        if (token && userTipo === 'profesional') {
+            const postulacionesRes = await fetchProtegido(`${API_BASE_URL}/postulaciones`);
+            const postulaciones = await postulacionesRes.json();
+            const yaPostulado = postulaciones.some(p => p.vacante_id == vacanteId);
+            
+            if (yaPostulado) {
+                botonPostularHTML = `<button class="button postular-button" style="width:100%; margin: 20px 0; background-color: #28a745;" disabled><i class="fas fa-check"></i> Ya te postulaste</button>`;
+            } else {
+                botonPostularHTML = `<button onclick="postularse(${vacante.id})" class="button postular-button" style="width:100%; margin: 20px 0;"><i class="fas fa-paper-plane"></i> Postularse a esta vacante</button>`;
+            }
+        } else {
+            // Si no está logueado o no es profesional, el botón lleva a login/registro
+            botonPostularHTML = `<button onclick="mostrarLogin()" class="button postular-button" style="width:100%; margin: 20px 0;"><i class="fas fa-sign-in-alt"></i> Inicia Sesión para Postularte</button>`;
+        }
+        // --- FIN: LÓGICA DE BOTÓN CON ESTADO ---
+
         let requisitosHTML = '<div class="perfil-seccion"><h3>Requisitos del Perfil</h3>';
         if (vacante.requisitos_obligatorios && vacante.requisitos_obligatorios.length > 0) {
             requisitosHTML += '<h4>✅ Requisitos Indispensables (Obligatorios)</h4><ul class="lista-requisitos">';
@@ -1107,8 +1148,8 @@ async function mostrarVacanteDetalles(vacanteId) {
         }
         requisitosHTML += '</div>';
 
-        // ⭐ CORRECCIÓN 47: Usar API_BASE_URL para rutas de archivos
-        const logoUrl = vacante.institucion.logoPath ? `${API_BASE_URL}/${vacante.institucion.logoPath}` : 'default-avatar.png';
+        // ⭐ USO DE OBTENERURLARCHIVO
+        const logoUrl = obtenerUrlArchivo(vacante.institucion.logoPath);
         const institucionLink = vacante.institucion.id ? `onclick="mostrarPerfilPublicoInstitucion(${vacante.institucion.id})"` : 'style="cursor: default; text-decoration: none;"';
 
         vacanteInfoDiv.innerHTML = `
@@ -1118,7 +1159,7 @@ async function mostrarVacanteDetalles(vacanteId) {
                     <img src="${logoUrl}" alt="Logo de ${vacante.institucion.nombre}" class="logo-institucion-vacante">
                     <p><strong>Institución:</strong> <a href="#" ${institucionLink}>${vacante.institucion.nombre}</a></p>
                 </div>
-                <button onclick="postularse(${vacante.id})" class="button postular-button" style="width:100%; margin: 20px 0;">Postularse a esta vacante</button>
+                ${botonPostularHTML}
                 <div class="detalles-grid">
                     ${vacante.ubicacion ? `<div><strong><i class="fas fa-map-marker-alt"></i> Ubicación:</strong><p>${vacante.ubicacion}</p></div>` : ''}
                     ${vacante.tipoContrato ? `<div><strong><i class="fas fa-file-contract"></i> Contrato:</strong><p>${vacante.tipoContrato}</p></div>` : ''}
@@ -1304,6 +1345,8 @@ function procederConPostulacion(vacanteId) {
                 mostrarMensajeGlobal('¡Postulación enviada con éxito!', 'success');
                 postularButton.textContent = 'Ya te postulaste';
                 postularButton.classList.add('postulado');
+                // Actualiza la vista de detalles del botón
+                mostrarVacanteDetalles(vacanteId); 
             }
         } catch (error) {
             mostrarMensajeGlobal('Error al postularse. Inténtalo de nuevo.', 'error');
@@ -1601,7 +1644,7 @@ async function eliminarAlerta(id) {
 // # --- LÓGICA DE PERFIL (VISTA Y EDICIÓN) ---
 // =================================================================
 
-// app.js (Reemplazar la función cargarPerfilProfesional COMPLETA)
+// ⭐ USO DE OBTENERURLARCHIVO
 async function cargarPerfilProfesional() {
     // ⭐ El contenedor se obtiene al inicio
     const perfilContainer = document.getElementById('infoProfesional'); 
@@ -1612,8 +1655,9 @@ async function cargarPerfilProfesional() {
             throw new Error(`HTTP error! status: ${res.status}`);
         }
         const perfil = await res.json();
-        // ⭐ Usar API_BASE_URL para rutas de archivos
-        const imagenSrc = perfil.fotoPath ? `${API_BASE_URL}/${perfil.fotoPath}` : 'default-avatar.png';
+        
+        // ⭐ Uso de la función utilitaria
+        const imagenSrc = obtenerUrlArchivo(perfil.fotoPath);
 
         let perfilHTML = `
             <div class="perfil-header">
@@ -1637,7 +1681,7 @@ async function cargarPerfilProfesional() {
                     <div><strong>Fecha de Nacimiento:</strong> <p>${perfil.fechaNacimiento || 'No especificado'}</p></div>
                     ${perfil.linkedinURL ? `<div><strong>LinkedIn:</strong> <p><a href="${perfil.linkedinURL}" target="_blank">Ver Perfil</a></p></div>` : ''}
                 </div>
-                ${perfil.cvPath ? `<div class="cv-download-container" style="margin-top: 20px;"><a href="${API_BASE_URL}/${perfil.cvPath}" target="_blank" class="button">Descargar CV</a></div>` : ''}
+                ${perfil.cvPath ? `<div class="cv-download-container" style="margin-top: 20px;"><a href="${obtenerUrlArchivo(perfil.cvPath)}" target="_blank" class="button">Descargar CV</a></div>` : ''}
             </div>
             <div class="perfil-seccion">
                 <h4>Acerca de mí</h4>
@@ -1695,8 +1739,9 @@ async function cargarDatosPerfilProfesional() {
         document.getElementById('fechaNacimientoEditar').value = perfil.fechaNacimiento || '';
         const cvActualP = document.getElementById('cvActual');
         if (cvActualP) {
+             // ⭐ USO DE OBTENERURLARCHIVO
             cvActualP.innerHTML = perfil.cvPath ?
-                `CV actual: <a href="${API_BASE_URL}/${perfil.cvPath}" target="_blank">Ver CV</a>` :
+                `CV actual: <a href="${obtenerUrlArchivo(perfil.cvPath)}" target="_blank">Ver CV</a>` :
                 'No hay CV subido.';
         }
         document.getElementById('habilidadesEditar').value = Array.isArray(perfil.habilidades) ? perfil.habilidades.join(', ') : '';
@@ -1711,6 +1756,7 @@ async function cargarDatosPerfilProfesional() {
     }
 }
 
+// ⭐ USO DE OBTENERURLARCHIVO
 async function subirFotoDePerfil() {
     const fotoInput = document.getElementById('fotoEditar');
     const file = fotoInput.files[0];
@@ -1751,6 +1797,7 @@ async function subirFotoDePerfil() {
     }
 }
 
+// ⭐ USO DE OBTENERURLARCHIVO
 async function subirCV() {
     const cvInput = document.getElementById('cvEditar');
     const file = cvInput.files[0];
@@ -1777,7 +1824,8 @@ async function subirCV() {
             cvActualP.textContent = 'Error al subir.';
         } else {
             alert(data.message);
-            cvActualP.innerHTML = `CV actual: <a href="${API_BASE_URL}/${data.cvPath}" target="_blank">Ver CV</a>`;
+            // ⭐ USO DE OBTENERURLARCHIVO
+            cvActualP.innerHTML = `CV actual: <a href="${obtenerUrlArchivo(data.cvPath)}" target="_blank">Ver CV</a>`;
         }
     } catch (error) {
         console.error('Error al subir el CV:', error);
@@ -1804,6 +1852,7 @@ async function cargarDatosPerfilInstitucion() {
     }
 }
 
+// ⭐ USO DE OBTENERURLARCHIVO
 async function subirLogoInstitucion() {
     const logoInput = document.getElementById('logoEditar');
     const file = logoInput.files[0];
@@ -1833,6 +1882,7 @@ async function subirLogoInstitucion() {
     }
 }
 
+// ⭐ USO DE OBTENERURLARCHIVO
 async function cargarPerfilPublicoInstitucion(institucionId) {
     const perfilContainer = document.getElementById('perfilPublicoInstitucion');
     const perfilInfoDiv = perfilContainer.querySelector('#perfilInfo');
@@ -1850,8 +1900,8 @@ async function cargarPerfilPublicoInstitucion(institucionId) {
             return;
         }
 
-        // ⭐ CORRECCIÓN 47: Usar API_BASE_URL para rutas de archivos
-        const logoUrl = perfil.logoPath ? `${API_BASE_URL}/${perfil.logoPath}` : 'default-avatar.png';
+        // ⭐ USO DE OBTENERURLARCHIVO
+        const logoUrl = obtenerUrlArchivo(perfil.logoPath);
         let sitioWebHTML = '';
         if (perfil.sitioWeb) {
             let url = perfil.sitioWeb;
@@ -2031,6 +2081,7 @@ async function cargarPostulacionesInstitucion(vacanteId = null, esVistaPipeline 
     }
 }
 
+// ⭐ USO DE OBTENERURLARCHIVO
 async function verPerfilPostulante(postulacionId) {
     mostrarSeccion('perfilPostulante');
     const perfilContainer = document.getElementById('infoPostulante');
@@ -2044,8 +2095,8 @@ async function verPerfilPostulante(postulacionId) {
         }
         const perfil = await res.json();
         
-        // ⭐ CÓDIGO CORREGIDO (Línea crítica de la URL de imagen)
-        const imagenSrc = perfil.fotoPath ? `${API_BASE_URL}/uploads/${perfil.fotoPath}` : 'default-avatar.png';
+        // ⭐ USO DE OBTENERURLARCHIVO
+        const imagenSrc = obtenerUrlArchivo(perfil.fotoPath);
 
         let perfilHTML = `
             <div class="perfil-header">
@@ -2058,7 +2109,7 @@ async function verPerfilPostulante(postulacionId) {
                 <p><strong>Correo:</strong> ${perfil.correo}</p>
                 <p><strong>Teléfono:</strong> ${perfil.telefono || 'No especificado'}</p>
                 ${perfil.linkedinURL ? `<p><strong>LinkedIn:</strong> <a href="${perfil.linkedinURL}" target="_blank">Ver Perfil</a></p>` : ''}
-                ${perfil.cvPath ? `<p><a href="${API_BASE_URL}/uploads/${perfil.cvPath}" target="_blank" class="button">Descargar CV</a></p>` : ''}
+                ${perfil.cvPath ? `<p><a href="${obtenerUrlArchivo(perfil.cvPath)}" target="_blank" class="button">Descargar CV</a></p>` : ''}
             </div>
             <div class="perfil-seccion">
                 <h4>Acerca del Profesional</h4>
@@ -2217,8 +2268,8 @@ async function ejecutarBusquedaTalentos() {
             perfiles.forEach(perfil => {
                 const perfilDiv = document.createElement('div');
                 perfilDiv.className = 'vacante';
-                // ⭐ CORRECCIÓN 47: Usar API_BASE_URL para rutas de archivos
-                const imagenSrc = perfil.fotoPath ? `${API_BASE_URL}/${perfil.fotoPath}` : 'default-avatar.png';
+                // ⭐ USO DE OBTENERURLARCHIVO
+                const imagenSrc = obtenerUrlArchivo(perfil.fotoPath);
                 const habilidadesHTML = (perfil.habilidades || []).map(h => `<span class="keyword-tag">${h}</span>`).join(' ');
 
                 perfilDiv.innerHTML = `
@@ -2242,6 +2293,7 @@ async function ejecutarBusquedaTalentos() {
     }
 }
 
+// ⭐ USO DE OBTENERURLARCHIVO
 async function verPerfilCompletoProfesional(profesionalId) {
     mostrarSeccion('perfilPostulante');
     const perfilContainer = document.getElementById('infoPostulante');
@@ -2254,8 +2306,8 @@ async function verPerfilCompletoProfesional(profesionalId) {
             throw new Error(errData.error || 'No se pudo cargar el perfil.');
         }
         const perfil = await res.json();
-        // ⭐ CORRECCIÓN 47: Usar API_BASE_URL para rutas de archivos
-        const imagenSrc = perfil.fotoPath ? `${API_BASE_URL}/${perfil.fotoPath}` : 'default-avatar.png';
+        // ⭐ USO DE OBTENERURLARCHIVO
+        const imagenSrc = obtenerUrlArchivo(perfil.fotoPath);
 
         let perfilHTML = `
             <div class="perfil-header">
@@ -2268,7 +2320,7 @@ async function verPerfilCompletoProfesional(profesionalId) {
                 <p><strong>Correo:</strong> ${perfil.correo}</p>
                 <p><strong>Teléfono:</strong> ${perfil.telefono || 'No especificado'}</p>
                 ${perfil.linkedinURL ? `<p><strong>LinkedIn:</strong> <a href="${perfil.linkedinURL}" target="_blank">Ver Perfil</a></p>` : ''}
-                ${perfil.cvPath ? `<p><a href="${API_BASE_URL}/${perfil.cvPath}" target="_blank" class="button">Descargar CV</a></p>` : ''}
+                ${perfil.cvPath ? `<p><a href="${obtenerUrlArchivo(perfil.cvPath)}" target="_blank" class="button">Descargar CV</a></p>` : ''}
             </div>
             <div class="perfil-seccion">
                 <h4>Acerca del Profesional</h4>
@@ -2307,8 +2359,7 @@ async function verPerfilCompletoProfesional(profesionalId) {
 // # --- DRAG AND DROP (PIPELINE) ---
 // =================================================================
 
-// app.js (Reemplazar la función activarDragAndDrop)
-
+// ⭐ MEJORA 3: Función actualizada para inserción en el punto correcto (UX)
 function activarDragAndDrop() {
     const tarjetas = document.querySelectorAll('.candidate-card');
     const columnas = document.querySelectorAll('.pipeline-column .candidate-cards');
@@ -2323,7 +2374,7 @@ function activarDragAndDrop() {
         tarjeta.addEventListener('dragend', () => {
             tarjeta.classList.remove('dragging');
             tarjetaArrastrada = null;
-            // ⭐ MEJORA 2: Aseguramos que los contadores estén correctos al finalizar el arrastre
+            // Aseguramos que los contadores estén correctos al finalizar el arrastre
             actualizarContadoresPipeline();
         });
     });
@@ -2332,6 +2383,18 @@ function activarDragAndDrop() {
         columna.addEventListener('dragover', e => {
             e.preventDefault();
             columna.classList.add('drag-over');
+            
+            // Lógica para el punto de inserción (Feedback visual de dónde caerá)
+            const afterElement = obtenerElementoDespues(columna, e.clientY);
+            const dragging = document.querySelector('.dragging');
+            
+            if (dragging) {
+                if (afterElement == null) {
+                    columna.appendChild(dragging);
+                } else {
+                    columna.insertBefore(dragging, afterElement);
+                }
+            }
         });
 
         columna.addEventListener('dragleave', () => {
@@ -2344,26 +2407,27 @@ function activarDragAndDrop() {
 
             if (tarjetaArrastrada) {
                 const id = tarjetaArrastrada.dataset.id;
-                const nuevoEstado = columna.parentElement.querySelector('h5').textContent;
+                // El estado se toma del encabezado de la columna padre
+                const nuevoEstado = columna.parentElement.querySelector('.pipeline-column-header h5').textContent;
                 const estadoActual = tarjetaArrastrada.dataset.estado;
 
                 if (nuevoEstado === estadoActual) {
                     return;
                 }
 
-                columna.appendChild(tarjetaArrastrada);
+                // El movimiento visual ya se hizo en el 'dragover'
                 tarjetaArrastrada.dataset.estado = nuevoEstado;
                 
                 // 1. Llamada al backend
                 cambiarEstadoPostulacion(id, nuevoEstado);
                 
-                // 2. ⭐ MEJORA 3: Actualizar contadores inmediatamente después de la acción
+                // 2. Actualizar contadores
                 actualizarContadoresPipeline(); 
             }
         });
     });
     
-    // ⭐ MEJORA 1: Asegurar que los contadores iniciales se muestren correctamente
+    // Aseguramos que los contadores iniciales se muestren correctamente
     actualizarContadoresPipeline();
 }
 
