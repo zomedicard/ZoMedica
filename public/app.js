@@ -1119,35 +1119,38 @@ async function mostrarVacanteDetalles(vacanteId) {
 // =================================================================
 
 // app.js (Reemplazar la función handleUrlParams COMPLETA)
-
 async function handleUrlParams() {
-    // 1. Dividimos el hash para obtener la sección y los parámetros
+    // 1. Obtener parámetros del HASH (para navegación interna: #login?verified=true)
     const urlParts = window.location.hash.split('?');
     const hashSection = urlParts[0].replace('#', '');
     const hashParams = new URLSearchParams(urlParts.length > 1 ? urlParts[1] : '');
     
+    // 2. Obtener parámetros de CONSULTA (para enlaces externos como el de reset)
+    const searchParams = new URLSearchParams(window.location.search);
+
     // --- Lógica para Reseteo de Password ---
-    const resetToken = hashParams.get('resetToken');
+    // Busca el token en el hash O en la consulta principal
+    const resetToken = hashParams.get('resetToken') || searchParams.get('resetToken'); 
+    
     if (resetToken) {
         mostrarFormularioReset(resetToken);
-        // Limpiamos la URL después de procesar, dejando solo #resetPassword
+        // Limpiamos la URL después de procesar
         history.replaceState(null, '', window.location.pathname + '#resetPassword');
         return; 
     }
     
     // --- Lógica para Verificación de Correo (Redirección del Backend) ---
-    const verifiedStatus = hashParams.get('verified');
+    const verifiedStatus = hashParams.get('verified') || searchParams.get('verified');
     if (verifiedStatus) {
         if (verifiedStatus === 'true') {
             mostrarMensajeGlobal('¡Tu correo ha sido verificado con éxito! Ya puedes iniciar sesión.', 'success');
         } else if (verifiedStatus === 'false' || verifiedStatus === 'error') {
             mostrarMensajeGlobal('El enlace de verificación es inválido o ya ha sido utilizado.', 'error');
         }
-        // Limpiamos la URL después de mostrar el mensaje, dejando solo #login
+        // Limpiamos la URL después de mostrar el mensaje
         history.replaceState(null, '', window.location.pathname + '#login');
         mostrarLogin();
         
-        // ⭐ ¡CORRECCIÓN CLAVE! Detener el flujo de navegación general.
         return; 
     } 
 
