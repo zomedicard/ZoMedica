@@ -1619,3 +1619,93 @@ app.get('/institucion/vacantes/:id/analiticas', verificarToken, async (req, res)
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
+
+// =================================================================
+// SECCIÓN: SEMBRADO DE DATOS (SEEDER)
+// =================================================================
+
+// Función para insertar datos de prueba en todas las tablas
+async function sembrarDatos() {
+    try {
+        console.log('🌱 Iniciando sembrado de datos de prueba...');
+
+        // 1. ELIMINAR DATOS PREVIOS (Opcional, para empezar limpio)
+        // Puedes comentar esta sección si quieres conservar usuarios ya registrados
+        await db.query('DELETE FROM usuarios WHERE nombre IN (\'Empresa de Pruebas\', \'Profesional Ejemplo\')');
+        await db.query('DELETE FROM vacantes');
+        await db.query('DELETE FROM postulaciones');
+        await db.query('DELETE FROM notificaciones');
+        await db.query('DELETE FROM conversaciones');
+
+        // 2. CREAR USUARIOS DE PRUEBA
+        const hashedPasswordInst = await bcrypt.hash('123456', 10);
+        const hashedPasswordProf = await bcrypt.hash('123456', 10);
+
+        const instResult = await db.query(
+            "INSERT INTO usuarios (nombre, correo, password, rol, verificado) VALUES ($1, $2, $3, 'institucion', 1) RETURNING id",
+            ['Empresa General de Pruebas', 'empresa@emply.com', hashedPasswordInst]
+        );
+        const institucionId = instResult.rows[0].id;
+
+        const profResult = await db.query(
+            "INSERT INTO usuarios (nombre, correo, password, rol, verificado, especialidad, habilidades) VALUES ($1, $2, $3, 'profesional', 1, $4, $5) RETURNING id",
+            ['Profesional Ejemplo General', 'profesional@emply.com', hashedPasswordProf, 'Marketing Digital', '["SEO", "SEM", "Análisis de Datos", "Liderazgo"]']
+        );
+        const profesionalId = profResult.rows[0].id;
+        
+        // 3. CREAR VACANTES DE PRUEBA
+        const vacante1Result = await db.query(
+            "INSERT INTO vacantes (titulo, institucion, descripcion, requisitos_obligatorios, requisitos_deseables, usuario_id, ubicacion, tipoContrato, salario) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
+            [
+                'Gerente de Proyectos (IT)',
+                'Empresa General de Pruebas',
+                'Buscamos un gerente de proyectos experimentado en metodologías Ágiles.',
+                'Certificación PMP,5 años de experiencia,Inglés avanzado',
+                'Conocimiento de Scrum,Experiencia en DevOps',
+                institucionId,
+                'Distrito Nacional',
+                'Jornada Completa',
+                'RD$120,000 - RD$150,000'
+            ]
+        );
+        const vacanteId1 = vacante1Result.rows[0].id;
+
+        await db.query(
+            "INSERT INTO vacantes (titulo, institucion, descripcion, requisitos_obligatorios, requisitos_deseables, usuario_id, ubicacion, tipoContrato, salario) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
+            [
+                'Analista Financiero Junior',
+                'Empresa General de Pruebas',
+                'Análisis de datos financieros y preparación de reportes.',
+                'Licenciatura en Finanzas,Manejo de Excel avanzado',
+                'Experiencia en Contabilidad',
+                institucionId,
+                'Santiago',
+                'Media Jornada',
+                'RD$45,000'
+            ]
+        );
+        
+        // 4. CREAR POSTULACIÓN DE PRUEBA (Para ver datos en el panel)
+        await db.query(
+            "INSERT INTO postulaciones (usuario_id, vacante_id, fecha, estado) VALUES ($1, $2, $3, $4)",
+            [profesionalId, vacanteId1, new Date().toISOString(), 'En Revisión']
+        );
+        
+        console.log('✅ Sembrado completado. Se crearon 2 vacantes y 2 usuarios de prueba.');
+    } catch (error) {
+        console.error('❌ Error durante el sembrado de datos:', error);
+    }
+}
+
+// =================================================================
+// ENDPOINT PARA EJECUTAR EL SEMBRADO
+// =================================================================
+
+app.post('/api/seed', async (req, res) => {
+    try {
+        await sembrarDatos();
+        res.json({ message: 'Datos de prueba insertados con éxito.' });
+    } catch (error) {
+        res.status(500).json({ error: 'Fallo al sembrar los datos.' });
+    }
+});
