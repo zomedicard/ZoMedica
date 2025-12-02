@@ -786,6 +786,7 @@ app.delete('/vacantes/:id', verificarToken, async (req, res) => {
     }
 });
 
+
 app.get('/vacantes', async (req, res) => {
     // Los valores q, ubicacion, tipoContrato llegan aquí ya normalizados desde el frontend (app.js)
     const { q, ubicacion, tipoContrato } = req.query;
@@ -802,12 +803,13 @@ app.get('/vacantes', async (req, res) => {
 
     // --- 1. FILTRO DE PALABRA CLAVE (q) ---
     if (q) {
-        // CORRECCIÓN CRÍTICA: Usar paramIndex dinámico para $N, $N+1, $N+2
-        conditions.push(`(v.titulo ILIKE $${paramIndex} OR v.descripcion ILIKE $${paramIndex + 1} OR v.habilidades ILIKE $${paramIndex + 2})`);
+        // ⭐ CORRECCIÓN FINAL: Eliminar referencia a 'habilidades' (columna inexistente). 
+        // Usamos paramIndex dinámico para solo titulo y descripcion.
+        conditions.push(`(v.titulo ILIKE $${paramIndex} OR v.descripcion ILIKE $${paramIndex + 1})`);
         
         const searchTerm = `%${q}%`;
-        params.push(searchTerm, searchTerm, searchTerm);
-        paramIndex += 3; // El índice avanza 3 posiciones
+        params.push(searchTerm, searchTerm); // Solo dos parámetros
+        paramIndex += 2; // El índice avanza 2 posiciones
     }
 
     // --- 2. FILTRO DE UBICACIÓN ---
@@ -832,22 +834,21 @@ app.get('/vacantes', async (req, res) => {
     sql += ' GROUP BY v.id ORDER BY v.id DESC';
 
     try {
-        // Ejecución: La variable 'params' debe coincidir perfectamente con la cantidad de $N.
+        // Ejecución: PostgreSQL asegura que params[] coincida con los $ marcados.
         const vacantesResult = await db.query(sql, params);
         const vacantes = vacantesResult.rows;
 
-        // Lógica de limpieza (si aplica)
+        // Bloque forEach original mantenido para compatibilidad.
         vacantes.forEach(v => {
-            // Este bloque se mantiene para compatibilidad.
+            // Lógica de limpieza/formateo.
         });
         res.json(vacantes);
     } catch (err) {
-        // El servidor registrará el error fatal de SQL si la lógica falla.
+        // Esto captura el error real del SQL y lo registra.
         console.error('Error fatal al obtener vacantes (SQL Crash):', err); 
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
-
 
 app.get('/institucion/vacantes', verificarToken, async (req, res) => {
     if (req.user.rol !== 'institucion') {
