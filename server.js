@@ -264,17 +264,6 @@ let clients = new Map(); // Se mantiene global para WebSockets
 
         console.log('✅ Estructura de tablas de PostgreSQL verificada/creada.');
 
-// --- CÓDIGO TEMPORAL PARA FORZAR VERIFICACIÓN DEL PRIMER USUARIO ---
-const CORREO_ADMIN_PARA_TEST = 'Frankgeorge59@gmail.com'; // ESTO YA ESTÁ CORRECTO
-
-await db.query(
-    // ⭐ CORRECCIÓN CRÍTICA: Cambiar el 1 final por 0
-    // Queremos actualizar a los usuarios que NO están verificados (verificado = 0)
-    'UPDATE usuarios SET verificado = 1 WHERE correo = $1 AND verificado = 0',
-    [CORREO_ADMIN_PARA_TEST]
-);
-console.log(`✅ NOTA: Usuario de prueba ${CORREO_ADMIN_PARA_TEST} forzado a verificado=1.`);
-// --- FIN DEL CÓDIGO TEMPORAL ---
 
 console.log('✅ Estructura de tablas de PostgreSQL verificada/creada.');
 
@@ -664,7 +653,7 @@ app.put('/perfil', verificarToken, async (req, res) => {
 // =================================================================
 // RUTA: Actualizar CV (Ahora usa Cloudinary y elimina el anterior)
 // =================================================================
-app.put('/perfil/cv', verificarToken, uploadCV.single('cvFile'), async (req, res) => {
+app.put('/perfil/cv', verificarToken, uploadCV.single('cv'), async (req, res) => {
     try {
         if (!req.file) {
             const error = req.fileFilterError || 'No se subió ningún archivo o el formato no es válido (solo PDF, DOC, DOCX).';
