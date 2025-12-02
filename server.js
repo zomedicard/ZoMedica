@@ -20,19 +20,15 @@ import crypto from 'crypto';
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import nodemailer from 'nodemailer';
-import sgMail from '@sendgrid/mail';
-
-// SECCIÓN: CONFIGURACIÓN DE NODEMAILER (SERVICIO DE CORREO) - USANDO SENDGRID WEB API
-// =================================================================
-// ⭐ CORRECCIÓN FINAL: Usar la API Web de SendGrid
 import sgTransport from 'nodemailer-sendgrid-transport';
 
-// Configura el cliente de SendGrid con la clave API
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
+// =================================================================
+// SECCIÓN: CONFIGURACIÓN DE NODEMAILER (SERVICIO DE CORREO) - USANDO SENDGRID WEB API
+// =================================================================
+// ⭐ CORRECCIÓN FINAL: Usar la API Web de SendGrid (Resuelve el ETIMEDOUT)
 const transporter = nodemailer.createTransport(sgTransport({
     auth: {
-        api_key: process.env.SENDGRID_API_KEY
+        api_key: process.env.SENDGRID_API_KEY // Usa la clave API larga que configuraste
     }
 }));
 
