@@ -20,20 +20,22 @@ import crypto from 'crypto';
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
+// SECCIÓN: CONFIGURACIÓN DE NODEMAILER (SERVICIO DE CORREO) - USANDO SENDGRID WEB API
 // =================================================================
-// SECCIÓN: CONFIGURACIÓN DE NODEMAILER (SERVICIO DE CORREO) - USANDO SENDGRID
-// =================================================================
-// ⭐ CORRECCIÓN 69/70: Migrar a Puerto 465/SSL para conexión estable
-const transporter = nodemailer.createTransport({
-    host: 'smtp.sendgrid.net', 
-    port: 465,                 // ⭐ CAMBIADO a 465
-    secure: true,              // ⭐ CAMBIADO a true
+// ⭐ CORRECCIÓN FINAL: Usar la API Web de SendGrid
+import sgTransport from 'nodemailer-sendgrid-transport';
+
+// Configura el cliente de SendGrid con la clave API
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+const transporter = nodemailer.createTransport(sgTransport({
     auth: {
-        user: 'apikey', 
-        pass: process.env.SENDGRID_API_KEY
+        api_key: process.env.SENDGRID_API_KEY
     }
-});
+}));
+
 // =================================================================
 // SECCIÓN: CONFIGURACIÓN INICIAL DEL SERVIDOR
 // =================================================================
