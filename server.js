@@ -787,6 +787,7 @@ app.delete('/vacantes/:id', verificarToken, async (req, res) => {
 });
 
 app.get('/vacantes', async (req, res) => {
+    // Los valores q, ubicacion, tipoContrato llegan aquí ya normalizados desde el frontend (app.js)
     const { q, ubicacion, tipoContrato } = req.query;
 
     let sql = `
@@ -797,28 +798,33 @@ app.get('/vacantes', async (req, res) => {
 
     let params = [];
     let conditions = [];
-    let paramIndex = 1;
+    let paramIndex = 1; // ⭐ INICIO DEL MARCADOR DE POSICIÓN SQL ($1)
 
+    // --- 1. FILTRO DE PALABRA CLAVE (q) ---
     if (q) {
-        // En Postgres, LIKE es sensible a mayúsculas/minúsculas. Usamos ILIKE para insensibilidad.
-        conditions.push('(v.titulo ILIKE $1 OR v.descripcion ILIKE $2 OR v.habilidades ILIKE $3)'); // Asumiendo que 'keywords' era 'habilidades'
+        // CORRECCIÓN CRÍTICA: Usar paramIndex dinámico para $N, $N+1, $N+2
+        conditions.push(`(v.titulo ILIKE $${paramIndex} OR v.descripcion ILIKE $${paramIndex + 1} OR v.habilidades ILIKE $${paramIndex + 2})`);
+        
         const searchTerm = `%${q}%`;
         params.push(searchTerm, searchTerm, searchTerm);
-        paramIndex += 3;
+        paramIndex += 3; // El índice avanza 3 posiciones
     }
 
+    // --- 2. FILTRO DE UBICACIÓN ---
     if (ubicacion) {
         conditions.push(`v.ubicacion ILIKE $${paramIndex}`);
         params.push(`%${ubicacion}%`);
-        paramIndex++;
+        paramIndex++; // El índice avanza 1 posición
     }
 
+    // --- 3. FILTRO DE TIPO DE CONTRATO ---
     if (tipoContrato) {
         conditions.push(`v.tipoContrato = $${paramIndex}`);
         params.push(tipoContrato);
-        paramIndex++;
+        paramIndex++; // El índice avanza 1 posición
     }
 
+    // --- CONSTRUCCIÓN FINAL DEL SQL ---
     if (conditions.length > 0) {
         sql += ' WHERE ' + conditions.join(' AND ');
     }
@@ -826,22 +832,22 @@ app.get('/vacantes', async (req, res) => {
     sql += ' GROUP BY v.id ORDER BY v.id DESC';
 
     try {
-        // CONVERSION: db.all() -> db.query().rows
+        // Ejecución: La variable 'params' debe coincidir perfectamente con la cantidad de $N.
         const vacantesResult = await db.query(sql, params);
         const vacantes = vacantesResult.rows;
 
-        // La migración anterior usaba "keywords" para el JSON, que eliminamos en la migración de tablas.
-        // Asumiremos que las keywords se extraen de la descripción o título si no están separadas.
+        // Lógica de limpieza (si aplica)
         vacantes.forEach(v => {
-            // El campo keywords ya no existe en la tabla de vacantes de Postgres.
-            // Lo quitamos para evitar errores de parseo de JSON.
+            // Este bloque se mantiene para compatibilidad.
         });
         res.json(vacantes);
     } catch (err) {
-        console.error('Error al obtener vacantes:', err);
+        // El servidor registrará el error fatal de SQL si la lógica falla.
+        console.error('Error fatal al obtener vacantes (SQL Crash):', err); 
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
+
 
 app.get('/institucion/vacantes', verificarToken, async (req, res) => {
     if (req.user.rol !== 'institucion') {
