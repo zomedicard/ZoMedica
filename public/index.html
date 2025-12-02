@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024">
-    <title>ZoMedica - Plataforma de Empleo</title>
+    <title>Emply - Plataforma de Empleo</title>
     <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="pipeline.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -13,7 +13,7 @@
         <nav>
             <a href="#" onclick="mostrarInicio()" class="brand-link">
     <div class="brand">
-        <span>ZoMedica</span>
+        <span>Emply</span>
     </div>
 </a>
 
@@ -74,30 +74,30 @@
     <h2 id="saludoUsuario" class="saludo-personal" style="text-align: center; margin-bottom: 20px;"></h2>
 
     <div class="hero-section">
-        <h1 class="hero-title">Tu Carrera en el Sector Salud Comienza Aquí</h1>
+        <h1 class="hero-title">Encuentra tu Próximo Empleo, Sin Límites.</h1>
         <p class="hero-subtitle">
-            ZoMedica es la plataforma exclusiva que conecta a los profesionales de la salud con las clínicas, hospitales y centros médicos más importantes del país.
+            Emply conecta al mejor talento con oportunidades en todos los sectores, facilitando tu crecimiento profesional sin importar la industria.
         </p>
         <div class="cta-buttons">
-    <a href="#" id="btnEncontrarEmpleo" onclick="manejarClicEncontrarEmpleo()" class="button">Encontrar mi próximo empleo</a>
+    <a href="#" id="btnEncontrarEmpleo" onclick="manejarClicEncontrarEmpleo()" class="button">Ver todas las vacantes</a>
     <a href="#" id="btnPublicarVacante" onclick="mostrarRegistro()" class="button-secondary">Publicar una vacante</a>
 </div>
 
     <div class="benefits-section">
         <div class="benefit-card">
-            <div class="benefit-icon"><i class="fas fa-user-md"></i></div>
+            <div class="benefit-icon"><i class="fas fa-user-tie"></i></div>
             <h4>Para Profesionales</h4>
-            <p>Accede a ofertas de empleo exclusivas, crea un perfil especializado y contacta directamente con las instituciones que buscan tu talento.</p>
+            <p>Accede a ofertas de empleo en diversas industrias, crea un perfil profesional completo y gestiona tus postulaciones fácilmente.</p>
         </div>
         <div class="benefit-card">
-            <div class="benefit-icon"><i class="fas fa-hospital"></i></div>
-            <h4>Para Instituciones</h4>
+            <div class="benefit-icon"><i class="fas fa-building"></i></div>
+            <h4>Para Empresas</h4>
             <p>Publica tus vacantes y encuentra talento calificado rápidamente. Gestiona tus candidatos con nuestro pipeline visual e intuitivo.</p>
         </div>
         <div class="benefit-card">
-            <div class="benefit-icon"><i class="fas fa-network-wired"></i></div>
-            <h4>Conexión Especializada</h4>
-            <p>Nos enfocamos 100% en el sector salud, asegurando que las oportunidades y los candidatos sean siempre relevantes.</p>
+            <div class="benefit-icon"><i class="fas fa-globe-americas"></i></div>
+            <h4>Oportunidades sin Fronteras</h4>
+            <p>Conectamos empleadores y candidatos en todas las áreas laborales, asegurando que las oportunidades sean siempre relevantes.</p>
         </div>
     </div>
 
@@ -108,7 +108,7 @@
 
         <section id="registro" class="container auth-container">
     <h2>Crea tu Cuenta</h2>
-    <p class="auth-subtitle">Únete a la red de profesionales de la salud más grande del país.</p>
+    <p class="auth-subtitle">Únete a la red de profesionales más grande del país.</p>
     <p id="errorRegistro" class="error" style="display: none;"></p>
     <form id="formRegistro">
         <div class="form-group">
@@ -127,8 +127,8 @@
             <i class="fas fa-briefcase"></i>
             <select id="rol" required>
                 <option value="" disabled selected>Selecciona tu rol...</option>
-                <option value="profesional">Soy un Profesional</option>
-                <option value="institucion">Represento una Institución</option>
+                <option value="profesional">Soy un Profesional / Candidato</option>
+                <option value="institucion">Soy una Empresa / Institución</option>
             </select>
         </div>
         <button type="submit">Registrarme</button>
@@ -183,11 +183,11 @@
 </section>
 
         <section id="vacantes" class="container" style="display: none;">
-    <h2>Encuentra tu Próximo Empleo en el Sector Salud</h2>
-    <p>Filtra por palabra clave, ubicación o tipo de contrato para encontrar la oportunidad perfecta para ti.</p>
+    <h2>Encuentra tu Próximo Empleo</h2>
+    <p>Filtra por palabra clave, ubicación o tipo de contrato para encontrar la oportunidad perfecta para ti en cualquier sector.</p>
 
     <div class="modern-filter-bar">
-        <input type="text" id="searchInput" placeholder="Buscar por puesto o palabra clave...">
+        <input type="text" id="searchInput" placeholder="Buscar por puesto, empresa o palabra clave...">
         
         <select id="ubicacionFilter">
             <option value="">Todas las ubicaciones</option>
@@ -234,8 +234,8 @@
         <label for="nombreEditar">Nombre Completo:</label>
         <input type="text" id="nombreEditar" required>
 
-        <label for="especialidadEditar">Título Profesional / Especialidad:</label>
-        <input type="text" id="especialidadEditar" placeholder="Ej: Médico General, Pediatra">
+        <label for="especialidadEditar">Puesto o Industria Actual:</label>
+        <input type="text" id="especialidadEditar" placeholder="Ej: Desarrollador Web, Gerente de Ventas">
         
         <label for="bioEditar">Biografía Profesional:</label>
         <textarea id="bioEditar" rows="5" placeholder="Escribe un breve resumen sobre tu experiencia y objetivos..."></textarea>
@@ -277,7 +277,7 @@
 
         <h3>Habilidades y Herramientas</h3>
         <label for="habilidadesEditar">Habilidades (separadas por coma):</label>
-        <input type="text" id="habilidadesEditar" placeholder="Ej: Cirugía menor, Diagnóstico, Microsoft Office">
+        <input type="text" id="habilidadesEditar" placeholder="Ej: Liderazgo, SQL, Adobe Creative Suite">
 
         <button type="submit">Guardar Todos los Cambios</button>
     </form>
@@ -285,10 +285,10 @@
 
 
 <section id="editarPerfilInstitucion" class="container" style="display: none;">
-    <h2>Editar Perfil de Institución</h2>
+    <h2>Editar Perfil de Empresa / Institución</h2>
     <p id="errorEditarPerfilInstitucion" class="error"></p>
 <form id="formEditarPerfilInstitucion">
-    <label for="nombreInstitucionEditar">Nombre de la Institución:</label>
+    <label for="nombreInstitucionEditar">Nombre de la Empresa / Institución:</label>
     <input type="text" id="nombreInstitucionEditar" required>
 
     <label for="direccionEditar">Dirección:</label>
@@ -298,10 +298,10 @@
     <input type="text" id="telefonoInstitucionEditar">
 
     <label for="sitioWebEditar">Sitio Web:</label>
-    <input type="url" id="sitioWebEditar" placeholder="https://www.tuinstitucion.com">
+    <input type="url" id="sitioWebEditar" placeholder="https://www.tuempresa.com">
 
     <label for="bioInstitucionEditar">Biografía / Sobre Nosotros:</label>
-    <textarea id="bioInstitucionEditar" rows="5" placeholder="Describe la misión y visión de tu institución..."></textarea>
+    <textarea id="bioInstitucionEditar" rows="5" placeholder="Describe la misión y visión de tu empresa..."></textarea>
 
     <label for="logoEditar">Subir nuevo Logo (JPG o PNG):</label>
     <input type="file" id="logoEditar" name="logo" accept=".jpg, .jpeg, .png">
@@ -359,7 +359,7 @@
 <section id="instituciones" class="container" style="display: none;">
     <div class="dashboard-header">
         <div class="dashboard-welcome">
-            <h2>Panel de Institución</h2>
+            <h2>Panel de Empresa / Institución</h2>
             <p>¡Hola de nuevo, <span id="nombreInstitucionPanel" style="font-weight: 600;"></span>!</p>
         </div>
         
@@ -412,13 +412,13 @@
       
 <section id="busquedaTalentos" class="container" style="display: none;">
     <h2>Buscador de Talentos</h2>
-    <p>Encuentra profesionales buscando por especialidad, habilidades o palabras clave.</p>
+    <p>Encuentra profesionales buscando por puesto, habilidades o palabras clave.</p>
 
     <div class="filtros-container">
         <h4>Filtros de Búsqueda</h4>
         <div class="modern-filter-bar"> 
-            <input type="text" id="filtroEspecialidad" placeholder="Filtrar por especialidad...">
-            <input type="text" id="filtroHabilidades" placeholder="Filtrar por habilidades...">
+            <input type="text" id="filtroEspecialidad" placeholder="Filtrar por Puesto o Industria...">
+            <input type="text" id="filtroHabilidades" placeholder="Filtrar por habilidades (separadas por coma)...">
             <input type="text" id="filtroKeyword" placeholder="Buscar por palabra clave...">
             <button onclick="ejecutarBusquedaTalentos()" class="button" style="margin-top: 0;">Buscar</button>
         </div>
@@ -442,7 +442,7 @@
         <label for="vacanteTitulo">Título de la Vacante:</label>
         <input type="text" id="vacanteTitulo" required>
 
-        <label for="vacanteInstitucion">Nombre de la Institución:</label>
+        <label for="vacanteInstitucion">Nombre de la Empresa:</label>
         <input type="text" id="vacanteInstitucion" required>
 
         <label for="vacanteUbicacion">Ubicación:</label>
@@ -466,7 +466,7 @@
         <textarea id="vacanteDescripcion" rows="5" required></textarea>
         
      <label for="vacanteRequisitosObligatorios">Requisitos Indispensables (Obligatorios):</label>
-<p style="font-size: 0.8rem; color: #6c757d; margin-top: -10px;">Separe cada requisito con una coma (ej: Título en Medicina, Inglés Avanzado).</p>
+<p style="font-size: 0.8rem; color: #6c757d; margin-top: -10px;">Separe cada requisito con una coma (ej: Título en Ingeniería, Inglés Avanzado).</p>
 <textarea id="vacanteRequisitosObligatorios" rows="3" required></textarea>
 
 <label for="vacanteRequisitosDeseables">Requisitos Deseables (Opcionales):</label>
@@ -483,7 +483,7 @@
         <input type="hidden" id="editarVacanteId"> <label for="vacanteTituloEditar">Título de la Vacante:</label>
         <input type="text" id="vacanteTituloEditar" required>
 
-        <label for="vacanteInstitucionEditar">Nombre de la Institución:</label>
+        <label for="vacanteInstitucionEditar">Nombre de la Empresa:</label>
         <input type="text" id="vacanteInstitucionEditar" required>
 
         <label for="vacanteUbicacionEditar">Ubicación:</label>

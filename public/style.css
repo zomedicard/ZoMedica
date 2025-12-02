@@ -1,8 +1,8 @@
-/* --- Paleta de Colores para MediJobs (Basado en #0A66C2) --- */
+/* --- Paleta de Colores para Emply (Basado en #1d3d63 - Azul Marino) --- */
 :root {
-    --primary-blue: #0A66C2;   /* Azul Principal para botones y enlaces */
-    --nav-blue: #063a6b;       /* Azul oscuro para la barra de navegación */
-    --accent-green: #00C853;   /* Verde para acentos, íconos y éxito */
+    --primary-blue: #1d3d63;   /* Azul Marino Neutro para botones y enlaces */
+    --nav-blue: #152c4a;       /* Azul oscuro para la barra de navegación */
+    --accent-green: #ff6f00;   /* Naranja para acentos, íconos y éxito */
     --dark-text: #333333;      /* Gris Grafito para texto principal */
     --light-bg: #F5F9FF;      /* Fondo general de la página con un toque azul */
     --white: #ffffff;        /* Fondo de tarjetas y contenedores principales */
@@ -219,6 +219,12 @@ section { display: none; padding: 25px; }
     border-radius: 8px;
     font-size: 1rem;
     transition: border-color 0.2s;
+}
+.modern-filter-bar input:focus, 
+.modern-filter-bar select:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 0.2rem rgba(25, 61, 99, 0.25); /* Ajustado a color primario */
 }
 .modern-filter-bar button {
     flex-shrink: 0;
@@ -1395,8 +1401,9 @@ nav .brand span {
     align-items: center;
     gap: 8px;
 }
-.dropdown-menu > a:hover {
-    background-color: #074a8a;
+nav .nav-links a:hover { /* Asegura que el hover se aplique bien */
+    background-color: #11305f; /* Ajustado a --nav-blue */
+    color: var(--white);
     transform: translateY(-1px);
 }
 
@@ -1573,7 +1580,7 @@ nav .nav-links a {
 
 /* Asignamos colores a cada tarjeta */
 .stat-card:nth-child(1) { border-color: var(--primary-blue); }
-.stat-card:nth-child(2) { border-color: var(--success-color); }
+.stat-card:nth-child(2) { border-color: var(--accent-green); } /* Ajustado a accent-green */
 .stat-card:nth-child(3) { border-color: var(--info-color); } /* Para la tercera tarjeta (opcional) */
 
 .stat-card h4 {
@@ -1598,7 +1605,7 @@ nav .nav-links a {
 
 /* Colores de iconos por tarjeta */
 .stat-card:nth-child(1) .card-icon { color: var(--primary-blue); }
-.stat-card:nth-child(2) .card-icon { color: var(--success-color); }
+.stat-card:nth-child(2) .card-icon { color: var(--accent-green); } /* Ajustado a accent-green */
 .stat-card:nth-child(3) .card-icon { color: var(--info-color); }
 
 /* Títulos de las columnas del dashboard */
