@@ -747,8 +747,6 @@ app.put('/perfil/foto', verificarToken, uploadImage.single('foto'), async (req, 
     }
 });
 
-// RUTA: Actualizar Logo de Institución (Ahora usa Cloudinary)
-
 // =================================================================
 // RUTA: Actualizar Logo de Institución (Ahora usa Cloudinary)
 // =================================================================
@@ -759,7 +757,6 @@ app.put('/perfil/logo', verificarToken, uploadImage.single('logo'), async (req, 
     
     try {
         if (!req.file) {
-            // Este caso debería ser capturado por Multer, pero lo verificamos:
             const error = req.fileFilterError || 'No se subió ningún archivo o el formato no es válido (solo imágenes).';
             return res.status(400).json({ error: error });
         }
@@ -773,7 +770,6 @@ app.put('/perfil/logo', verificarToken, uploadImage.single('logo'), async (req, 
         // 2. Eliminar el logo anterior de Cloudinary (Limpieza)
         if (oldLogoPath && oldLogoPath.startsWith('http')) {
             try {
-                // Lógica para extraer el public_id y borrar el archivo 'image'
                 const urlParts = oldLogoPath.split('/');
                 const publicIdWithExt = urlParts.slice(urlParts.findIndex(part => part === 'upload') + 2).join('/');
                 const publicId = publicIdWithExt.replace(/\.\w+$/, '');
@@ -793,9 +789,10 @@ app.put('/perfil/logo', verificarToken, uploadImage.single('logo'), async (req, 
 
     } catch (err) {
         console.error('Error al actualizar logo de institución con Cloudinary:', err);
-        // ⭐ La subida a Cloudinary falló. Devolvemos 400 o 500 limpio.
+        // Devolvemos 500 limpio.
         res.status(500).json({ error: 'Error interno del servidor: Fallo al procesar el archivo en la nube.' });
     }
+});
 
 app.get('/instituciones/:id', async (req, res) => {
     const institucionId = req.params.id;
