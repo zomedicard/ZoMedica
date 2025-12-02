@@ -112,31 +112,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 
-// =================================================================
-// SECCIÓN: CONFIGURACIÓN DE MULTER (SUBIDA DE ARCHIVOS)
-// =================================================================
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, 'uploads');
-        fs.mkdir(uploadDir, { recursive: true }).then(() => cb(null, uploadDir));
-    },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    }
-});
-const upload = multer({
-    storage,
-    limits: { fileSize: 8 * 1024 * 1024 },
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype === 'application/pdf' || file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
-            cb(null, true);
-        } else {
-            cb(new Error('Solo se permiten archivos PDF, JPG o PNG'), false);
-        }
-    }
-});
-
 
 // =================================================================
 // SECCIÓN: CONEXIÓN A POSTGRESQL Y MIGRACIÓN DE TABLAS
