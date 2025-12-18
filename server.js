@@ -481,7 +481,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// === REEMPLAZAR CONFIGURACIÓN DE CLOUDINARY PARA OPTIMIZACIÓN ===
+
 const imageStorage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
