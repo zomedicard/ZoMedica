@@ -482,17 +482,6 @@ app.post('/login', async (req, res) => {
 });
 
 
-const imageStorage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: 'emply_perfiles',
-        resource_type: 'image', 
-        format: async (req, file) => 'jpg',
-        transformation: [{ width: 800, height: 800, crop: 'limit', quality: 'auto' }], // Optimiza tamaño y calidad
-        public_id: (req, file) => `img-${req.user.id}-${Date.now()}`,
-    },
-});
-
 app.post('/forgot-password', async (req, res) => {
     const { correo } = req.body;
     try {
