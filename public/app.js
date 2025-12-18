@@ -1021,74 +1021,62 @@ function aplicarFiltros() {
     cargarVacantes(searchInput, ubicacionFilter, tipoContratoFilter);
 }
 
+// === REEMPLAZAR FUNCIÓN MOSTRARVACANTES EN APP.JS ===
 async function cargarVacantes(query = '', ubicacion = '', tipoContrato = '') {
     const listaVacantes = document.getElementById('listaVacantes');
-    if (!listaVacantes) {
-        return;
-    }
+    if (!listaVacantes) return;
+    
     mostrarSpinner('listaVacantes');
 
     try {
-        const params = new URLSearchParams(); const queryNormalizado = normalizarTextoBusqueda(query);
- if (queryNormalizado) { params.append('q', queryNormalizado); }
-        if (ubicacion) {
-            params.append('ubicacion', ubicacion);
-        }
-        if (tipoContrato) {
-            params.append('tipoContrato', tipoContrato);
-        }
+        const params = new URLSearchParams();
+        const queryNormalizado = normalizarTextoBusqueda(query);
+        if (queryNormalizado) params.append('q', queryNormalizado);
+        if (ubicacion) params.append('ubicacion', ubicacion);
+        if (tipoContrato) params.append('tipoContrato', tipoContrato);
 
-        // ⭐ CORRECCIÓN 47: Usar API_BASE_URL
+        // AÑADIMOS CACHE BUSTING PARA EVITAR RESULTADOS VIEJOS
+        params.append('_t', Date.now());
+
         const response = await fetch(`${API_BASE_URL}/vacantes?${params.toString()}`);
-        if (!response.ok) {
-            throw new Error(`Error del servidor: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
+        
         const vacantes = await response.json();
         listaVacantes.innerHTML = '';
 
         if (!vacantes || vacantes.length === 0) {
-            listaVacantes.innerHTML = '<p>No se encontraron vacantes con esos criterios.</p>';
+            listaVacantes.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No encontramos vacantes. Intenta con otros filtros.</p></div>';
         } else {
-            vacantes.forEach(vacante => {
-                const vacanteDiv = document.createElement('div');
-                vacanteDiv.className = 'vacante';
-                const titulo = vacante.titulo || 'Título no disponible';
-                const institucion = vacante.institucion || 'Institución no especificada';
-                const descripcionCorta = (vacante.descripcion || 'Sin descripción.').substring(0, 100);
-
-                vacanteDiv.innerHTML = `
-                    <button class="favorite-btn" onclick="toggleFavorito(${vacante.id}, this)">
-                        <i class="fas fa-star"></i>
-                    </button>
-                    <div class="vacante-contenido">
-                        <a href="#" onclick="mostrarVacanteDetalles(${vacante.id})">
-                            <h4 class="vacante-titulo">${titulo}</h4>
-                        </a>
-                        <p class="vacante-institucion">${institucion}</p>
-                        <div class="vacante-detalles-iconos">
-                            ${vacante.ubicacion ? `
-                                <div class="detalle-icono">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <span>${vacante.ubicacion}</span>
-                                </div>` : ''}
-                            ${vacante.tipoContrato ? `
-                                <div class="detalle-icono">
-                                    <i class="fas fa-file-contract"></i>
-                                    <span>${vacante.tipoContrato}</span>
-                                </div>` : ''}
-                        </div>
-                        <p>${descripcionCorta}...</p>
-                    </div>
-                `;
-                listaVacantes.appendChild(vacanteDiv);
-            });
+            renderizarVacantes(vacantes, listaVacantes);
         }
     } catch (error) {
-        listaVacantes.innerHTML = '<p>Error al cargar las vacantes.</p>';
-        console.error('Error al cargar vacantes:', error);
+        listaVacantes.innerHTML = '<p class="error">Error de conexión con el servidor.</p>';
     } finally {
         ocultarSpinner();
     }
+}
+
+// NUEVA FUNCIÓN AUXILIAR PARA RENDERIZAR (Mantiene el código limpio)
+function renderizarVacantes(vacantes, contenedor) {
+    vacantes.forEach(vacante => {
+        const vacanteDiv = document.createElement('div');
+        vacanteDiv.className = 'vacante';
+        vacanteDiv.innerHTML = `
+            <button class="favorite-btn" onclick="toggleFavorito(${vacante.id}, this)">
+                <i class="fas fa-star"></i>
+            </button>
+            <div class="vacante-contenido">
+                <a href="#" onclick="mostrarVacanteDetalles(${vacante.id})">
+                    <h4 class="vacante-titulo">${vacante.titulo}</h4>
+                </a>
+                <p class="vacante-institucion">${vacante.institucion}</p>
+                <div class="vacante-detalles-iconos">
+                    <div class="detalle-icono"><i class="fas fa-map-marker-alt"></i><span>${vacante.ubicacion || 'Remoto'}</span></div>
+                    <div class="detalle-icono"><i class="fas fa-file-contract"></i><span>${vacante.tipocontrato || 'N/A'}</span></div>
+                </div>
+            </div>`;
+        contenedor.appendChild(vacanteDiv);
+    });
 }
 
 // ⭐ MEJORA 2: Función actualizada para mostrar el estado de postulación

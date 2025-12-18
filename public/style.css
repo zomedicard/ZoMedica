@@ -1880,3 +1880,48 @@ nav .nav-links a {
     text-indent: 0 !important;
     font-size: 1rem !important; /* Asegura que el texto tenga tamaño */
 }
+
+/* === REEMPLAZAR O AÑADIR AL FINAL DE STYLE.CSS === */
+
+/* Corrección de Responsividad */
+@media (max-width: 768px) {
+    nav {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    .nav-links {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .vacante-grid {
+        grid-template-columns: 1fr; /* Una columna en móvil */
+    }
+
+    .hero-title {
+        font-size: 1.8rem;
+    }
+
+    .dashboard-main-content {
+        grid-template-columns: 1fr; /* Columnas del panel una sobre otra */
+    }
+}
+
+/* Skeleton Loading Animation */
+.loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 8px;
+    height: 100px;
+    margin-bottom: 15px;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
